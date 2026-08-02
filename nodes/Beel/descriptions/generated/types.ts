@@ -52,6 +52,17 @@ export interface GeneratedField {
 	/** Nested scalar fields, for `fixedCollection`. */
 	fields?: GeneratedField[];
 
+	/**
+	 * Required inside its own nested object (`apiName` has a dotted path), even
+	 * when that object is optional on the request.
+	 */
+	groupRequired?: boolean;
+	/**
+	 * Shows the field only when a sibling in the same collection has one of these
+	 * values — used where a field's valid values depend on another field, such as
+	 * the tax percentage depending on the tax type.
+	 */
+	showWhen?: { field: string; values: Array<string | number> };
 	/** `loadOptionsMethod` to attach, for resource dropdowns such as series or customers. */
 	loadOptionsMethod?: string;
 	numberPrecision?: number;

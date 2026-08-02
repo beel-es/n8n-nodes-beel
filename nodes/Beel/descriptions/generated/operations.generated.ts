@@ -71,6 +71,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"type": "options",
 				"options": [
 					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
 						"name": "SCHEDULED",
 						"value": "SCHEDULED",
 						"description": "Scheduled invoice to be issued automatically on a future date"
@@ -111,7 +115,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Completely cancelled invoice (TOTAL corrective invoice)"
 					}
 				],
-				"default": "SCHEDULED"
+				"default": ""
 			},
 			{
 				"name": "type",
@@ -120,6 +124,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"description": "Filter by invoice type",
 				"type": "options",
 				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
 					{
 						"name": "STANDARD",
 						"value": "STANDARD",
@@ -136,7 +144,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Simplified invoice without all requirements (up to 400€, or 3,000€ with NIF)"
 					}
 				],
-				"default": "STANDARD"
+				"default": ""
 			},
 			{
 				"name": "customer_id",
@@ -256,6 +264,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"type": "options",
 				"options": [
 					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
 						"name": "NO VERIFACTU",
 						"value": "NO_VERIFACTU"
 					},
@@ -272,7 +284,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"value": "REJECTED"
 					}
 				],
-				"default": "NO_VERIFACTU"
+				"default": ""
 			},
 			{
 				"name": "sort_by",
@@ -460,7 +472,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							}
 						],
 						"default": "02",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "alternative_id_number",
@@ -473,7 +486,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": "",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "alternative_id_country_code",
@@ -502,7 +516,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "Calle Mayor, 123",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "address_number",
@@ -516,7 +531,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "123",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "address_floor",
@@ -556,7 +572,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "28001",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "address_city",
@@ -571,7 +588,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "Madrid",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "address_province",
@@ -586,7 +604,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "Madrid",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "address_country",
@@ -601,7 +620,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "España",
 						"placeholder": "España",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "address_country_code",
@@ -745,10 +765,145 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							}
 						],
 						"default": "IVA",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
-						"name": "main_tax_percentage",
+						"name": "main_tax_percentage_IVA",
+						"apiName": "main_tax.percentage",
+						"displayName": "Main Tax Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IVA",
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 21,
+						"required": false,
+						"groupRequired": true,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "4%",
+								"value": 4
+							},
+							{
+								"name": "10%",
+								"value": 10
+							},
+							{
+								"name": "21%",
+								"value": 21
+							}
+						],
+						"showWhen": {
+							"field": "main_tax_type",
+							"values": [
+								"IVA"
+							]
+						}
+					},
+					{
+						"name": "main_tax_percentage_IGIC",
+						"apiName": "main_tax.percentage",
+						"displayName": "Main Tax Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IGIC",
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 0,
+						"required": false,
+						"groupRequired": true,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "3%",
+								"value": 3
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7%",
+								"value": 7
+							},
+							{
+								"name": "9.5%",
+								"value": 9.5
+							},
+							{
+								"name": "15%",
+								"value": 15
+							},
+							{
+								"name": "20%",
+								"value": 20
+							}
+						],
+						"showWhen": {
+							"field": "main_tax_type",
+							"values": [
+								"IGIC"
+							]
+						}
+					},
+					{
+						"name": "main_tax_percentage_IPSI",
+						"apiName": "main_tax.percentage",
+						"displayName": "Main Tax Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IPSI",
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 0.5,
+						"required": false,
+						"groupRequired": true,
+						"options": [
+							{
+								"name": "0.5%",
+								"value": 0.5
+							},
+							{
+								"name": "1%",
+								"value": 1
+							},
+							{
+								"name": "2%",
+								"value": 2
+							},
+							{
+								"name": "4%",
+								"value": 4
+							},
+							{
+								"name": "8%",
+								"value": 8
+							},
+							{
+								"name": "10%",
+								"value": 10
+							}
+						],
+						"showWhen": {
+							"field": "main_tax_type",
+							"values": [
+								"IPSI"
+							]
+						}
+					},
+					{
+						"name": "main_tax_percentage_OTHER",
 						"apiName": "main_tax.percentage",
 						"displayName": "Main Tax Percentage",
 						"description": "Tax percentage (between 0 and 100)",
@@ -758,7 +913,14 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "number",
 						"default": 0,
-						"required": false
+						"required": false,
+						"groupRequired": true,
+						"showWhen": {
+							"field": "main_tax_type",
+							"values": [
+								"OTHER"
+							]
+						}
 					},
 					{
 						"name": "main_tax_regime_key",
@@ -864,6 +1026,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "options",
 						"options": [
 							{
+								"name": "— Not set —",
+								"value": ""
+							},
+							{
 								"name": "0",
 								"value": 0
 							},
@@ -880,7 +1046,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": 5.2
 							}
 						],
-						"default": 0
+						"default": ""
 					},
 					{
 						"name": "irpf_rate",
@@ -889,6 +1055,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Personal income tax/withholding percentage in integer format",
 						"type": "options",
 						"options": [
+							{
+								"name": "— Not set —",
+								"value": ""
+							},
 							{
 								"name": "0",
 								"value": 0
@@ -918,7 +1088,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": 24
 							}
 						],
-						"default": 0
+						"default": ""
 					},
 					{
 						"name": "exemption_reason",
@@ -927,6 +1097,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Tax exemption reason code per Spanish VAT Law (Ley 37/1992 LIVA)",
 						"type": "options",
 						"options": [
+							{
+								"name": "— Not set —",
+								"value": ""
+							},
 							{
 								"name": "EXENTA ART 20",
 								"value": "EXENTA_ART_20"
@@ -988,7 +1162,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": "OTRO"
 							}
 						],
-						"default": "EXENTA_ART_20"
+						"default": ""
 					},
 					{
 						"name": "exemption_reason_text",
@@ -1228,7 +1402,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"multipleValues": true,
 						"default": [],
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "email_config_cc",
@@ -1441,7 +1616,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							}
 						],
 						"default": "02",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "alternative_id_number",
@@ -1454,7 +1630,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": "",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "alternative_id_country_code",
@@ -1483,7 +1660,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "Calle Mayor, 123",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "address_number",
@@ -1497,7 +1675,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "123",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "address_floor",
@@ -1537,7 +1716,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "28001",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "address_city",
@@ -1552,7 +1732,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "Madrid",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "address_province",
@@ -1567,7 +1748,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "Madrid",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "address_country",
@@ -1582,7 +1764,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "España",
 						"placeholder": "España",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "address_country_code",
@@ -1714,10 +1897,145 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							}
 						],
 						"default": "IVA",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
-						"name": "main_tax_percentage",
+						"name": "main_tax_percentage_IVA",
+						"apiName": "main_tax.percentage",
+						"displayName": "Main Tax Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IVA",
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 21,
+						"required": false,
+						"groupRequired": true,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "4%",
+								"value": 4
+							},
+							{
+								"name": "10%",
+								"value": 10
+							},
+							{
+								"name": "21%",
+								"value": 21
+							}
+						],
+						"showWhen": {
+							"field": "main_tax_type",
+							"values": [
+								"IVA"
+							]
+						}
+					},
+					{
+						"name": "main_tax_percentage_IGIC",
+						"apiName": "main_tax.percentage",
+						"displayName": "Main Tax Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IGIC",
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 0,
+						"required": false,
+						"groupRequired": true,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "3%",
+								"value": 3
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7%",
+								"value": 7
+							},
+							{
+								"name": "9.5%",
+								"value": 9.5
+							},
+							{
+								"name": "15%",
+								"value": 15
+							},
+							{
+								"name": "20%",
+								"value": 20
+							}
+						],
+						"showWhen": {
+							"field": "main_tax_type",
+							"values": [
+								"IGIC"
+							]
+						}
+					},
+					{
+						"name": "main_tax_percentage_IPSI",
+						"apiName": "main_tax.percentage",
+						"displayName": "Main Tax Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IPSI",
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 0.5,
+						"required": false,
+						"groupRequired": true,
+						"options": [
+							{
+								"name": "0.5%",
+								"value": 0.5
+							},
+							{
+								"name": "1%",
+								"value": 1
+							},
+							{
+								"name": "2%",
+								"value": 2
+							},
+							{
+								"name": "4%",
+								"value": 4
+							},
+							{
+								"name": "8%",
+								"value": 8
+							},
+							{
+								"name": "10%",
+								"value": 10
+							}
+						],
+						"showWhen": {
+							"field": "main_tax_type",
+							"values": [
+								"IPSI"
+							]
+						}
+					},
+					{
+						"name": "main_tax_percentage_OTHER",
 						"apiName": "main_tax.percentage",
 						"displayName": "Main Tax Percentage",
 						"description": "Tax percentage (between 0 and 100)",
@@ -1727,7 +2045,14 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "number",
 						"default": 0,
-						"required": false
+						"required": false,
+						"groupRequired": true,
+						"showWhen": {
+							"field": "main_tax_type",
+							"values": [
+								"OTHER"
+							]
+						}
 					},
 					{
 						"name": "main_tax_regime_key",
@@ -1833,6 +2158,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "options",
 						"options": [
 							{
+								"name": "— Not set —",
+								"value": ""
+							},
+							{
 								"name": "0",
 								"value": 0
 							},
@@ -1849,7 +2178,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": 5.2
 							}
 						],
-						"default": 0
+						"default": ""
 					},
 					{
 						"name": "irpf_rate",
@@ -1858,6 +2187,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Personal income tax/withholding percentage in integer format",
 						"type": "options",
 						"options": [
+							{
+								"name": "— Not set —",
+								"value": ""
+							},
 							{
 								"name": "0",
 								"value": 0
@@ -1887,7 +2220,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": 24
 							}
 						],
-						"default": 0
+						"default": ""
 					},
 					{
 						"name": "exemption_reason",
@@ -1896,6 +2229,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Tax exemption reason code per Spanish VAT Law (Ley 37/1992 LIVA)",
 						"type": "options",
 						"options": [
+							{
+								"name": "— Not set —",
+								"value": ""
+							},
 							{
 								"name": "EXENTA ART 20",
 								"value": "EXENTA_ART_20"
@@ -1957,7 +2294,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": "OTRO"
 							}
 						],
-						"default": "EXENTA_ART_20"
+						"default": ""
 					},
 					{
 						"name": "exemption_reason_text",
@@ -2266,10 +2603,145 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							}
 						],
 						"default": "IVA",
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
-						"name": "main_tax_percentage",
+						"name": "main_tax_percentage_IVA",
+						"apiName": "main_tax.percentage",
+						"displayName": "Main Tax Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IVA",
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 21,
+						"required": false,
+						"groupRequired": true,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "4%",
+								"value": 4
+							},
+							{
+								"name": "10%",
+								"value": 10
+							},
+							{
+								"name": "21%",
+								"value": 21
+							}
+						],
+						"showWhen": {
+							"field": "main_tax_type",
+							"values": [
+								"IVA"
+							]
+						}
+					},
+					{
+						"name": "main_tax_percentage_IGIC",
+						"apiName": "main_tax.percentage",
+						"displayName": "Main Tax Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IGIC",
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 0,
+						"required": false,
+						"groupRequired": true,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "3%",
+								"value": 3
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7%",
+								"value": 7
+							},
+							{
+								"name": "9.5%",
+								"value": 9.5
+							},
+							{
+								"name": "15%",
+								"value": 15
+							},
+							{
+								"name": "20%",
+								"value": 20
+							}
+						],
+						"showWhen": {
+							"field": "main_tax_type",
+							"values": [
+								"IGIC"
+							]
+						}
+					},
+					{
+						"name": "main_tax_percentage_IPSI",
+						"apiName": "main_tax.percentage",
+						"displayName": "Main Tax Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IPSI",
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 0.5,
+						"required": false,
+						"groupRequired": true,
+						"options": [
+							{
+								"name": "0.5%",
+								"value": 0.5
+							},
+							{
+								"name": "1%",
+								"value": 1
+							},
+							{
+								"name": "2%",
+								"value": 2
+							},
+							{
+								"name": "4%",
+								"value": 4
+							},
+							{
+								"name": "8%",
+								"value": 8
+							},
+							{
+								"name": "10%",
+								"value": 10
+							}
+						],
+						"showWhen": {
+							"field": "main_tax_type",
+							"values": [
+								"IPSI"
+							]
+						}
+					},
+					{
+						"name": "main_tax_percentage_OTHER",
 						"apiName": "main_tax.percentage",
 						"displayName": "Main Tax Percentage",
 						"description": "Tax percentage (between 0 and 100)",
@@ -2279,7 +2751,14 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "number",
 						"default": 0,
-						"required": false
+						"required": false,
+						"groupRequired": true,
+						"showWhen": {
+							"field": "main_tax_type",
+							"values": [
+								"OTHER"
+							]
+						}
 					},
 					{
 						"name": "main_tax_regime_key",
@@ -2385,6 +2864,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "options",
 						"options": [
 							{
+								"name": "— Not set —",
+								"value": ""
+							},
+							{
 								"name": "0",
 								"value": 0
 							},
@@ -2401,7 +2884,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": 5.2
 							}
 						],
-						"default": 0
+						"default": ""
 					},
 					{
 						"name": "irpf_rate",
@@ -2410,6 +2893,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Personal income tax/withholding percentage in integer format",
 						"type": "options",
 						"options": [
+							{
+								"name": "— Not set —",
+								"value": ""
+							},
 							{
 								"name": "0",
 								"value": 0
@@ -2439,7 +2926,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": 24
 							}
 						],
-						"default": 0
+						"default": ""
 					},
 					{
 						"name": "exemption_reason",
@@ -2448,6 +2935,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Tax exemption reason code per Spanish VAT Law (Ley 37/1992 LIVA)",
 						"type": "options",
 						"options": [
+							{
+								"name": "— Not set —",
+								"value": ""
+							},
 							{
 								"name": "EXENTA ART 20",
 								"value": "EXENTA_ART_20"
@@ -2509,7 +3000,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": "OTRO"
 							}
 						],
-						"default": "EXENTA_ART_20"
+						"default": ""
 					},
 					{
 						"name": "exemption_reason_text",
@@ -2603,7 +3094,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"multipleValues": true,
 						"default": [],
-						"required": false
+						"required": false,
+						"groupRequired": true
 					},
 					{
 						"name": "email_config_cc",
@@ -3264,6 +3756,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"type": "options",
 				"options": [
 					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
 						"name": "DRAFT",
 						"value": "DRAFT",
 						"description": "Create as draft for manual review"
@@ -3274,7 +3770,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Issue and send automatically via email"
 					}
 				],
-				"default": "DRAFT"
+				"default": ""
 			}
 		],
 		"filters": [],
@@ -4389,6 +4885,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"type": "options",
 				"options": [
 					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
 						"name": "PRODUCT",
 						"value": "PRODUCT",
 						"description": "Physical, tangible products"
@@ -4419,7 +4919,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Other unclassified types"
 					}
 				],
-				"default": "PRODUCT"
+				"default": ""
 			},
 			{
 				"name": "active",
@@ -4599,6 +5099,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"type": "options",
 				"options": [
 					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
 						"name": "PRODUCT",
 						"value": "PRODUCT",
 						"description": "Physical, tangible products"
@@ -4629,7 +5133,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Other unclassified types"
 					}
 				],
-				"default": "PRODUCT"
+				"default": ""
 			},
 			{
 				"name": "default_price",
@@ -4694,7 +5198,138 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"default": "IVA"
 					},
 					{
-						"name": "percentage",
+						"name": "percentage_IVA",
+						"apiName": "percentage",
+						"displayName": "Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IVA",
+						"required": true,
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 21,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "4%",
+								"value": 4
+							},
+							{
+								"name": "10%",
+								"value": 10
+							},
+							{
+								"name": "21%",
+								"value": 21
+							}
+						],
+						"showWhen": {
+							"field": "type",
+							"values": [
+								"IVA"
+							]
+						}
+					},
+					{
+						"name": "percentage_IGIC",
+						"apiName": "percentage",
+						"displayName": "Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IGIC",
+						"required": true,
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 0,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "3%",
+								"value": 3
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7%",
+								"value": 7
+							},
+							{
+								"name": "9.5%",
+								"value": 9.5
+							},
+							{
+								"name": "15%",
+								"value": 15
+							},
+							{
+								"name": "20%",
+								"value": 20
+							}
+						],
+						"showWhen": {
+							"field": "type",
+							"values": [
+								"IGIC"
+							]
+						}
+					},
+					{
+						"name": "percentage_IPSI",
+						"apiName": "percentage",
+						"displayName": "Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IPSI",
+						"required": true,
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 0.5,
+						"options": [
+							{
+								"name": "0.5%",
+								"value": 0.5
+							},
+							{
+								"name": "1%",
+								"value": 1
+							},
+							{
+								"name": "2%",
+								"value": 2
+							},
+							{
+								"name": "4%",
+								"value": 4
+							},
+							{
+								"name": "8%",
+								"value": 8
+							},
+							{
+								"name": "10%",
+								"value": 10
+							}
+						],
+						"showWhen": {
+							"field": "type",
+							"values": [
+								"IPSI"
+							]
+						}
+					},
+					{
+						"name": "percentage_OTHER",
 						"apiName": "percentage",
 						"displayName": "Percentage",
 						"description": "Tax percentage (between 0 and 100)",
@@ -4704,7 +5339,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							"maximum": 100
 						},
 						"type": "number",
-						"default": 0
+						"default": 0,
+						"showWhen": {
+							"field": "type",
+							"values": [
+								"OTHER"
+							]
+						}
 					},
 					{
 						"name": "regime_key",
@@ -4911,6 +5552,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"type": "options",
 				"options": [
 					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
 						"name": "PRODUCT",
 						"value": "PRODUCT",
 						"description": "Physical, tangible products"
@@ -4941,7 +5586,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Other unclassified types"
 					}
 				],
-				"default": "PRODUCT"
+				"default": ""
 			},
 			{
 				"name": "default_price",
@@ -5006,7 +5651,138 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"default": "IVA"
 					},
 					{
-						"name": "percentage",
+						"name": "percentage_IVA",
+						"apiName": "percentage",
+						"displayName": "Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IVA",
+						"required": true,
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 21,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "4%",
+								"value": 4
+							},
+							{
+								"name": "10%",
+								"value": 10
+							},
+							{
+								"name": "21%",
+								"value": 21
+							}
+						],
+						"showWhen": {
+							"field": "type",
+							"values": [
+								"IVA"
+							]
+						}
+					},
+					{
+						"name": "percentage_IGIC",
+						"apiName": "percentage",
+						"displayName": "Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IGIC",
+						"required": true,
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 0,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "3%",
+								"value": 3
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7%",
+								"value": 7
+							},
+							{
+								"name": "9.5%",
+								"value": 9.5
+							},
+							{
+								"name": "15%",
+								"value": 15
+							},
+							{
+								"name": "20%",
+								"value": 20
+							}
+						],
+						"showWhen": {
+							"field": "type",
+							"values": [
+								"IGIC"
+							]
+						}
+					},
+					{
+						"name": "percentage_IPSI",
+						"apiName": "percentage",
+						"displayName": "Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IPSI",
+						"required": true,
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 0.5,
+						"options": [
+							{
+								"name": "0.5%",
+								"value": 0.5
+							},
+							{
+								"name": "1%",
+								"value": 1
+							},
+							{
+								"name": "2%",
+								"value": 2
+							},
+							{
+								"name": "4%",
+								"value": 4
+							},
+							{
+								"name": "8%",
+								"value": 8
+							},
+							{
+								"name": "10%",
+								"value": 10
+							}
+						],
+						"showWhen": {
+							"field": "type",
+							"values": [
+								"IPSI"
+							]
+						}
+					},
+					{
+						"name": "percentage_OTHER",
 						"apiName": "percentage",
 						"displayName": "Percentage",
 						"description": "Tax percentage (between 0 and 100)",
@@ -5016,7 +5792,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							"maximum": 100
 						},
 						"type": "number",
-						"default": 0
+						"default": 0,
+						"showWhen": {
+							"field": "type",
+							"values": [
+								"OTHER"
+							]
+						}
 					},
 					{
 						"name": "regime_key",
@@ -5828,6 +6610,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"type": "options",
 				"options": [
 					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
 						"name": "NONE",
 						"value": "NONE"
 					},
@@ -5856,7 +6642,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"value": "OTHER"
 					}
 				],
-				"default": "NONE"
+				"default": ""
 			},
 			{
 				"name": "payment_iban",
@@ -6170,6 +6956,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"type": "options",
 				"options": [
 					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
 						"name": "NONE",
 						"value": "NONE"
 					},
@@ -6198,7 +6988,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"value": "OTHER"
 					}
 				],
-				"default": "NONE"
+				"default": ""
 			},
 			{
 				"name": "payment_iban",
@@ -6310,6 +7100,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"type": "options",
 				"options": [
 					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
 						"name": "ACTIVE",
 						"value": "ACTIVE"
 					},
@@ -6322,7 +7116,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"value": "COMPLETED"
 					}
 				],
-				"default": "ACTIVE"
+				"default": ""
 			},
 			{
 				"name": "customer_id",

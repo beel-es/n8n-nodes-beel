@@ -37,6 +37,10 @@ export function toNodeProperty(field: GeneratedField): INodeProperties {
 		...(field.description ? { description: field.description } : {}),
 		...(field.placeholder ? { placeholder: field.placeholder } : {}),
 		...(field.required ? { required: true } : {}),
+		// Inside a collection, displayOptions resolve against sibling fields.
+		...(field.showWhen
+			? { displayOptions: { show: { [field.showWhen.field]: field.showWhen.values } } }
+			: {}),
 	};
 
 	switch (field.type) {

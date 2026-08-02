@@ -64,7 +64,7 @@ async function expectRequest(
 		url: requested.url,
 		...(expected.body !== undefined ? { body: requested.body } : {}),
 		...(expected.companyId !== undefined
-			? { companyId: requested.headers['X-Active-Profile'] }
+			? { companyId: requested.headers['Beel-Active-Company'] }
 			: {}),
 	};
 
@@ -131,7 +131,7 @@ const COMPANY_ID = '660e8400-e29b-41d4-a716-446655440001';
 						quantity: 40,
 						unit_price: 50,
 						main_tax_type: 'IVA',
-						main_tax_percentage: 21,
+						main_tax_percentage_IVA: 21,
 						main_tax_regime_key: '01',
 						irpf_rate: 15,
 					},
@@ -164,6 +164,149 @@ const COMPANY_ID = '660e8400-e29b-41d4-a716-446655440001';
 				options: { issue_directly: true, wait_for_pdf: true },
 			},
 		},
+	);
+
+	// Regression: n8n fills every field of a collection with its contract default
+	// as soon as the collection exists, so picking a customer used to ship a
+	// half-built `address` (country "España") and `alternative_id` (type "02"),
+	// and the API rejected the invoice for the fields it was never given.
+	await expectRequest(
+		'a customer recipient does not carry empty address or alternative ID objects',
+		'invoice',
+		'create',
+		{
+			type: 'STANDARD',
+			recipient: {
+				value: {
+					customer_id: CUSTOMER_ID,
+					address_country: 'España',
+					address_country_code: 'ES',
+					address_street: '',
+					address_number: '',
+					address_postal_code: '',
+					address_city: '',
+					address_province: '',
+					alternative_id_type: '02',
+					alternative_id_number: '',
+				},
+			},
+			lines: { value: [{ description: 'Sprint 1', quantity: 1, unit_price: 100 }] },
+			additionalFields: {},
+		},
+		{
+			method: 'POST',
+			url: 'https://app.beel.es/api/v1/invoices',
+			body: {
+				type: 'STANDARD',
+				recipient: { customer_id: CUSTOMER_ID },
+				lines: [{ description: 'Sprint 1', quantity: 1, unit_price: 100 }],
+			},
+		},
+	);
+
+	// A genuinely inline recipient still sends the whole address.
+	await expectRequest(
+		'an inline recipient sends its full address',
+		'invoice',
+		'create',
+		{
+			type: 'STANDARD',
+			recipient: {
+				value: {
+					legal_name: 'Acme SL',
+					nif: 'B86561412',
+					address_street: 'Calle Mayor',
+					address_number: '1',
+					address_postal_code: '28001',
+					address_city: 'Madrid',
+					address_province: 'Madrid',
+					address_country: 'España',
+					address_country_code: 'ES',
+					alternative_id_type: '02',
+					alternative_id_number: '',
+				},
+			},
+			lines: { value: [{ description: 'Sprint 1', quantity: 1, unit_price: 100 }] },
+			additionalFields: {},
+		},
+		{
+			method: 'POST',
+			url: 'https://app.beel.es/api/v1/invoices',
+			body: {
+				type: 'STANDARD',
+				recipient: {
+					legal_name: 'Acme SL',
+					nif: 'B86561412',
+					address: {
+						street: 'Calle Mayor',
+						number: '1',
+						postal_code: '28001',
+						city: 'Madrid',
+						province: 'Madrid',
+						country: 'España',
+						country_code: 'ES',
+					},
+				},
+				lines: [{ description: 'Sprint 1', quantity: 1, unit_price: 100 }],
+			},
+		},
+	);
+
+	// Only the rates the chosen tax type allows are offered, and the hidden
+	// variants must not leak into the request.
+	await expectRequest(
+		'the tax percentage follows the chosen tax type',
+		'invoice',
+		'create',
+		{
+			type: 'STANDARD',
+			recipient: { value: { customer_id: CUSTOMER_ID } },
+			lines: {
+				value: [
+					{
+						description: 'Canarias',
+						quantity: 1,
+						unit_price: 100,
+						main_tax_type: 'IGIC',
+						main_tax_percentage_IVA: 21,
+						main_tax_percentage_IGIC: 7,
+						main_tax_percentage_IPSI: 10,
+					},
+				],
+			},
+			additionalFields: {},
+		},
+		{
+			method: 'POST',
+			url: 'https://app.beel.es/api/v1/invoices',
+			body: {
+				type: 'STANDARD',
+				recipient: { customer_id: CUSTOMER_ID },
+				lines: [
+					{
+						description: 'Canarias',
+						quantity: 1,
+						unit_price: 100,
+						main_tax: { type: 'IGIC', percentage: 7 },
+					},
+				],
+			},
+		},
+	);
+
+	await expectRejection(
+		'a half-filled address says which fields are missing',
+		'invoice',
+		'create',
+		{
+			type: 'STANDARD',
+			recipient: {
+				value: { legal_name: 'Acme SL', nif: 'B86561412', address_street: 'Calle Mayor' },
+			},
+			lines: { value: [{ description: 'Sprint 1', quantity: 1, unit_price: 100 }] },
+			additionalFields: {},
+		},
+		/missing required address fields/,
 	);
 
 	await expectRequest(

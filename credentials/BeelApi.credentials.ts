@@ -34,7 +34,7 @@ export class BeelApi implements ICredentialType {
 			default: '',
 			placeholder: '550e8400-e29b-41d4-a716-446655440000',
 			description:
-				'Optional. UUID of the company (NIF) every node should operate as by default, sent as the <code>X-Active-Profile</code> header. Only relevant for multi-NIF accounts using an account-wide API key; a company-scoped key already resolves its own company. Each node can override it with its own Company field.',
+				'Optional. UUID of the company (NIF) every node should operate as by default, sent as the <code>Beel-Active-Company</code> header. Only relevant for multi-NIF accounts using an account-wide API key; a company-scoped key already resolves its own company. Each node can override it with its own Company field.',
 		},
 		{
 			displayName: 'Base URL',

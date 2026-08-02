@@ -44,7 +44,7 @@ An account can bill under several NIFs (companies). The node resolves the compan
 2. The **Default Company ID** on the credential
 3. Whatever the API key is already scoped to — a company-scoped key needs neither of the above
 
-Under the hood this is the `X-Active-Profile` header. The **Company** dropdown is populated from `GET /v1/companies`, and the series and customer dropdowns follow the company you pick, so you never see another NIF's data by accident.
+Under the hood this is the `Beel-Active-Company` header. The **Company** dropdown is populated from `GET /v1/companies`, and the series and customer dropdowns follow the company you pick, so you never see another NIF's data by accident.
 
 ## Operations
 

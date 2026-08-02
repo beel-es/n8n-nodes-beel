@@ -108,6 +108,20 @@ export const LOAD_OPTIONS_BY_FIELD: Record<string, string> = {
 	customer_id: 'getCustomers',
 };
 
+/**
+ * Cross-field constraints the contract states in prose instead of schema.
+ *
+ * `TaxInfo` documents which percentages each tax type accepts, but as a bullet
+ * list in its description, so the generator would otherwise offer a free number
+ * and let an invalid rate reach the API. `null` means the type accepts any value.
+ */
+export const TAX_PERCENTAGES: Record<string, number[] | null> = {
+	IVA: [0, 4, 10, 21],
+	IGIC: [0, 3, 5, 7, 9.5, 15, 20],
+	IPSI: [0.5, 1, 2, 4, 8, 10],
+	OTHER: null,
+};
+
 /** Acronyms and one-letter names that title-casing would mangle. */
 export const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
 	nif: 'NIF',

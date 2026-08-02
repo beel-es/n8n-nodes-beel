@@ -22,6 +22,7 @@ import {
 	MANUAL_OPERATION_IDS,
 	OPERATION_NAMES,
 	RESOURCES,
+	TAX_PERCENTAGES,
 } from './config';
 import type {
 	GeneratedField,
@@ -166,6 +167,46 @@ function constraintHint(validation: GeneratedValidation | undefined, type: strin
 	return hints.length > 0 ? hints.join(', ') : undefined;
 }
 
+/**
+ * Replaces a tax percentage field with one variant per tax type, each offering
+ * only the rates that type accepts. Returns the fields unchanged when the
+ * collection is not a tax object.
+ */
+function applyTaxPercentageOptions(fields: GeneratedField[]): GeneratedField[] {
+	const taxTypes = Object.keys(TAX_PERCENTAGES);
+
+	const typeField = fields.find(
+		(field) =>
+			field.apiName.split('.').pop() === 'type' &&
+			field.options !== undefined &&
+			taxTypes.every((taxType) => field.options!.some((option) => option.value === taxType)),
+	);
+	const percentageField = fields.find((field) => field.apiName.split('.').pop() === 'percentage');
+
+	if (!typeField || !percentageField) return fields;
+
+	return fields.flatMap((field) => {
+		if (field !== percentageField) return [field];
+
+		return Object.entries(TAX_PERCENTAGES).map(([taxType, rates]) => {
+			const showWhen = { field: typeField.name, values: [taxType] };
+
+			// A type with no fixed list keeps the free number input.
+			if (rates === null) return { ...field, name: `${field.name}_${taxType}`, showWhen };
+
+			return {
+				...field,
+				name: `${field.name}_${taxType}`,
+				type: 'options' as const,
+				options: rates.map((rate) => ({ name: `${rate}%`, value: rate })),
+				default: rates.includes(21) ? 21 : rates[0],
+				description: `${field.description ?? 'Tax percentage'} — rates allowed for ${taxType}`,
+				showWhen,
+			};
+		});
+	});
+}
+
 function isScalarSchema(schema: Json): boolean {
 	const type = schema.type;
 	return type === 'string' || type === 'number' || type === 'integer' || type === 'boolean';
@@ -195,17 +236,34 @@ function toFields(apiName: string, rawSchema: Json, required: boolean, depth = 0
 		if (!children) return null;
 
 		for (const child of children) {
+			const groupRequired = (schema.required ?? []).includes(child.apiName);
+
 			flattened.push({
-				...child,
+				// A field its own object requires is never "not set": once the object is
+				// sent it must carry a real value, so restore the enum's own default.
+				...(groupRequired ? withoutEmptyChoice(child) : child),
 				name: `${apiName}_${child.name}`,
 				apiName: `${apiName}.${child.apiName}`,
 				displayName: `${titleCase(apiName)} ${child.displayName}`,
-				required: required && (schema.required ?? []).includes(child.apiName),
+				required: required && groupRequired,
+				// Required within its own object, even when the object itself is optional:
+				// this is what tells the executor whether a half-filled group may be sent.
+				...(groupRequired ? { groupRequired: true } : {}),
 			});
 		}
 	}
 
 	return flattened;
+}
+
+/** Undoes the optional-enum "not set" choice, for fields their own object requires. */
+function withoutEmptyChoice(field: GeneratedField): GeneratedField {
+	if (field.type !== 'options' || field.default !== '') return field;
+
+	const options = (field.options ?? []).filter((option) => option.value !== '');
+	if (options.length === (field.options ?? []).length) return field;
+
+	return { ...field, options, default: options[0].value };
 }
 
 /** Maps one OpenAPI property to a single generated field, or `null` when unsupported. */
@@ -233,6 +291,19 @@ function toField(apiName: string, rawSchema: Json, required: boolean, depth = 0)
 
 	const options = enumOptions(schema);
 	if (options) {
+		// A dropdown always holds some value, so an optional enum with no default in
+		// the contract would silently send its first member — which is how an
+		// untouched "Exemption Reason" ended up on every invoice line. Give those an
+		// explicit empty choice; the executor leaves empty values out of the request.
+		if (!required && schema.default === undefined) {
+			return {
+				...base,
+				type: 'options',
+				options: [{ name: '— Not set —', value: '' }, ...options],
+				default: '',
+			};
+		}
+
 		return { ...base, type: 'options', options, default: schema.default ?? options[0].value };
 	}
 
@@ -280,7 +351,13 @@ function toField(apiName: string, rawSchema: Json, required: boolean, depth = 0)
 				}
 				if (nested.length === 0) return null;
 
-				return { ...base, type: 'fixedCollection', fields: nested, multipleValues: true, default: {} };
+				return {
+					...base,
+					type: 'fixedCollection',
+					fields: applyTaxPercentageOptions(nested),
+					multipleValues: true,
+					default: {},
+				};
 			}
 
 			if (!isScalarSchema(items)) return null;
@@ -318,7 +395,7 @@ function toField(apiName: string, rawSchema: Json, required: boolean, depth = 0)
 				nested.push(...children);
 			}
 
-			return { ...base, type: 'fixedCollection', fields: nested, default: {} };
+			return { ...base, type: 'fixedCollection', fields: applyTaxPercentageOptions(nested), default: {} };
 		}
 
 		default:

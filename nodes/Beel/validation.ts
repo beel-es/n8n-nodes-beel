@@ -23,6 +23,12 @@ const FORMAT_CHECKS: Record<string, { test: RegExp; expected: string }> = {
 	uri: { test: /^https?:\/\/.+/, expected: 'an http(s) URL' },
 };
 
+/** Whether a conditional field applies, given the values of its siblings. */
+export function isVisible(field: GeneratedField, siblings: IDataObject): boolean {
+	if (!field.showWhen) return true;
+	return field.showWhen.values.includes(siblings[field.showWhen.field] as string | number);
+}
+
 function fail(node: INode, field: GeneratedField, problem: string, itemIndex: number): never {
 	throw new NodeOperationError(node, `"${field.displayName}" ${problem}`, {
 		itemIndex,
@@ -120,6 +126,7 @@ export function validateField(
 
 		for (const entry of entries) {
 			for (const child of field.fields ?? []) {
+				if (!isVisible(child, entry)) continue;
 				validateField(node, child, entry[child.name], itemIndex);
 			}
 		}

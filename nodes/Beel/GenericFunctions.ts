@@ -30,12 +30,15 @@ export interface IBeelEnvelope {
 	pagination?: IDataObject;
 }
 
+/** Header that designates which company (NIF) an account-wide key operates as. */
+const ACTIVE_COMPANY_HEADER = 'Beel-Active-Company';
+
 /**
  * Performs an authenticated request against the BeeL Public API.
  *
  * Adds an `Idempotency-Key` to every POST so a retried request never creates a
- * duplicate invoice, and sets `X-Active-Profile` so multi-NIF accounts operate
- * as the intended company.
+ * duplicate invoice, and sets the active-company header so multi-NIF accounts
+ * operate as the intended company.
  */
 export async function beelApiRequest(
 	this: BeelRequestContext,
@@ -58,7 +61,7 @@ export async function beelApiRequest(
 	// A company chosen on the node overrides the account default in the credential.
 	const activeProfile = (companyId || ((credentials.companyId as string) ?? '')).trim();
 	if (activeProfile !== '') {
-		headers['X-Active-Profile'] = activeProfile;
+		headers[ACTIVE_COMPANY_HEADER] = activeProfile;
 	}
 
 	const options: IHttpRequestOptions = {
