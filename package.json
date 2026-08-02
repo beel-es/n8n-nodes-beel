@@ -1,7 +1,7 @@
 {
   "name": "n8n-nodes-beel",
   "version": "0.1.0",
-  "description": "n8n community node for BeeL \u2014 Spanish invoicing with VeriFactu compliance",
+  "description": "n8n community node for BeeL \u2014 Spanish invoicing with VeriFactu compliance, generated from the OpenAPI contract",
   "keywords": [
     "n8n-community-node-package",
     "n8n",
@@ -33,16 +33,21 @@
   "scripts": {
     "generate": "tsx scripts/generate.ts",
     "generate:check": "tsx scripts/generate.ts --check",
-    "test": "tsx scripts/check-node.ts && tsx scripts/check-requests.ts && tsx scripts/generate.ts --check",
     "build": "npx rimraf dist && tsc && gulp build:icons",
     "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "format": "prettier nodes credentials --write",
     "lint": "eslint nodes credentials package.json",
     "lintfix": "eslint nodes credentials package.json --fix",
-    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
+    "prepublishOnly": "npm run lint && npm run test && npm run build"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
@@ -65,9 +70,13 @@
     "rimraf": "^6.0.1",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2",
+    "vitest": "^4.1.10",
     "yaml": "^2.7.1"
   },
   "peerDependencies": {
     "n8n-workflow": "*"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

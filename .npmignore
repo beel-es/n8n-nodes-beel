@@ -1,0 +1,7 @@
+# The published package is only what `files` allows; this is belt and braces so
+# a stray file can never ship with the node.
+*
+!dist/**
+!README.md
+!LICENSE
+!CHANGELOG.md

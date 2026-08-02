@@ -17,6 +17,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
-      # Fails when the generated operations are stale, or when the contract grew
-      # an endpoint that is neither generated, hand-written nor excluded.
+      # The suite also fails when the generated operations are stale, or when the
+      # contract grew an endpoint that is neither generated, hand-written nor
+      # explicitly excluded.
       - run: npm test
