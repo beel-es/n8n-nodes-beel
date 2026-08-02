@@ -75,8 +75,14 @@ async function expectRequest(
 		return;
 	}
 
-	if (expected.method === 'POST' && !requested.headers['Idempotency-Key']) {
-		failures.push(`${label}: POST went out without an Idempotency-Key`);
+	if (expected.method === 'POST') {
+		const key = requested.headers['Idempotency-Key'];
+		if (!key) failures.push(`${label}: POST went out without an Idempotency-Key`);
+
+		const supplied = parameters.idempotencyKey as string | undefined;
+		if (supplied && key !== supplied) {
+			failures.push(`${label}: Idempotency-Key was "${key}", not the supplied "${supplied}"`);
+		}
 	}
 
 	console.log(`ok  ${label}`);
@@ -319,6 +325,14 @@ const COMPANY_ID = '660e8400-e29b-41d4-a716-446655440001';
 			url: `https://app.beel.es/api/v1/invoices/${INVOICE_ID}/void`,
 			body: { reason: 'Duplicada por error de integración' },
 		},
+	);
+
+	await expectRequest(
+		'a supplied idempotency key is used verbatim, so a re-run is safe',
+		'nif',
+		'validate',
+		{ nif: 'B86561412', idempotencyKey: 'order-42' },
+		{ method: 'POST', url: 'https://app.beel.es/api/v1/nif/validate', body: { nif: 'B86561412' } },
 	);
 
 	await expectRejection(

@@ -57,6 +57,23 @@ function buildProperties(): INodeProperties[] {
 		options: [],
 	});
 
+	const creating = ALL_OPERATIONS.filter((operation) => operation.method === 'POST');
+	properties.push({
+		displayName: 'Idempotency Key',
+		name: 'idempotencyKey',
+		type: 'string',
+		default: '',
+		placeholder: '={{ $json.order_id }}',
+		description:
+			'Optional. Retrying with the same key returns the resource created the first time instead of creating another one. Leave empty and each run sends a fresh key, which makes a network-level retry safe but still creates a new resource if the workflow runs again. Derive it from your own data — an order ID, for instance — to make re-runs safe too.',
+		displayOptions: {
+			show: {
+				resource: [...new Set(creating.map((operation) => operation.resource))],
+				operation: [...new Set(creating.map((operation) => operation.operation))],
+			},
+		},
+	});
+
 	for (const operation of ALL_OPERATIONS) {
 		properties.push(...buildOperationProperties(operation));
 	}

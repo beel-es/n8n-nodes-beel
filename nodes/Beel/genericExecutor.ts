@@ -238,6 +238,8 @@ export async function executeGeneratedOperation(
 		['GET', 'DELETE'].includes(operation.method) ? undefined : collected.body,
 		collected.query,
 		companyId,
+		{},
+		this.getNodeParameter('idempotencyKey', itemIndex, '') as string,
 	);
 
 	// 204 No Content — report the outcome rather than an empty item.

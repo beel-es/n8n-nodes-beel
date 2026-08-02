@@ -48,6 +48,7 @@ export async function beelApiRequest(
 	qs: IDataObject = {},
 	companyId = '',
 	option: Partial<IHttpRequestOptions> = {},
+	idempotencyKey = '',
 ): Promise<any> {
 	const credentials = await this.getCredentials('beelApi');
 	const baseUrl = ((credentials.baseUrl as string) || 'https://app.beel.es/api').replace(/\/+$/, '');
@@ -55,7 +56,10 @@ export async function beelApiRequest(
 	const headers: IDataObject = { Accept: 'application/json' };
 
 	if (method === 'POST') {
-		headers['Idempotency-Key'] = randomUUID();
+		// A random key makes a transport-level retry safe. A key the workflow author
+		// supplies goes further: re-running the workflow returns the invoice already
+		// created for that key instead of issuing a second one.
+		headers['Idempotency-Key'] = idempotencyKey.trim() || randomUUID();
 	}
 
 	// A company chosen on the node overrides the account default in the credential.

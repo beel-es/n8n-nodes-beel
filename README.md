@@ -60,6 +60,12 @@ Under **Additional Fields → Options** you decide what happens on creation: lea
 
 `Download PDF` puts the file in a binary field. Issued invoices are fetched through the pre-signed URL the API returns; enable **Draft Preview** for drafts, which have no final PDF yet.
 
+### Idempotency
+
+Every `POST` carries an `Idempotency-Key`, and the API returns the resource created the first time instead of creating a second one. By default the key is a fresh UUID per request, which makes a network-level retry safe but still creates a new invoice if the workflow runs again.
+
+Set the **Idempotency Key** field from your own data — `{{ $json.order_id }}` — and re-running the workflow, or n8n retrying the node, returns the invoice that order already produced.
+
 ### Customer, Product, Series, Recurring Invoice, Configuration, NIF
 
 Full CRUD on customers, products and numbering series; recurring templates can be created, paused, resumed, previewed, skipped and generated on demand; the configuration resource exposes tax settings, tax types and VeriFactu status; and `NIF → Validate` checks a Spanish tax ID against the AEAT registry.
