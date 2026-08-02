@@ -1,8 +1,24 @@
-# n8n-nodes-beel
+<p align="center">
+  <a href="https://beel.es">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/beel-es/n8n-nodes-beel/main/assets/beel-wordmark-white.png">
+      <img src="https://raw.githubusercontent.com/beel-es/n8n-nodes-beel/main/assets/beel-wordmark-blue.png" alt="BeeL" width="220">
+    </picture>
+  </a>
+</p>
 
-[![npm version](https://img.shields.io/npm/v/n8n-nodes-beel.svg)](https://www.npmjs.com/package/n8n-nodes-beel)
-[![CI](https://github.com/beel-es/n8n-nodes-beel/actions/workflows/ci.yml/badge.svg)](https://github.com/beel-es/n8n-nodes-beel/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<h1 align="center">n8n-nodes-beel</h1>
+
+<p align="center">
+  Issue invoices from n8n, with VeriFactu compliance.<br>
+  <a href="https://beel.es">beel.es</a> · <a href="https://docs.beel.es">API docs</a> · <a href="https://www.npmjs.com/package/n8n-nodes-beel">npm</a>
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/n8n-nodes-beel"><img src="https://img.shields.io/npm/v/n8n-nodes-beel.svg" alt="npm version"></a>
+  <a href="https://github.com/beel-es/n8n-nodes-beel/actions/workflows/ci.yml"><img src="https://github.com/beel-es/n8n-nodes-beel/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+</p>
 
 n8n community node for [BeeL](https://beel.es) — invoicing for self-employed professionals and companies in Spain, with VeriFactu compliance.
 
