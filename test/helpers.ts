@@ -62,6 +62,7 @@ export function makeContext(options: StubOptions = {}): StubContext {
 		getNodeWebhookUrl: () => 'https://n8n.example.com/webhook/beel',
 		getHeaderData: () => options.headers ?? {},
 		getRequestObject: () => ({ rawBody: options.rawBody }),
+		logger: { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} },
 		helpers: {
 			httpRequestWithAuthentication: async (_credential: string, request: IDataObject) => {
 				requests.push(request);

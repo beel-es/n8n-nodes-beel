@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.1
+
+Everything n8n's verification checks asked for, so the node can be submitted to
+the Creator Portal. No change to what any operation does.
+
+- `NodeConnectionTypes.Main` instead of the `'main'` literal
+- Errors leaving the node are always a `NodeApiError` or `NodeOperationError`,
+  never a bare one without the node attached
+- The credential icon has a light and a dark variant
+- A failed webhook unsubscribe is logged instead of vanishing
+- `usableAsTool` declared on the trigger
+- Defaults the linter can see, in the generated property builder
+- Publishing moved to `publish.yml`, the filename npm's Trusted Publisher setup
+  expects, and `@n8n/node-cli` added as a dev dependency
+
 ## 0.1.0
 
 First release.

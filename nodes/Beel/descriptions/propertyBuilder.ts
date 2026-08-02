@@ -28,12 +28,13 @@ function showFor(operation: GeneratedOperation): DisplayOptions {
 
 /** Maps a generated field to an n8n property (without display conditions). */
 export function toNodeProperty(field: GeneratedField): INodeProperties {
-	// eslint-disable-next-line n8n-nodes-base/node-param-default-missing -- default comes from the contract
 	const property: INodeProperties = {
 		displayName: field.displayName,
 		name: field.name,
 		type: 'string',
-		default: field.default as string,
+		// Overwritten right below with the contract's own default; declared here so
+		// the value is always present, whichever branch the switch takes.
+		default: '',
 		...(field.description ? { description: field.description } : {}),
 		...(field.placeholder ? { placeholder: field.placeholder } : {}),
 		...(field.required ? { required: true } : {}),
@@ -42,6 +43,8 @@ export function toNodeProperty(field: GeneratedField): INodeProperties {
 			? { displayOptions: { show: { [field.showWhen.field]: field.showWhen.values } } }
 			: {}),
 	};
+
+	property.default = field.default as string;
 
 	switch (field.type) {
 		case 'options':
@@ -230,14 +233,13 @@ export function buildOperationSelector(
 	resource: string,
 	operations: GeneratedOperation[],
 ): INodeProperties {
-	// eslint-disable-next-line n8n-nodes-base/node-param-default-missing -- default is the first generated operation
-	return {
+	const selector: INodeProperties = {
 		displayName: 'Operation',
 		name: 'operation',
 		type: 'options',
 		noDataExpression: true,
 		displayOptions: { show: { resource: [resource] } },
-		default: operations[0].operation,
+		default: '',
 		options: operations.map((operation) => ({
 			name: operation.displayName,
 			value: operation.operation,
@@ -245,4 +247,9 @@ export function buildOperationSelector(
 			description: operation.description,
 		})),
 	};
+
+	// The first operation of the resource is what the node opens on.
+	selector.default = operations[0].operation;
+
+	return selector;
 }

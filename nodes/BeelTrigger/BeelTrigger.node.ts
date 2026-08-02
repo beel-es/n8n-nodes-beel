@@ -8,7 +8,7 @@ import type {
 	IWebhookFunctions,
 	IWebhookResponseData,
 } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
+import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
 import { beelApiRequest, getCompanies, unwrap, WEBHOOK_EVENTS } from '../Beel/GenericFunctions';
 
@@ -58,8 +58,11 @@ export class BeelTrigger implements INodeType {
 		subtitle: '={{$parameter["events"].join(", ")}}',
 		description: 'Starts the workflow when BeeL emits an event',
 		defaults: { name: 'BeeL Trigger' },
+		// Required by n8n's verification checks. Inert on a trigger: a node without
+		// `execute` cannot be called by an agent, so nothing surfaces as a tool.
+		usableAsTool: true,
 		inputs: [],
-		outputs: ['main'],
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [{ name: 'beelApi', required: true }],
 		webhooks: [
 			{
@@ -238,8 +241,15 @@ export class BeelTrigger implements INodeType {
 						{},
 						companyId,
 					);
-				} catch {
-					// Already gone on BeeL's side; drop the local state either way.
+				} catch (error) {
+					// Usually the subscription is already gone on BeeL's side, which is
+					// harmless — but a real failure leaves an endpoint receiving events
+					// nobody handles, so say so rather than fail the deactivation.
+					this.logger.warn(
+						`BeeL Trigger could not delete webhook subscription ${state.webhookId}: ${
+							(error as Error).message
+						}. Remove it from the BeeL dashboard if it is still active.`,
+					);
 					return false;
 				} finally {
 					delete state.webhookId;

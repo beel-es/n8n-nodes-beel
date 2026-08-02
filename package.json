@@ -1,7 +1,7 @@
 {
   "name": "n8n-nodes-beel",
-  "version": "0.1.0",
-  "description": "n8n community node for BeeL \u2014 Spanish invoicing with VeriFactu compliance, generated from the OpenAPI contract",
+  "version": "0.1.1",
+  "description": "n8n community node for BeeL — Spanish invoicing with VeriFactu compliance, generated from the OpenAPI contract",
   "keywords": [
     "n8n-community-node-package",
     "n8n",
@@ -60,6 +60,7 @@
     ]
   },
   "devDependencies": {
+    "@n8n/node-cli": "^0.41.2",
     "@types/node": "^26.1.2",
     "@typescript-eslint/parser": "^8.32.0",
     "eslint": "^8.57.0",

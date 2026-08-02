@@ -13,7 +13,7 @@ export class BeelApi implements ICredentialType {
 
 	documentationUrl = 'https://docs.beel.es';
 
-	icon: Icon = 'file:beel.svg';
+	icon: Icon = { light: 'file:beel.svg', dark: 'file:beel.dark.svg' };
 
 	properties: INodeProperties[] = [
 		{

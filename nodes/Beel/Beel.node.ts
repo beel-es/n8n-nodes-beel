@@ -5,7 +5,7 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
+import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
 import {
 	GENERATED_OPERATIONS,
@@ -99,8 +99,8 @@ export class Beel implements INodeType {
 		description: 'Issue invoices and manage customers, products and series in BeeL',
 		defaults: { name: 'BeeL' },
 		usableAsTool: true,
-		inputs: ['main'],
-		outputs: ['main'],
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [{ name: 'beelApi', required: true }],
 		properties: buildProperties(),
 	};
@@ -152,7 +152,11 @@ export class Beel implements INodeType {
 					});
 					continue;
 				}
-				throw error;
+
+				// Anything the helpers did not already wrap reaches the user as a bare
+				// Error with no node attached; give it the node and the item.
+				if (error instanceof NodeApiError || error instanceof NodeOperationError) throw error;
+				throw new NodeOperationError(this.getNode(), error as Error, { itemIndex });
 			}
 		}
 

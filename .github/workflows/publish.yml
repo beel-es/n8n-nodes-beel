@@ -1,9 +1,10 @@
-name: Release
+name: Publish
 
-# Publishing is deliberate: it happens when a v* tag is pushed, never on a merge.
+# Publishing is deliberate: it happens when a version tag is pushed, never on a merge.
 on:
   push:
-    tags: ['v*']
+    # Both shapes, so a tag written either way releases.
+    tags: ['v*.*.*', '*.*.*']
 
 jobs:
   publish:
@@ -35,6 +36,8 @@ jobs:
           fi
 
       # prepublishOnly would run lint, tests and build a second time.
+      # Provenance requires the OIDC token above. npm accepts either a Trusted
+      # Publisher (no secret at all) or NPM_TOKEN; whichever is configured wins.
       - run: npm publish --provenance --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
