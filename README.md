@@ -7,7 +7,7 @@ n8n community node for [BeeL](https://beel.es) — invoicing for self-employed p
 
 Issue invoices, keep customers and products in sync, and react to AEAT events, without writing a single HTTP request.
 
-- **BeeL** — 62 operations across invoices, customers, products, series, recurring invoices, companies, API keys, configuration and NIF validation
+- **BeeL** — 59 operations across invoices, customers, products, series, recurring invoices, companies, configuration and NIF validation
 - **BeeL Trigger** — starts a workflow on `invoice.emitted`, `invoice.email.sent`, `invoice.cancelled` and `verifactu.status.updated`, with HMAC-SHA256 signature verification
 - Multi-NIF aware, idempotent by default, and validated against the API contract before a request is sent
 
@@ -78,8 +78,6 @@ Create  →  Generate Representation  →  Download Representation
 ```
 
 `Submit Representation` is the one endpoint that takes a file: point **Input Binary Field** at the item holding the signed PDF and the node uploads it as `multipart/form-data`. `Cancel Representation` aborts a process in flight, and the **BeeL Trigger** tells you when the AEAT answers.
-
-**Company API Key** issues keys scoped to a single NIF — `Create`, `Get Many`, `Revoke` — so each company you create can be handed its own credential.
 
 ### Customer, Product, Series, Recurring Invoice, Configuration, NIF
 

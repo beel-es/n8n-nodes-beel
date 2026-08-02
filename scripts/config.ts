@@ -17,7 +17,6 @@ export const RESOURCES: Array<{ resource: string; displayName: string; tags: str
 	{ resource: 'configuration', displayName: 'Configuration', tags: ['ConfigurationTax', 'ConfigurationVeriFactu', 'ConfigurationPreferences'] },
 	{ resource: 'nif', displayName: 'NIF', tags: ['NIF'] },
 	{ resource: 'company', displayName: 'Company', tags: ['PublicCompanies', 'PublicCompanyRepresentations'] },
-	{ resource: 'companyApiKey', displayName: 'Company API Key', tags: ['PublicCompanyApiKeys'] },
 ];
 
 /**
@@ -93,10 +92,6 @@ export const OPERATION_NAMES: Record<string, string> = {
 	downloadRepresentation: 'downloadRepresentation',
 	getRepresentationStatus: 'getRepresentationStatus',
 	cancelRepresentation: 'cancelRepresentation',
-	// Company-scoped API keys
-	createCompanyApiKey: 'create',
-	listCompanyApiKeys: 'getAll',
-	revokeCompanyApiKey: 'revoke',
 };
 
 /**
@@ -115,6 +110,11 @@ export const EXCLUDED_OPERATION_IDS = [
 	'downloadInvoicesPdfBulk', 'sendInvoicesBulkEmail', 'changeInvoicesStatusBulk', 'exportInvoicesExcel',
 	'createCustomersBulk', 'deactivateCustomersBulk', 'importCustomersCsvPreview', 'importHoldedContacts',
 	'downloadCustomerTemplateCsv', 'createProductsBulk', 'deleteProductsBulk',
+	// Company-scoped API keys. The contract says the issued key "authenticates
+	// directly as this company", but in practice everything is operated with the
+	// account-wide key and companies are managed from it, so exposing these would
+	// promise an isolation the platform does not actually work that way.
+	'createCompanyApiKey', 'listCompanyApiKeys', 'revokeCompanyApiKey',
 	// Account-wide settings, changed in the dashboard rather than per workflow.
 	'updateLanguage', 'updateTaxConfiguration', 'updateVeriFactuConfiguration',
 	// Webhook subscriptions are managed by the BeeL Trigger node.
