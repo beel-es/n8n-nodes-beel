@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+
+Clears the last of n8n's verification checks: `execute` no longer rethrows the
+caught error, it always throws a failure carrying the node and the item index.
+
 ## 0.1.1
 
 Everything n8n's verification checks asked for, so the node can be submitted to

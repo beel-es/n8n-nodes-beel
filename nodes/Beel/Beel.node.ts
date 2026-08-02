@@ -145,18 +145,19 @@ export class Beel implements INodeType {
 					...results.map((json) => ({ json, pairedItem: { item: itemIndex } })),
 				);
 			} catch (error) {
+				// Anything the helpers did not already wrap would reach the user as a
+				// bare Error with no node attached, so give it the node and the item.
+				const failure =
+					error instanceof NodeApiError || error instanceof NodeOperationError
+						? error
+						: new NodeOperationError(this.getNode(), error as Error, { itemIndex });
+
 				if (this.continueOnFail()) {
-					returnData.push({
-						json: { error: (error as Error).message },
-						pairedItem: { item: itemIndex },
-					});
+					returnData.push({ json: { error: failure.message }, pairedItem: { item: itemIndex } });
 					continue;
 				}
 
-				// Anything the helpers did not already wrap reaches the user as a bare
-				// Error with no node attached; give it the node and the item.
-				if (error instanceof NodeApiError || error instanceof NodeOperationError) throw error;
-				throw new NodeOperationError(this.getNode(), error as Error, { itemIndex });
+				throw failure;
 			}
 		}
 
