@@ -16,6 +16,8 @@ export const RESOURCES: Array<{ resource: string; displayName: string; tags: str
 	{ resource: 'recurringInvoice', displayName: 'Recurring Invoice', tags: ['RecurringInvoices'] },
 	{ resource: 'configuration', displayName: 'Configuration', tags: ['ConfigurationTax', 'ConfigurationVeriFactu', 'ConfigurationPreferences'] },
 	{ resource: 'nif', displayName: 'NIF', tags: ['NIF'] },
+	{ resource: 'company', displayName: 'Company', tags: ['PublicCompanies', 'PublicCompanyRepresentations'] },
+	{ resource: 'companyApiKey', displayName: 'Company API Key', tags: ['PublicCompanyApiKeys'] },
 ];
 
 /**
@@ -80,10 +82,32 @@ export const OPERATION_NAMES: Record<string, string> = {
 	getInvoiceCustomizationOptions: 'getInvoiceCustomization',
 	// NIF
 	validateNif: 'validate',
+	// Company (multi-NIF): CRUD plus the VeriFactu representation flow that
+	// registers a NIF with the AEAT.
+	createCompany: 'create',
+	listCompanies: 'getAll',
+	getCompany: 'get',
+	updateCompany: 'update',
+	deleteCompany: 'delete',
+	generateRepresentation: 'generateRepresentation',
+	downloadRepresentation: 'downloadRepresentation',
+	getRepresentationStatus: 'getRepresentationStatus',
+	cancelRepresentation: 'cancelRepresentation',
+	// Company-scoped API keys
+	createCompanyApiKey: 'create',
+	listCompanyApiKeys: 'getAll',
+	revokeCompanyApiKey: 'revoke',
 };
 
-/** Hand-written instead of generated: they return binary data (a PDF), not JSON. */
-export const MANUAL_OPERATION_IDS = ['generateInvoicePdf', 'previewDraftInvoicePdf'];
+/**
+ * Hand-written instead of generated: they move a file rather than JSON — two
+ * PDF downloads and the multipart upload of the signed representation.
+ */
+export const MANUAL_OPERATION_IDS = [
+	'generateInvoicePdf',
+	'previewDraftInvoicePdf',
+	'submitRepresentation',
+];
 
 /** Out of scope, listed so the drift check separates "decided no" from "not looked at". */
 export const EXCLUDED_OPERATION_IDS = [
@@ -91,11 +115,7 @@ export const EXCLUDED_OPERATION_IDS = [
 	'downloadInvoicesPdfBulk', 'sendInvoicesBulkEmail', 'changeInvoicesStatusBulk', 'exportInvoicesExcel',
 	'createCustomersBulk', 'deactivateCustomersBulk', 'importCustomersCsvPreview', 'importHoldedContacts',
 	'downloadCustomerTemplateCsv', 'createProductsBulk', 'deleteProductsBulk',
-	// Account administration, not workflow automation.
-	'createCompany', 'listCompanies', 'getCompany', 'updateCompany', 'deleteCompany',
-	'generateRepresentation', 'downloadRepresentation', 'submitRepresentation',
-	'getRepresentationStatus', 'cancelRepresentation',
-	'createCompanyApiKey', 'listCompanyApiKeys', 'revokeCompanyApiKey',
+	// Account-wide settings, changed in the dashboard rather than per workflow.
 	'updateLanguage', 'updateTaxConfiguration', 'updateVeriFactuConfiguration',
 	// Webhook subscriptions are managed by the BeeL Trigger node.
 	'createWebhookSubscription', 'listWebhookSubscriptions', 'updateWebhookSubscription',

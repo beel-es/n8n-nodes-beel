@@ -38,6 +38,14 @@ export const GENERATED_RESOURCES: GeneratedResource[] = [
 	{
 		"resource": "nif",
 		"displayName": "NIF"
+	},
+	{
+		"resource": "company",
+		"displayName": "Company"
+	},
+	{
+		"resource": "companyApiKey",
+		"displayName": "Company API Key"
 	}
 ];
 
@@ -7693,6 +7701,459 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"placeholder": "JUAN PEREZ GARCIA"
 			}
 		],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "company",
+		"operation": "create",
+		"displayName": "Create",
+		"action": "Create a company (sub-account)",
+		"description": "Creates a new NIF/company under the authenticated account",
+		"operationId": "createCompany",
+		"method": "POST",
+		"path": "/v1/companies",
+		"pathParams": [],
+		"requiredFields": [
+			{
+				"name": "nif_company_create",
+				"apiName": "nif",
+				"displayName": "NIF",
+				"description": "NIF/CIF of the business",
+				"required": true,
+				"type": "string",
+				"default": "",
+				"placeholder": "B12345678"
+			},
+			{
+				"name": "legal_name_company_create",
+				"apiName": "legal_name",
+				"displayName": "Legal Name",
+				"description": "Legal/fiscal name",
+				"required": true,
+				"type": "string",
+				"default": "",
+				"placeholder": "Mi Empresa SL"
+			},
+			{
+				"name": "entity_type",
+				"apiName": "entity_type",
+				"displayName": "Entity Type",
+				"description": "Type of entity",
+				"required": true,
+				"type": "options",
+				"options": [
+					{
+						"name": "INDIVIDUAL",
+						"value": "INDIVIDUAL"
+					},
+					{
+						"name": "LEGAL ENTITY",
+						"value": "LEGAL_ENTITY"
+					}
+				],
+				"default": "INDIVIDUAL"
+			},
+			{
+				"name": "address_street",
+				"apiName": "address_street",
+				"displayName": "Address Street",
+				"required": true,
+				"type": "string",
+				"default": "",
+				"placeholder": "Calle Mayor"
+			},
+			{
+				"name": "address_postal_code",
+				"apiName": "address_postal_code",
+				"displayName": "Address Postal Code",
+				"required": true,
+				"type": "string",
+				"default": "",
+				"placeholder": "28001"
+			},
+			{
+				"name": "address_city",
+				"apiName": "address_city",
+				"displayName": "Address City",
+				"required": true,
+				"type": "string",
+				"default": "",
+				"placeholder": "Madrid"
+			},
+			{
+				"name": "address_province",
+				"apiName": "address_province",
+				"displayName": "Address Province",
+				"required": true,
+				"type": "string",
+				"default": "",
+				"placeholder": "Madrid"
+			}
+		],
+		"optionalFields": [
+			{
+				"name": "address_number",
+				"apiName": "address_number",
+				"displayName": "Address Number",
+				"type": "string",
+				"default": "",
+				"placeholder": "10"
+			},
+			{
+				"name": "address_country",
+				"apiName": "address_country",
+				"displayName": "Address Country",
+				"type": "string",
+				"default": "ES"
+			},
+			{
+				"name": "legal_form",
+				"apiName": "legal_form",
+				"displayName": "Legal Form",
+				"description": "Required for LEGAL_ENTITY",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "representative_name",
+				"apiName": "representative_name",
+				"displayName": "Representative Name",
+				"description": "Required for LEGAL_ENTITY",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "representative_nif",
+				"apiName": "representative_nif",
+				"displayName": "Representative NIF",
+				"description": "Required for LEGAL_ENTITY",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "business_display_name",
+				"apiName": "business_display_name",
+				"displayName": "Business Display Name",
+				"description": "Optional display name",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "tax_type",
+				"apiName": "tax_type",
+				"displayName": "Tax Type",
+				"type": "string",
+				"default": "IVA"
+			},
+			{
+				"name": "tax_percentage",
+				"apiName": "tax_percentage",
+				"displayName": "Tax Percentage",
+				"type": "number",
+				"default": 21
+			},
+			{
+				"name": "irpf_percentage",
+				"apiName": "irpf_percentage",
+				"displayName": "IRPF Percentage",
+				"type": "number",
+				"default": 15
+			}
+		],
+		"filters": [],
+		"optionalCollectionName": "additionalFields",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "company",
+		"operation": "getAll",
+		"displayName": "Get Many",
+		"action": "List all companies",
+		"description": "Returns all companies (sub-accounts) under the authenticated account",
+		"operationId": "listCompanies",
+		"method": "GET",
+		"path": "/v1/companies",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": true,
+		"listKey": ""
+	},
+	{
+		"resource": "company",
+		"operation": "get",
+		"displayName": "Get",
+		"action": "Get company details",
+		"description": "Returns details of a specific company including VeriFactu status",
+		"operationId": "getCompany",
+		"method": "GET",
+		"path": "/v1/companies/{company_id}",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "company",
+		"operation": "update",
+		"displayName": "Update",
+		"action": "Update company details",
+		"description": "Updates editable fields of a company",
+		"operationId": "updateCompany",
+		"method": "PATCH",
+		"path": "/v1/companies/{company_id}",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [
+			{
+				"name": "business_display_name",
+				"apiName": "business_display_name",
+				"displayName": "Business Display Name",
+				"description": "Friendly display name for the company",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "address_street",
+				"apiName": "address_street",
+				"displayName": "Address Street",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "address_number",
+				"apiName": "address_number",
+				"displayName": "Address Number",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "address_postal_code",
+				"apiName": "address_postal_code",
+				"displayName": "Address Postal Code",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "address_city",
+				"apiName": "address_city",
+				"displayName": "Address City",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "address_province",
+				"apiName": "address_province",
+				"displayName": "Address Province",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "address_country",
+				"apiName": "address_country",
+				"displayName": "Address Country",
+				"type": "string",
+				"default": ""
+			}
+		],
+		"filters": [],
+		"optionalCollectionName": "updateFields",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "company",
+		"operation": "delete",
+		"displayName": "Delete",
+		"action": "Delete a company",
+		"description": "Deletes a company (sub-account)",
+		"operationId": "deleteCompany",
+		"method": "DELETE",
+		"path": "/v1/companies/{company_id}",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "company",
+		"operation": "generateRepresentation",
+		"displayName": "Generate Representation",
+		"action": "Generate unsigned representation PDF",
+		"description": "Generates the VeriFactu representation PDF for digital signature",
+		"operationId": "generateRepresentation",
+		"method": "POST",
+		"path": "/v1/companies/{company_id}/representation/generate",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "company",
+		"operation": "downloadRepresentation",
+		"displayName": "Download Representation",
+		"action": "Download representation PDF",
+		"description": "Returns a presigned URL (5min) to download the representation PDF",
+		"operationId": "downloadRepresentation",
+		"method": "GET",
+		"path": "/v1/companies/{company_id}/representation/download",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "company",
+		"operation": "getRepresentationStatus",
+		"displayName": "Get Representation Status",
+		"action": "Get representation status",
+		"description": "Returns the current status of the VeriFactu representation process",
+		"operationId": "getRepresentationStatus",
+		"method": "GET",
+		"path": "/v1/companies/{company_id}/representation/status",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "company",
+		"operation": "cancelRepresentation",
+		"displayName": "Cancel Representation",
+		"action": "Cancel representation",
+		"description": "Cancels the current representation process",
+		"operationId": "cancelRepresentation",
+		"method": "DELETE",
+		"path": "/v1/companies/{company_id}/representation/cancel",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "companyApiKey",
+		"operation": "create",
+		"displayName": "Create",
+		"action": "Create API key scoped to a company",
+		"description": "Creates an API key that authenticates directly as this company",
+		"operationId": "createCompanyApiKey",
+		"method": "POST",
+		"path": "/v1/companies/{company_id}/api-keys",
+		"pathParams": [],
+		"requiredFields": [
+			{
+				"name": "name_companyApiKey_create",
+				"apiName": "name",
+				"displayName": "Name",
+				"description": "Descriptive name for the API key",
+				"required": true,
+				"type": "string",
+				"default": ""
+			}
+		],
+		"optionalFields": [
+			{
+				"name": "permissions",
+				"apiName": "permissions",
+				"displayName": "Permissions",
+				"description": "Scopes for the key (cannot exceed parent key scopes)",
+				"type": "string",
+				"multipleValues": true,
+				"default": []
+			},
+			{
+				"name": "expires_in_days",
+				"apiName": "expires_in_days",
+				"displayName": "Expires In Days",
+				"description": "Expiration in days (optional)",
+				"type": "number",
+				"default": 0,
+				"numberPrecision": 0
+			}
+		],
+		"filters": [],
+		"optionalCollectionName": "additionalFields",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "companyApiKey",
+		"operation": "getAll",
+		"displayName": "Get Many",
+		"action": "List API keys for a company",
+		"description": "Returns all API keys associated with this company",
+		"operationId": "listCompanyApiKeys",
+		"method": "GET",
+		"path": "/v1/companies/{company_id}/api-keys",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": true,
+		"listKey": ""
+	},
+	{
+		"resource": "companyApiKey",
+		"operation": "revoke",
+		"displayName": "Revoke",
+		"action": "Revoke an API key",
+		"description": "Revokes (deletes) an API key associated with this company",
+		"operationId": "revokeCompanyApiKey",
+		"method": "DELETE",
+		"path": "/v1/companies/{company_id}/api-keys/{key_id}",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
 		"filters": [],
 		"optionalCollectionName": "options",
 		"queryParamNames": [],

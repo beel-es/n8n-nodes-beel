@@ -76,8 +76,9 @@ export async function beelApiRequest(
 		...option,
 	};
 
-	// The API rejects POST/PUT/PATCH without a JSON body.
-	if (['POST', 'PUT', 'PATCH'].includes(method)) {
+	// The API rejects POST/PUT/PATCH without a JSON body — unless the caller
+	// already supplied one, as the multipart upload does.
+	if (['POST', 'PUT', 'PATCH'].includes(method) && option.body === undefined) {
 		options.body = body ?? {};
 	}
 

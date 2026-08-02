@@ -19,7 +19,12 @@ import {
 } from './descriptions/propertyBuilder';
 import { getCompanies, getCustomers, getProducts, getSeries } from './GenericFunctions';
 import { executeGeneratedOperation } from './genericExecutor';
-import { downloadInvoicePdf, MANUAL_OPERATIONS, MANUAL_PROPERTIES } from './manualOperations';
+import {
+	downloadInvoicePdf,
+	MANUAL_OPERATIONS,
+	MANUAL_PROPERTIES,
+	submitRepresentation,
+} from './manualOperations';
 
 /** Everything the node can do: generated from the contract, plus the file operations. */
 const ALL_OPERATIONS: GeneratedOperation[] = [...GENERATED_OPERATIONS, ...MANUAL_OPERATIONS];
@@ -126,6 +131,11 @@ export class Beel implements INodeType {
 			try {
 				if (resource === 'invoice' && operationName === 'downloadPdf') {
 					returnData.push(await downloadInvoicePdf.call(this, itemIndex));
+					continue;
+				}
+
+				if (resource === 'company' && operationName === 'submitRepresentation') {
+					returnData.push(await submitRepresentation.call(this, itemIndex));
 					continue;
 				}
 

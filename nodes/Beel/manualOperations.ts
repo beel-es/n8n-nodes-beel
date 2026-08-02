@@ -5,8 +5,8 @@ import { beelApiRequest, resolveCompanyId, unwrap } from './GenericFunctions';
 import type { GeneratedOperation } from './descriptions/generated/types';
 
 /**
- * Operations that cannot come from the generator because they produce a file
- * rather than JSON. They are declared in the same shape as generated ones so the
+ * Operations that cannot come from the generator because they move a file rather
+ * than JSON. They are declared in the same shape as generated ones so the
  * Operation dropdown treats them identically.
  */
 
@@ -41,6 +41,36 @@ export const MANUAL_OPERATIONS: GeneratedOperation[] = [
 		isList: false,
 		listKey: '',
 	},
+	{
+		resource: 'company',
+		operation: 'submitRepresentation',
+		displayName: 'Submit Representation',
+		action: 'Submit the signed representation',
+		description: 'Upload the signed representation PDF that registers the NIF with the AEAT',
+		operationId: 'submitRepresentation',
+		method: 'POST',
+		path: '/v1/companies/{company_id}/representation/submit',
+		pathParams: [
+			{
+				displayName: 'Company ID',
+				name: 'companyIdPath',
+				apiName: 'company_id',
+				type: 'string',
+				default: '',
+				required: true,
+				description: 'ID of the company whose representation is being submitted',
+				validation: { format: 'uuid' },
+			},
+		],
+		requiredFields: [],
+		optionalFields: [],
+		filters: [],
+		optionalCollectionName: 'options',
+		queryParamNames: [],
+		paginated: false,
+		isList: false,
+		listKey: '',
+	},
 ];
 
 /** Extra properties for the hand-written operations. */
@@ -62,6 +92,15 @@ export const MANUAL_PROPERTIES: INodeProperties[] = [
 		description:
 			'Whether to render a watermarked preview instead. Issued invoices have a final PDF; drafts have no invoice number yet, so only a preview can be produced for them.',
 		displayOptions: { show: { resource: ['invoice'], operation: ['downloadPdf'] } },
+	},
+	{
+		displayName: 'Input Binary Field',
+		name: 'inputBinaryField',
+		type: 'string',
+		default: 'data',
+		required: true,
+		hint: 'The name of the input binary field holding the signed PDF',
+		displayOptions: { show: { resource: ['company'], operation: ['submitRepresentation'] } },
 	},
 ];
 
@@ -141,6 +180,60 @@ export async function downloadInvoicePdf(
 		binary: {
 			[binaryPropertyName]: await this.helpers.prepareBinaryData(buffer, fileName, 'application/pdf'),
 		},
+		pairedItem: { item: itemIndex },
+	};
+}
+
+/**
+ * Uploads the signed representation PDF for a company.
+ *
+ * This is the step that registers a NIF with the AEAT: BeeL generates an
+ * unsigned PDF, the holder signs it, and the signed copy comes back here as
+ * `multipart/form-data` — the only endpoint in the API that takes a file.
+ */
+export async function submitRepresentation(
+	this: IExecuteFunctions,
+	itemIndex: number,
+): Promise<INodeExecutionData> {
+	const companyId = (this.getNodeParameter('companyIdPath', itemIndex) as string).trim();
+	const binaryField = this.getNodeParameter('inputBinaryField', itemIndex) as string;
+
+	if (companyId === '') {
+		throw new NodeOperationError(this.getNode(), '"Company ID" is required', { itemIndex });
+	}
+
+	const binary = this.helpers.assertBinaryData(itemIndex, binaryField);
+	const buffer = await this.helpers.getBinaryDataBuffer(itemIndex, binaryField);
+
+	if (binary.mimeType && !binary.mimeType.includes('pdf')) {
+		throw new NodeOperationError(
+			this.getNode(),
+			`The signed representation must be a PDF, but "${binaryField}" holds ${binary.mimeType}`,
+			{ itemIndex },
+		);
+	}
+
+	// Node 18+ ships FormData and Blob, so the boundary is built without a
+	// dependency — community nodes are expected to have none.
+	const form = new FormData();
+	form.append(
+		'file',
+		new Blob([new Uint8Array(buffer)], { type: 'application/pdf' }),
+		binary.fileName ?? `representation-${companyId}.pdf`,
+	);
+
+	const response = await beelApiRequest.call(
+		this,
+		'POST',
+		`/v1/companies/${encodeURIComponent(companyId)}/representation/submit`,
+		undefined,
+		{},
+		resolveCompanyId(this, itemIndex),
+		{ body: form, json: false },
+	);
+
+	return {
+		json: { ...unwrap(response), company_id: companyId },
 		pairedItem: { item: itemIndex },
 	};
 }
