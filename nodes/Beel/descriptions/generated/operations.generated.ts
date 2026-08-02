@@ -5496,7 +5496,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operationId": "getProduct",
 		"method": "GET",
 		"path": "/v1/products/{product_id}",
-		"pathParams": [],
+		"pathParams": [
+			{
+				"name": "productId",
+				"apiName": "product_id",
+				"displayName": "Product ID",
+				"description": "Product unique UUID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
 		"requiredFields": [],
 		"optionalFields": [],
 		"filters": [],
@@ -5515,7 +5528,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operationId": "updateProduct",
 		"method": "PUT",
 		"path": "/v1/products/{product_id}",
-		"pathParams": [],
+		"pathParams": [
+			{
+				"name": "productId",
+				"apiName": "product_id",
+				"displayName": "Product ID",
+				"description": "Product unique UUID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
 		"requiredFields": [],
 		"optionalFields": [
 			{
@@ -5957,7 +5983,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operationId": "deleteProduct",
 		"method": "DELETE",
 		"path": "/v1/products/{product_id}",
-		"pathParams": [],
+		"pathParams": [
+			{
+				"name": "productId",
+				"apiName": "product_id",
+				"displayName": "Product ID",
+				"description": "Product unique UUID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
 		"requiredFields": [],
 		"optionalFields": [],
 		"filters": [],
@@ -7900,7 +7939,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operationId": "getCompany",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}",
-		"pathParams": [],
+		"pathParams": [
+			{
+				"name": "companyId",
+				"apiName": "company_id",
+				"displayName": "Company ID",
+				"description": "Format: UUID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
 		"requiredFields": [],
 		"optionalFields": [],
 		"filters": [],
@@ -7919,7 +7971,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operationId": "updateCompany",
 		"method": "PATCH",
 		"path": "/v1/companies/{company_id}",
-		"pathParams": [],
+		"pathParams": [
+			{
+				"name": "companyId",
+				"apiName": "company_id",
+				"displayName": "Company ID",
+				"description": "Format: UUID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
 		"requiredFields": [],
 		"optionalFields": [
 			{
@@ -7989,7 +8054,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operationId": "deleteCompany",
 		"method": "DELETE",
 		"path": "/v1/companies/{company_id}",
-		"pathParams": [],
+		"pathParams": [
+			{
+				"name": "companyId",
+				"apiName": "company_id",
+				"displayName": "Company ID",
+				"description": "Format: UUID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
 		"requiredFields": [],
 		"optionalFields": [],
 		"filters": [],
@@ -8008,7 +8086,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operationId": "generateRepresentation",
 		"method": "POST",
 		"path": "/v1/companies/{company_id}/representation/generate",
-		"pathParams": [],
+		"pathParams": [
+			{
+				"name": "companyId",
+				"apiName": "company_id",
+				"displayName": "Company ID",
+				"description": "Format: UUID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
 		"requiredFields": [],
 		"optionalFields": [],
 		"filters": [],
@@ -8027,7 +8118,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operationId": "downloadRepresentation",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/representation/download",
-		"pathParams": [],
+		"pathParams": [
+			{
+				"name": "companyId",
+				"apiName": "company_id",
+				"displayName": "Company ID",
+				"description": "Format: UUID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
 		"requiredFields": [],
 		"optionalFields": [],
 		"filters": [],
@@ -8046,7 +8150,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operationId": "getRepresentationStatus",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/representation/status",
-		"pathParams": [],
+		"pathParams": [
+			{
+				"name": "companyId",
+				"apiName": "company_id",
+				"displayName": "Company ID",
+				"description": "Format: UUID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
 		"requiredFields": [],
 		"optionalFields": [],
 		"filters": [],
@@ -8065,7 +8182,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operationId": "cancelRepresentation",
 		"method": "DELETE",
 		"path": "/v1/companies/{company_id}/representation/cancel",
-		"pathParams": [],
+		"pathParams": [
+			{
+				"name": "companyId",
+				"apiName": "company_id",
+				"displayName": "Company ID",
+				"description": "Format: UUID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
 		"requiredFields": [],
 		"optionalFields": [],
 		"filters": [],
@@ -8084,7 +8214,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operationId": "createCompanyApiKey",
 		"method": "POST",
 		"path": "/v1/companies/{company_id}/api-keys",
-		"pathParams": [],
+		"pathParams": [
+			{
+				"name": "companyId",
+				"apiName": "company_id",
+				"displayName": "Company ID",
+				"description": "Format: UUID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
 		"requiredFields": [
 			{
 				"name": "name_companyApiKey_create",
@@ -8132,7 +8275,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operationId": "listCompanyApiKeys",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/api-keys",
-		"pathParams": [],
+		"pathParams": [
+			{
+				"name": "companyId",
+				"apiName": "company_id",
+				"displayName": "Company ID",
+				"description": "Format: UUID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
 		"requiredFields": [],
 		"optionalFields": [],
 		"filters": [],
@@ -8151,7 +8307,32 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operationId": "revokeCompanyApiKey",
 		"method": "DELETE",
 		"path": "/v1/companies/{company_id}/api-keys/{key_id}",
-		"pathParams": [],
+		"pathParams": [
+			{
+				"name": "companyId",
+				"apiName": "company_id",
+				"displayName": "Company ID",
+				"description": "Format: UUID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "keyId",
+				"apiName": "key_id",
+				"displayName": "Key ID",
+				"description": "Format: UUID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
 		"requiredFields": [],
 		"optionalFields": [],
 		"filters": [],

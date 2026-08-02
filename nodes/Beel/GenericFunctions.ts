@@ -164,13 +164,13 @@ export async function beelApiRequestAllItems(
 
 /** Company chosen on the node for this item, falling back to the credential default. */
 export function resolveCompanyId(context: IExecuteFunctions, itemIndex: number): string {
-	return ((context.getNodeParameter('companyId', itemIndex, '') as string) ?? '').trim();
+	return ((context.getNodeParameter('activeCompany', itemIndex, '') as string) ?? '').trim();
 }
 
 /** Company chosen on the node, as seen from a dropdown that is being populated. */
 function currentCompanyId(context: ILoadOptionsFunctions): string {
 	try {
-		return ((context.getCurrentNodeParameter('companyId') as string) ?? '').trim();
+		return ((context.getCurrentNodeParameter('activeCompany') as string) ?? '').trim();
 	} catch {
 		return '';
 	}

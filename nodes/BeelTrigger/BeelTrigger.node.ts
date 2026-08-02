@@ -88,7 +88,7 @@ export class BeelTrigger implements INodeType {
 			},
 			{
 				displayName: 'Company Name or ID',
-				name: 'companyId',
+				name: 'activeCompany',
 				type: 'options',
 				typeOptions: { loadOptionsMethod: 'getCompanies' },
 				default: '',
@@ -141,7 +141,7 @@ export class BeelTrigger implements INodeType {
 
 				const webhookUrl = this.getNodeWebhookUrl('default');
 				const events = this.getNodeParameter('events') as string[];
-				const companyId = (this.getNodeParameter('companyId', '') as string) ?? '';
+				const companyId = (this.getNodeParameter('activeCompany', '') as string) ?? '';
 
 				const response = unwrap(
 					await beelApiRequest.call(this, 'GET', '/v1/webhooks', undefined, {}, companyId),
@@ -180,7 +180,7 @@ export class BeelTrigger implements INodeType {
 			async create(this: IHookFunctions): Promise<boolean> {
 				const webhookUrl = this.getNodeWebhookUrl('default') as string;
 				const events = this.getNodeParameter('events') as string[];
-				const companyId = (this.getNodeParameter('companyId', '') as string) ?? '';
+				const companyId = (this.getNodeParameter('activeCompany', '') as string) ?? '';
 
 				if (events.length === 0) {
 					throw new NodeOperationError(this.getNode(), 'Select at least one event to subscribe to');
@@ -227,7 +227,7 @@ export class BeelTrigger implements INodeType {
 				const state = this.getWorkflowStaticData('node') as BeelWebhookState;
 				if (!state.webhookId) return true;
 
-				const companyId = (this.getNodeParameter('companyId', '') as string) ?? '';
+				const companyId = (this.getNodeParameter('activeCompany', '') as string) ?? '';
 
 				try {
 					await beelApiRequest.call(

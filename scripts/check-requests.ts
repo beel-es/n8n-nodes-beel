@@ -49,7 +49,7 @@ async function expectRequest(
 	resource: string,
 	operation: string,
 	parameters: Record<string, unknown>,
-	expected: { method: string; url: string; body?: unknown; companyId?: string },
+	expected: { method: string; url: string; body?: unknown; activeCompany?: string },
 ): Promise<void> {
 	requested = undefined;
 	try {
@@ -63,8 +63,8 @@ async function expectRequest(
 		method: requested.method,
 		url: requested.url,
 		...(expected.body !== undefined ? { body: requested.body } : {}),
-		...(expected.companyId !== undefined
-			? { companyId: requested.headers['Beel-Active-Company'] }
+		...(expected.activeCompany !== undefined
+			? { activeCompany: requested.headers['Beel-Active-Company'] }
 			: {}),
 	};
 
@@ -127,7 +127,7 @@ const COMPANY_ID = '660e8400-e29b-41d4-a716-446655440001';
 		'invoice',
 		'create',
 		{
-			companyId: COMPANY_ID,
+			activeCompany: COMPANY_ID,
 			type: 'STANDARD',
 			recipient: { value: { customer_id: CUSTOMER_ID } },
 			lines: {
@@ -152,7 +152,7 @@ const COMPANY_ID = '660e8400-e29b-41d4-a716-446655440001';
 		{
 			method: 'POST',
 			url: 'https://app.beel.es/api/v1/invoices',
-			companyId: COMPANY_ID,
+			activeCompany: COMPANY_ID,
 			body: {
 				type: 'STANDARD',
 				recipient: { customer_id: CUSTOMER_ID },
@@ -333,6 +333,19 @@ const COMPANY_ID = '660e8400-e29b-41d4-a716-446655440001';
 		'validate',
 		{ nif: 'B86561412', idempotencyKey: 'order-42' },
 		{ method: 'POST', url: 'https://app.beel.es/api/v1/nif/validate', body: { nif: 'B86561412' } },
+	);
+
+	// Regression: these paths declare company_id once for the whole path item, not
+	// per operation, so the generator used to miss it and send "{company_id}".
+	await expectRequest(
+		'a path parameter declared at path-item level is substituted',
+		'company',
+		'getRepresentationStatus',
+		{ companyId: COMPANY_ID },
+		{
+			method: 'GET',
+			url: `https://app.beel.es/api/v1/companies/${COMPANY_ID}/representation/status`,
+		},
 	);
 
 	await expectRejection(

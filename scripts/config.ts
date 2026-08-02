@@ -122,6 +122,27 @@ export const EXCLUDED_OPERATION_IDS = [
 	'deleteWebhookSubscription', 'listWebhookDeliveries', 'retryWebhookDelivery', 'rotateWebhookSecret',
 ];
 
+/**
+ * Parameter names the node defines itself. n8n stores values by name, so a
+ * generated field landing on one of these would read the other's value — which
+ * is how a `company_id` path parameter and the multi-NIF picker collided.
+ */
+export const RESERVED_PARAMETER_NAMES = [
+	'resource',
+	'operation',
+	'activeCompany',
+	'idempotencyKey',
+	'returnAll',
+	'limit',
+	'filters',
+	'additionalFields',
+	'updateFields',
+	'options',
+	'binaryPropertyName',
+	'inputBinaryField',
+	'draftPreview',
+];
+
 /** Fields that get a resource dropdown instead of a free-text UUID. */
 export const LOAD_OPTIONS_BY_FIELD: Record<string, string> = {
 	series_id: 'getSeries',

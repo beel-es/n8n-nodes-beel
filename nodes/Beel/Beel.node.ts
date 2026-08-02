@@ -53,7 +53,7 @@ function buildProperties(): INodeProperties[] {
 
 	properties.push({
 		displayName: 'Company Name or ID',
-		name: 'companyId',
+		name: 'activeCompany',
 		type: 'options',
 		typeOptions: { loadOptionsMethod: 'getCompanies' },
 		default: '',

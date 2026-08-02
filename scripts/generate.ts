@@ -21,6 +21,7 @@ import {
 	LOAD_OPTIONS_BY_FIELD,
 	MANUAL_OPERATION_IDS,
 	OPERATION_NAMES,
+	RESERVED_PARAMETER_NAMES,
 	RESOURCES,
 	TAX_PERCENTAGES,
 } from './config';
@@ -409,6 +410,8 @@ interface SpecOperation {
 	method: GeneratedOperation['method'];
 	path: string;
 	definition: Json;
+	/** Parameters declared once for the whole path, shared by all its methods. */
+	pathItemParameters: Json[];
 }
 
 const specOperations = new Map<string, SpecOperation>();
@@ -421,6 +424,7 @@ for (const [path, pathItem] of Object.entries(spec.paths as Json)) {
 			method: method.toUpperCase() as GeneratedOperation['method'],
 			path,
 			definition,
+			pathItemParameters: ((pathItem as Json).parameters ?? []) as Json[],
 		});
 	}
 }
@@ -463,7 +467,7 @@ function buildOperation(operationId: string, operation: string): GeneratedOperat
 	const found = specOperations.get(operationId);
 	if (!found) throw new Error(`operationId "${operationId}" is not in the contract`);
 
-	const { method, path, definition } = found;
+	const { method, path, definition, pathItemParameters } = found;
 
 	const tag = (definition.tags ?? [])[0] as string | undefined;
 	const resource = tag ? resourceByTag.get(tag) : undefined;
@@ -471,7 +475,13 @@ function buildOperation(operationId: string, operation: string): GeneratedOperat
 		throw new Error(`"${operationId}" has tag "${tag}", which no resource in config.ts claims`);
 	}
 
-	const parameters = ((definition.parameters ?? []) as Json[]).map(deref);
+	// An operation's own parameters win over the path-level ones of the same name.
+	const own = ((definition.parameters ?? []) as Json[]).map(deref);
+	const ownKeys = new Set(own.map((parameter) => `${parameter.in}:${parameter.name}`));
+	const parameters = [
+		...pathItemParameters.map(deref).filter((parameter) => !ownKeys.has(`${parameter.in}:${parameter.name}`)),
+		...own,
+	];
 
 	// `page` is what makes an endpoint paginated; only then does `limit` belong to
 	// pagination rather than being a plain result cap (as in product search).
@@ -520,6 +530,17 @@ function buildOperation(operationId: string, operation: string): GeneratedOperat
 		else optionalFields.push(...fields);
 	}
 
+	const placeholders = [...path.matchAll(/\{([^}]+)\}/g)].map((match) => match[1]);
+	const covered = new Set(pathParams.map((field) => field.apiName));
+	const uncovered = placeholders.filter((placeholder) => !covered.has(placeholder));
+
+	if (uncovered.length > 0) {
+		throw new Error(
+			`"${operationId}" has path placeholders with no parameter: ${uncovered.join(', ')}. ` +
+				'The request would be sent with the placeholder still in the URL.',
+		);
+	}
+
 	return {
 		resource: resource.resource,
 		operation,
@@ -559,6 +580,12 @@ for (const operation of operations) {
 	const suffix = `${operation.resource}_${operation.operation}`;
 
 	for (const field of [...operation.pathParams, ...operation.requiredFields]) {
+		// A generated field must never shadow a parameter the node defines itself,
+		// or reading one would silently return the other's value.
+		if (RESERVED_PARAMETER_NAMES.includes(field.name)) {
+			field.name = `${field.name}_${suffix}`;
+		}
+
 		// Only behaviour has to match: two endpoints often word the same parameter
 		// differently, and that is no reason to fragment it into two names.
 		const { name, description, placeholder, displayName, ...rest } = field;

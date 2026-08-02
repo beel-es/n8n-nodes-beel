@@ -9,6 +9,8 @@
 
 import type { INodeProperties } from 'n8n-workflow';
 
+import { GENERATED_OPERATIONS } from '../nodes/Beel/descriptions/generated/operations.generated';
+import { MANUAL_OPERATIONS } from '../nodes/Beel/manualOperations';
 import { Beel } from '../nodes/Beel/Beel.node';
 import { BeelTrigger } from '../nodes/BeelTrigger/BeelTrigger.node';
 
@@ -83,6 +85,33 @@ for (const NodeType of [Beel, BeelTrigger]) {
 	walk(properties);
 
 	console.log(`${name}: ${properties.length} properties, ${operations.size} operations`);
+}
+
+// 4. Every path placeholder must have a parameter to fill it, and that parameter
+//    must be a property the node actually renders — otherwise the request goes
+//    out with "{company_id}" still in the URL.
+{
+	const node = new Beel();
+	const names = new Set(node.description.properties.map((property) => property.name));
+
+	for (const operation of [...GENERATED_OPERATIONS, ...MANUAL_OPERATIONS]) {
+		const placeholders = [...operation.path.matchAll(/\{([^}]+)\}/g)].map((match) => match[1]);
+		const covered = new Set(operation.pathParams.map((field) => field.apiName));
+
+		for (const placeholder of placeholders) {
+			check(
+				covered.has(placeholder),
+				`${operation.resource}.${operation.operation}: path placeholder "${placeholder}" has no parameter`,
+			);
+		}
+
+		for (const field of operation.pathParams) {
+			check(
+				names.has(field.name),
+				`${operation.resource}.${operation.operation}: path parameter "${field.name}" is not a node property`,
+			);
+		}
+	}
 }
 
 if (problems.length > 0) {
