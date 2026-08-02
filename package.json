@@ -1,0 +1,73 @@
+{
+  "name": "n8n-nodes-beel",
+  "version": "0.1.0",
+  "description": "n8n community node for BeeL \u2014 Spanish invoicing with VeriFactu compliance",
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "beel",
+    "invoicing",
+    "facturacion",
+    "verifactu",
+    "aeat",
+    "spain",
+    "autonomos"
+  ],
+  "license": "MIT",
+  "homepage": "https://beel.es",
+  "author": {
+    "name": "BeeL Technical Team",
+    "email": "it@beel.es"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beel-es/n8n-nodes-beel.git"
+  },
+  "bugs": {
+    "url": "https://github.com/beel-es/n8n-nodes-beel/issues"
+  },
+  "engines": {
+    "node": ">=20.15"
+  },
+  "main": "index.js",
+  "scripts": {
+    "generate": "tsx scripts/generate.ts",
+    "generate:check": "tsx scripts/generate.ts --check",
+    "test": "tsx scripts/check-node.ts && tsx scripts/check-requests.ts && tsx scripts/generate.ts --check",
+    "build": "npx rimraf dist && tsc && gulp build:icons",
+    "dev": "tsc --watch",
+    "format": "prettier nodes credentials --write",
+    "lint": "eslint nodes credentials package.json",
+    "lintfix": "eslint nodes credentials package.json --fix",
+    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/BeelApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/Beel/Beel.node.js",
+      "dist/nodes/BeelTrigger/BeelTrigger.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "@typescript-eslint/parser": "^8.32.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.3",
+    "gulp": "^5.0.0",
+    "n8n-workflow": "*",
+    "prettier": "^3.5.3",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "yaml": "^2.7.1"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}

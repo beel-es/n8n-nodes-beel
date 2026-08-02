@@ -1,0 +1,122 @@
+/**
+ * Configuration for the OpenAPI → n8n generator.
+ *
+ * Only what the contract cannot tell us lives here: which endpoints are worth
+ * exposing, and what an operation is called in the UI. Everything else — labels,
+ * descriptions, required fields, pagination, list keys — is derived in
+ * `generate.ts` straight from `openapi/public-api.yaml`.
+ */
+
+/** OpenAPI tag → n8n resource. Order defines the Resource dropdown. */
+export const RESOURCES: Array<{ resource: string; displayName: string; tags: string[] }> = [
+	{ resource: 'invoice', displayName: 'Invoice', tags: ['Invoices', 'InvoiceLifecycle', 'InvoiceDelivery'] },
+	{ resource: 'customer', displayName: 'Customer', tags: ['Customers'] },
+	{ resource: 'product', displayName: 'Product', tags: ['Products'] },
+	{ resource: 'series', displayName: 'Series', tags: ['InvoiceSeries'] },
+	{ resource: 'recurringInvoice', displayName: 'Recurring Invoice', tags: ['RecurringInvoices'] },
+	{ resource: 'configuration', displayName: 'Configuration', tags: ['ConfigurationTax', 'ConfigurationVeriFactu', 'ConfigurationPreferences'] },
+	{ resource: 'nif', displayName: 'NIF', tags: ['NIF'] },
+];
+
+/**
+ * `operationId` → n8n operation name. Being an explicit map keeps the dropdown
+ * stable when the contract renames an operationId, and doubles as the allow-list:
+ * an endpoint that is not here, not manual and not excluded fails the drift check.
+ */
+export const OPERATION_NAMES: Record<string, string> = {
+	// Invoice
+	listInvoices: 'getAll',
+	createInvoice: 'create',
+	updateInvoice: 'update',
+	createCorrectiveInvoice: 'createCorrective',
+	getInvoice: 'get',
+	deleteInvoice: 'delete',
+	issueInvoice: 'issue',
+	duplicateInvoice: 'duplicate',
+	sendInvoiceEmail: 'send',
+	markInvoicePaid: 'markPaid',
+	markInvoiceSent: 'markSent',
+	revertInvoiceToIssued: 'revertToIssued',
+	voidInvoice: 'void',
+	scheduleInvoice: 'schedule',
+	unscheduleInvoice: 'unschedule',
+	rescheduleInvoice: 'reschedule',
+	// Customer
+	listCustomers: 'getAll',
+	createCustomer: 'create',
+	getCustomer: 'get',
+	updateCustomer: 'update',
+	deactivateCustomer: 'delete',
+	// Product
+	listProducts: 'getAll',
+	createProduct: 'create',
+	getProduct: 'get',
+	updateProduct: 'update',
+	deleteProduct: 'delete',
+	searchProducts: 'search',
+	// Series
+	listSeries: 'getAll',
+	createSeries: 'create',
+	updateSeries: 'update',
+	deleteSeries: 'delete',
+	setDefaultSeries: 'setDefault',
+	// Recurring invoice
+	createRecurringInvoice: 'create',
+	updateRecurringInvoice: 'update',
+	listRecurringInvoices: 'getAll',
+	getRecurringInvoice: 'get',
+	createRecurringFromInvoice: 'createFromInvoice',
+	deleteRecurringInvoice: 'delete',
+	pauseRecurringInvoice: 'pause',
+	resumeRecurringInvoice: 'resume',
+	generateInvoiceNow: 'generateNow',
+	skipNextGeneration: 'skipNext',
+	previewRecurringInvoice: 'preview',
+	getRecurringHistory: 'getHistory',
+	// Configuration
+	getTaxConfiguration: 'getTaxConfiguration',
+	getTaxTypes: 'getTaxTypes',
+	getVeriFactuConfiguration: 'getVerifactu',
+	getInvoiceCustomizationOptions: 'getInvoiceCustomization',
+	// NIF
+	validateNif: 'validate',
+};
+
+/** Hand-written instead of generated: they return binary data (a PDF), not JSON. */
+export const MANUAL_OPERATION_IDS = ['generateInvoicePdf', 'previewDraftInvoicePdf'];
+
+/** Out of scope, listed so the drift check separates "decided no" from "not looked at". */
+export const EXCLUDED_OPERATION_IDS = [
+	// Bulk, import and export — n8n's own batching and file nodes do this better.
+	'downloadInvoicesPdfBulk', 'sendInvoicesBulkEmail', 'changeInvoicesStatusBulk', 'exportInvoicesExcel',
+	'createCustomersBulk', 'deactivateCustomersBulk', 'importCustomersCsvPreview', 'importHoldedContacts',
+	'downloadCustomerTemplateCsv', 'createProductsBulk', 'deleteProductsBulk',
+	// Account administration, not workflow automation.
+	'createCompany', 'listCompanies', 'getCompany', 'updateCompany', 'deleteCompany',
+	'generateRepresentation', 'downloadRepresentation', 'submitRepresentation',
+	'getRepresentationStatus', 'cancelRepresentation',
+	'createCompanyApiKey', 'listCompanyApiKeys', 'revokeCompanyApiKey',
+	'updateLanguage', 'updateTaxConfiguration', 'updateVeriFactuConfiguration',
+	// Webhook subscriptions are managed by the BeeL Trigger node.
+	'createWebhookSubscription', 'listWebhookSubscriptions', 'updateWebhookSubscription',
+	'deleteWebhookSubscription', 'listWebhookDeliveries', 'retryWebhookDelivery', 'rotateWebhookSecret',
+];
+
+/** Fields that get a resource dropdown instead of a free-text UUID. */
+export const LOAD_OPTIONS_BY_FIELD: Record<string, string> = {
+	series_id: 'getSeries',
+	customer_id: 'getCustomers',
+};
+
+/** Acronyms and one-letter names that title-casing would mangle. */
+export const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
+	nif: 'NIF',
+	iban: 'IBAN',
+	swift: 'SWIFT',
+	irpf: 'IRPF',
+	irpf_rate: 'IRPF Rate',
+	url: 'URL',
+	web: 'Website',
+	cc: 'CC',
+	q: 'Search Query',
+};
