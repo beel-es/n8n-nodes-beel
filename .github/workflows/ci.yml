@@ -14,7 +14,10 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      # `n8n-workflow` pulls in isolated-vm, a native addon n8n uses to evaluate
+      # expressions at runtime. It does not build against this runner's Node, and
+      # nothing here imports it, so skip install scripts rather than compile it.
+      - run: npm ci --ignore-scripts
       - run: npm run lint
       - run: npm run build
       # The suite also fails when the generated operations are stale, or when the
