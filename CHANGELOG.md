@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.3
+
+Every string the n8n editor shows is English, as the node review requires. The
+contract's Spanish `example`/`default` for two address fields no longer reaches
+the UI:
+
+- Address Country: empty default and a `Spain` placeholder. The API expects the
+  country name in Spanish, so that is now said in the field description instead
+  of pre-filling `España`
+- Address Floor: `2nd floor, Apt A` instead of `2º A`
+
+Fixed in `scripts/config.ts` (new `FIELD_UI_OVERRIDES`) rather than in the
+generated file, so regenerating from the contract keeps the English text.
+
 ## 0.1.2
 
 Clears the last of n8n's verification checks: `execute` no longer rethrows the

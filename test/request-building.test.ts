@@ -105,7 +105,7 @@ describe('values the user never chose', () => {
 	it('leaves out an untouched address and alternative ID', async () => {
 		// n8n fills every field of a collection with its default as soon as the
 		// collection exists, so picking a customer used to ship a half-built address
-		// (country "España") and alternative_id (type "02"), and the API rejected the
+		// (country code "ES") and alternative_id (type "02"), and the API rejected the
 		// invoice for the fields it was never given.
 		const { request } = await run('invoice', 'create', {
 			parameters: {
@@ -113,7 +113,7 @@ describe('values the user never chose', () => {
 				recipient: {
 					value: {
 						customer_id: CUSTOMER_ID,
-						address_country: 'España',
+						address_country: '',
 						address_country_code: 'ES',
 						address_street: '',
 						address_number: '',
