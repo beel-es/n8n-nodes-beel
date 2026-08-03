@@ -18,6 +18,7 @@ import { parse } from 'yaml';
 import {
 	DISPLAY_NAME_OVERRIDES,
 	EXCLUDED_OPERATION_IDS,
+	FIELD_UI_OVERRIDES,
 	LOAD_OPTIONS_BY_FIELD,
 	MANUAL_OPERATION_IDS,
 	OPERATION_NAMES,
@@ -272,11 +273,14 @@ function toField(apiName: string, rawSchema: Json, required: boolean, depth = 0)
 	const schema = deref(rawSchema);
 	const validation = validationOf(schema);
 
+	// UI text the contract states in Spanish: n8n only allows English in the editor.
+	const uiOverride = FIELD_UI_OVERRIDES[apiName] ?? {};
+
 	const base = {
 		name: apiName,
 		apiName,
 		displayName: titleCase(apiName),
-		description: firstSentence(schema.description),
+		description: uiOverride.description ?? firstSentence(schema.description),
 		...(required ? { required: true } : {}),
 		...(validation ? { validation } : {}),
 	};
@@ -317,8 +321,12 @@ function toField(apiName: string, rawSchema: Json, required: boolean, depth = 0)
 			return withHint({
 				...base,
 				type: 'string',
-				default: schema.default ?? '',
-				...(schema.example !== undefined ? { placeholder: String(schema.example) } : {}),
+				default: uiOverride.default ?? schema.default ?? '',
+				...(uiOverride.placeholder !== undefined
+					? { placeholder: uiOverride.placeholder }
+					: schema.example !== undefined
+						? { placeholder: String(schema.example) }
+						: {}),
 			});
 
 		case 'integer':

@@ -548,7 +548,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": "",
-						"placeholder": "2º A",
+						"placeholder": "2nd floor, Apt A",
 						"required": false
 					},
 					{
@@ -615,15 +615,15 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "address_country",
 						"apiName": "address.country",
 						"displayName": "Address Country",
-						"description": "Country - Latin characters only (max 100 characters)",
+						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
 						"validation": {
 							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
 						"type": "string",
-						"default": "España",
-						"placeholder": "España",
+						"default": "",
+						"placeholder": "Spain",
 						"required": false,
 						"groupRequired": true
 					},
@@ -1692,7 +1692,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": "",
-						"placeholder": "2º A",
+						"placeholder": "2nd floor, Apt A",
 						"required": false
 					},
 					{
@@ -1759,15 +1759,15 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "address_country",
 						"apiName": "address.country",
 						"displayName": "Address Country",
-						"description": "Country - Latin characters only (max 100 characters)",
+						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
 						"validation": {
 							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
 						"type": "string",
-						"default": "España",
-						"placeholder": "España",
+						"default": "",
+						"placeholder": "Spain",
 						"required": false,
 						"groupRequired": true
 					},
@@ -4056,7 +4056,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": "",
-						"placeholder": "2º A"
+						"placeholder": "2nd floor, Apt A"
 					},
 					{
 						"name": "door",
@@ -4118,7 +4118,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "country",
 						"apiName": "country",
 						"displayName": "Country",
-						"description": "Country - Latin characters only (max 100 characters)",
+						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
 						"required": true,
 						"validation": {
 							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
@@ -4126,8 +4126,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							"maxLength": 100
 						},
 						"type": "string",
-						"default": "España",
-						"placeholder": "España"
+						"default": "",
+						"placeholder": "Spain"
 					},
 					{
 						"name": "country_code",
@@ -4557,7 +4557,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": "",
-						"placeholder": "2º A"
+						"placeholder": "2nd floor, Apt A"
 					},
 					{
 						"name": "door",
@@ -4619,7 +4619,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "country",
 						"apiName": "country",
 						"displayName": "Country",
-						"description": "Country - Latin characters only (max 100 characters)",
+						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
 						"required": true,
 						"validation": {
 							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
@@ -4627,8 +4627,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							"maxLength": 100
 						},
 						"type": "string",
-						"default": "España",
-						"placeholder": "España"
+						"default": "",
+						"placeholder": "Spain"
 					},
 					{
 						"name": "country_code",

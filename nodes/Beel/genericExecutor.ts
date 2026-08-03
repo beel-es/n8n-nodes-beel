@@ -37,7 +37,7 @@ function groupOf(field: GeneratedField): string {
  *
  * n8n materialises every field of a collection with its default as soon as the
  * collection exists, so an untouched `recipient.address` still arrives carrying
- * the contract's defaults (`country: España`). Sending that half-built object
+ * the contract's defaults (`country_code: ES`). Sending that half-built object
  * makes the API reject the whole invoice for a street it was never given.
  *
  * A group is only sent when every field it requires has a value. Since n8n

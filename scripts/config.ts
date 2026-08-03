@@ -163,6 +163,30 @@ export const TAX_PERCENTAGES: Record<string, number[] | null> = {
 	OTHER: null,
 };
 
+/**
+ * UI text overrides for fields whose contract `example`/`default` is Spanish.
+ *
+ * n8n requires every string visible in the editor to be English, but the API
+ * itself expects the Spanish country name, so the value stays in the description
+ * (in English) and the default is left empty rather than pre-filling "España".
+ * Keyed by the property's own name in the contract, so nested address objects
+ * and their flattened `address_*` fields both pick the override up.
+ */
+export const FIELD_UI_OVERRIDES: Record<
+	string,
+	{ default?: string; placeholder?: string; description?: string }
+> = {
+	country: {
+		default: '',
+		placeholder: 'Spain',
+		description:
+			"The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects",
+	},
+	floor: {
+		placeholder: '2nd floor, Apt A',
+	},
+};
+
 /** Acronyms and one-letter names that title-casing would mangle. */
 export const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
 	nif: 'NIF',
