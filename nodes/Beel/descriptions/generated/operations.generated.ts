@@ -408,7 +408,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": "",
-						"placeholder": "Tech Solutions SL"
+						"placeholder": "My Company Ltd"
 					},
 					{
 						"name": "trade_name",
@@ -519,7 +519,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": "",
-						"placeholder": "Calle Mayor, 123",
+						"placeholder": "123 Main Street",
 						"required": false,
 						"groupRequired": true
 					},
@@ -1106,63 +1106,63 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": ""
 							},
 							{
-								"name": "EXENTA ART 20",
+								"name": "Exempt — Art. 20 LIVA",
 								"value": "EXENTA_ART_20"
 							},
 							{
-								"name": "EXENTA ART 21 24",
+								"name": "Exempt — Art. 21 and 24 LIVA",
 								"value": "EXENTA_ART_21_24"
 							},
 							{
-								"name": "EXENTA ART 25",
+								"name": "Exempt — Art. 25 LIVA",
 								"value": "EXENTA_ART_25"
 							},
 							{
-								"name": "EXENTA ART 26",
+								"name": "Exempt — Art. 26 LIVA",
 								"value": "EXENTA_ART_26"
 							},
 							{
-								"name": "EXENTA ART 140",
+								"name": "Exempt — Art. 140 LIVA",
 								"value": "EXENTA_ART_140"
 							},
 							{
-								"name": "NO SUJETA ART 7 9",
+								"name": "Not Subject to VAT — Art. 7.9 LIVA",
 								"value": "NO_SUJETA_ART_7_9"
 							},
 							{
-								"name": "ISP ART 84 2 A",
+								"name": "Reverse Charge — Art. 84.2.a LIVA",
 								"value": "ISP_ART_84_2_A"
 							},
 							{
-								"name": "ISP ART 84 2 E",
+								"name": "Reverse Charge — Art. 84.2.e LIVA",
 								"value": "ISP_ART_84_2_E"
 							},
 							{
-								"name": "ISP ART 84 2 F",
+								"name": "Reverse Charge — Art. 84.2.f LIVA",
 								"value": "ISP_ART_84_2_F"
 							},
 							{
-								"name": "REGIMEN ART 129",
+								"name": "Special Regime — Art. 129 LIVA",
 								"value": "REGIMEN_ART_129"
 							},
 							{
-								"name": "REGIMEN ART 135",
+								"name": "Special Regime — Art. 135 LIVA",
 								"value": "REGIMEN_ART_135"
 							},
 							{
-								"name": "REGIMEN ART 141",
+								"name": "Special Regime — Art. 141 LIVA",
 								"value": "REGIMEN_ART_141"
 							},
 							{
-								"name": "REGIMEN ART 154",
+								"name": "Special Regime — Art. 154 LIVA",
 								"value": "REGIMEN_ART_154"
 							},
 							{
-								"name": "REGIMEN ART 163 DECIES",
+								"name": "Special Regime — Art. 163 Decies LIVA",
 								"value": "REGIMEN_ART_163_DECIES"
 							},
 							{
-								"name": "OTRO",
+								"name": "Other",
 								"value": "OTRO"
 							}
 						],
@@ -1552,7 +1552,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": "",
-						"placeholder": "Tech Solutions SL"
+						"placeholder": "My Company Ltd"
 					},
 					{
 						"name": "trade_name",
@@ -1663,7 +1663,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": "",
-						"placeholder": "Calle Mayor, 123",
+						"placeholder": "123 Main Street",
 						"required": false,
 						"groupRequired": true
 					},
@@ -2238,63 +2238,63 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": ""
 							},
 							{
-								"name": "EXENTA ART 20",
+								"name": "Exempt — Art. 20 LIVA",
 								"value": "EXENTA_ART_20"
 							},
 							{
-								"name": "EXENTA ART 21 24",
+								"name": "Exempt — Art. 21 and 24 LIVA",
 								"value": "EXENTA_ART_21_24"
 							},
 							{
-								"name": "EXENTA ART 25",
+								"name": "Exempt — Art. 25 LIVA",
 								"value": "EXENTA_ART_25"
 							},
 							{
-								"name": "EXENTA ART 26",
+								"name": "Exempt — Art. 26 LIVA",
 								"value": "EXENTA_ART_26"
 							},
 							{
-								"name": "EXENTA ART 140",
+								"name": "Exempt — Art. 140 LIVA",
 								"value": "EXENTA_ART_140"
 							},
 							{
-								"name": "NO SUJETA ART 7 9",
+								"name": "Not Subject to VAT — Art. 7.9 LIVA",
 								"value": "NO_SUJETA_ART_7_9"
 							},
 							{
-								"name": "ISP ART 84 2 A",
+								"name": "Reverse Charge — Art. 84.2.a LIVA",
 								"value": "ISP_ART_84_2_A"
 							},
 							{
-								"name": "ISP ART 84 2 E",
+								"name": "Reverse Charge — Art. 84.2.e LIVA",
 								"value": "ISP_ART_84_2_E"
 							},
 							{
-								"name": "ISP ART 84 2 F",
+								"name": "Reverse Charge — Art. 84.2.f LIVA",
 								"value": "ISP_ART_84_2_F"
 							},
 							{
-								"name": "REGIMEN ART 129",
+								"name": "Special Regime — Art. 129 LIVA",
 								"value": "REGIMEN_ART_129"
 							},
 							{
-								"name": "REGIMEN ART 135",
+								"name": "Special Regime — Art. 135 LIVA",
 								"value": "REGIMEN_ART_135"
 							},
 							{
-								"name": "REGIMEN ART 141",
+								"name": "Special Regime — Art. 141 LIVA",
 								"value": "REGIMEN_ART_141"
 							},
 							{
-								"name": "REGIMEN ART 154",
+								"name": "Special Regime — Art. 154 LIVA",
 								"value": "REGIMEN_ART_154"
 							},
 							{
-								"name": "REGIMEN ART 163 DECIES",
+								"name": "Special Regime — Art. 163 Decies LIVA",
 								"value": "REGIMEN_ART_163_DECIES"
 							},
 							{
-								"name": "OTRO",
+								"name": "Other",
 								"value": "OTRO"
 							}
 						],
@@ -2944,63 +2944,63 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": ""
 							},
 							{
-								"name": "EXENTA ART 20",
+								"name": "Exempt — Art. 20 LIVA",
 								"value": "EXENTA_ART_20"
 							},
 							{
-								"name": "EXENTA ART 21 24",
+								"name": "Exempt — Art. 21 and 24 LIVA",
 								"value": "EXENTA_ART_21_24"
 							},
 							{
-								"name": "EXENTA ART 25",
+								"name": "Exempt — Art. 25 LIVA",
 								"value": "EXENTA_ART_25"
 							},
 							{
-								"name": "EXENTA ART 26",
+								"name": "Exempt — Art. 26 LIVA",
 								"value": "EXENTA_ART_26"
 							},
 							{
-								"name": "EXENTA ART 140",
+								"name": "Exempt — Art. 140 LIVA",
 								"value": "EXENTA_ART_140"
 							},
 							{
-								"name": "NO SUJETA ART 7 9",
+								"name": "Not Subject to VAT — Art. 7.9 LIVA",
 								"value": "NO_SUJETA_ART_7_9"
 							},
 							{
-								"name": "ISP ART 84 2 A",
+								"name": "Reverse Charge — Art. 84.2.a LIVA",
 								"value": "ISP_ART_84_2_A"
 							},
 							{
-								"name": "ISP ART 84 2 E",
+								"name": "Reverse Charge — Art. 84.2.e LIVA",
 								"value": "ISP_ART_84_2_E"
 							},
 							{
-								"name": "ISP ART 84 2 F",
+								"name": "Reverse Charge — Art. 84.2.f LIVA",
 								"value": "ISP_ART_84_2_F"
 							},
 							{
-								"name": "REGIMEN ART 129",
+								"name": "Special Regime — Art. 129 LIVA",
 								"value": "REGIMEN_ART_129"
 							},
 							{
-								"name": "REGIMEN ART 135",
+								"name": "Special Regime — Art. 135 LIVA",
 								"value": "REGIMEN_ART_135"
 							},
 							{
-								"name": "REGIMEN ART 141",
+								"name": "Special Regime — Art. 141 LIVA",
 								"value": "REGIMEN_ART_141"
 							},
 							{
-								"name": "REGIMEN ART 154",
+								"name": "Special Regime — Art. 154 LIVA",
 								"value": "REGIMEN_ART_154"
 							},
 							{
-								"name": "REGIMEN ART 163 DECIES",
+								"name": "Special Regime — Art. 163 Decies LIVA",
 								"value": "REGIMEN_ART_163_DECIES"
 							},
 							{
-								"name": "OTRO",
+								"name": "Other",
 								"value": "OTRO"
 							}
 						],
@@ -3899,7 +3899,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"displayName": "Legal Name",
 				"description": "Filter by legal name (partial search case-insensitive)",
 				"type": "string",
-				"default": ""
+				"default": "",
+				"placeholder": "My Company Ltd"
 			},
 			{
 				"name": "nif",
@@ -4008,7 +4009,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					"maxLength": 120
 				},
 				"type": "string",
-				"default": ""
+				"default": "",
+				"placeholder": "My Company Ltd"
 			},
 			{
 				"name": "address",
@@ -4030,7 +4032,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": "",
-						"placeholder": "Calle Mayor, 123"
+						"placeholder": "123 Main Street"
 					},
 					{
 						"name": "number",
@@ -4499,7 +4501,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					"maxLength": 120
 				},
 				"type": "string",
-				"default": ""
+				"default": "",
+				"placeholder": "My Company Ltd"
 			},
 			{
 				"name": "trade_name",
@@ -4531,7 +4534,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": "",
-						"placeholder": "Calle Mayor, 123"
+						"placeholder": "123 Main Street"
 					},
 					{
 						"name": "number",
@@ -7733,7 +7736,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				},
 				"type": "string",
 				"default": "",
-				"placeholder": "JUAN PEREZ GARCIA"
+				"placeholder": "My Company Ltd"
 			}
 		],
 		"filters": [],
@@ -7772,7 +7775,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"required": true,
 				"type": "string",
 				"default": "",
-				"placeholder": "Mi Empresa SL"
+				"placeholder": "My Company Ltd"
 			},
 			{
 				"name": "entity_type",
@@ -7800,7 +7803,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"required": true,
 				"type": "string",
 				"default": "",
-				"placeholder": "Calle Mayor"
+				"placeholder": "123 Main Street"
 			},
 			{
 				"name": "address_postal_code",
@@ -7996,7 +7999,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"apiName": "address_street",
 				"displayName": "Address Street",
 				"type": "string",
-				"default": ""
+				"default": "",
+				"placeholder": "123 Main Street"
 			},
 			{
 				"name": "address_number",
