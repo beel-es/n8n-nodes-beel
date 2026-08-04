@@ -18,7 +18,6 @@ import { parse } from 'yaml';
 import {
 	DISPLAY_NAME_OVERRIDES,
 	EXCLUDED_OPERATION_IDS,
-	FIELD_UI_OVERRIDES,
 	LOAD_OPTIONS_BY_FIELD,
 	MANUAL_OPERATION_IDS,
 	OPERATION_NAMES,
@@ -26,6 +25,7 @@ import {
 	RESOURCES,
 	TAX_PERCENTAGES,
 } from './config';
+import { assertEnglishUiText, FIELD_UI_OVERRIDES, OPTION_NAME_OVERRIDES } from './ui-text';
 import type {
 	GeneratedField,
 	GeneratedOperation,
@@ -111,7 +111,8 @@ function enumOptions(schema: Json): GeneratedField['options'] | undefined {
 	}
 
 	return (schema.enum as Array<string | number>).map((value) => ({
-		name: titleCase(String(value)),
+		// The label may need translating (the value never does — it is the API's).
+		name: OPTION_NAME_OVERRIDES[String(value)] ?? titleCase(String(value)),
 		value,
 		...(docs.has(String(value)) ? { description: docs.get(String(value)) } : {}),
 	}));
@@ -610,6 +611,12 @@ for (const operation of operations) {
 		signatures.set(field.name, signature);
 	}
 }
+
+// ── English-only check ──────────────────────────────────────────────────────
+// Runs before anything is written, and again on every `--check` in CI: the
+// contract is Spanish, the editor may not be, and this is the seam between them.
+
+assertEnglishUiText(operations);
 
 // ── Coverage check ──────────────────────────────────────────────────────────
 

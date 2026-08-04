@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.1.4
+
+The rest of the Spanish that reached the editor, and a check so it cannot come
+back:
+
+- Address Street: `123 Main Street` instead of `Calle Mayor, 123`
+- Legal Name: `My Company Ltd` instead of `Mi Empresa SL`
+- Exemption Reason: all 15 options relabelled in English, keeping the statute
+  they cite — `OTRO` now reads `Other`, `EXENTA_ART_20` reads
+  `Exempt — Art. 20 LIVA`. The values sent to the API are unchanged.
+
+UI copy now lives in one module, `scripts/ui-text.ts`, which also holds
+`assertEnglishUiText`: generation fails, in CI too, if any string shown in the
+editor is not English. The contract is vendored from BeeL's API repo and its
+examples are legitimately Spanish, so a re-sync would otherwise quietly undo
+these fixes.
+
 ## 0.1.3
 
 Every string the n8n editor shows is English, as the node review requires. The
