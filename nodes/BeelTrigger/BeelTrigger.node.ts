@@ -58,9 +58,8 @@ export class BeelTrigger implements INodeType {
 		subtitle: '={{$parameter["events"].join(", ")}}',
 		description: 'Starts the workflow when BeeL emits an event',
 		defaults: { name: 'BeeL Trigger' },
-		// Required by n8n's verification checks. Inert on a trigger: a node without
-		// `execute` cannot be called by an agent, so nothing surfaces as a tool.
-		usableAsTool: true,
+		// NO declarar usableAsTool aquí: el scanner de n8n lo prohíbe en triggers
+		// (@n8n/community-nodes/node-usable-as-tool) — solo el nodo de acción lo lleva.
 		inputs: [],
 		outputs: [NodeConnectionTypes.Main],
 		credentials: [{ name: 'beelApi', required: true }],
