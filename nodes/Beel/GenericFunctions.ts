@@ -197,13 +197,31 @@ function currentCompanyId(context: ILoadOptionsFunctions): string {
 
 // ── Dropdowns ───────────────────────────────────────────────────────────────
 
+/**
+ * account_id de cada credencial, memoizado para la vida del proceso: es estable
+ * por API key, así que /v1/me/identity se consulta UNA vez por credencial, no
+ * en cada carga del dropdown ni en cada ejecución.
+ */
+const accountIdByCredential = new Map<string, string>();
+
+async function resolveAccountId(this: BeelRequestContext): Promise<string> {
+	const credentials = await this.getCredentials('beelApi');
+	const cacheKey = `${credentials.baseUrl ?? ''}:${credentials.apiKey as string}`;
+
+	const cached = accountIdByCredential.get(cacheKey);
+	if (cached) return cached;
+
+	const identity = (await beelApiRequest.call(this, 'GET', '/v1/me/identity')) as IBeelEnvelope;
+	const accountId = ((identity?.data as IDataObject)?.account_id ?? '') as string;
+	if (accountId) accountIdByCredential.set(cacheKey, accountId);
+	return accountId;
+}
+
 /** Companies (NIFs) the API key can operate as. */
 export async function getCompanies(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 	// El plano `GET /v1/companies` fue RETIRADO del contrato (multi-NIF: los
-	// recursos de cuenta viven bajo /v1/accounts/{account_id}/...). El account_id
-	// de la credencial se descubre con /v1/me/identity, que sí admite API key.
-	const identity = (await beelApiRequest.call(this, 'GET', '/v1/me/identity')) as IBeelEnvelope;
-	const accountId = ((identity?.data as IDataObject)?.account_id ?? '') as string;
+	// recursos de cuenta viven bajo /v1/accounts/{account_id}/...).
+	const accountId = await resolveAccountId.call(this);
 
 	const response = (await beelApiRequest.call(
 		this,
