@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.5
+
+Fixes against the current API contract (multi-NIF migration) and n8n's
+verification scanner:
+
+- **Company dropdown fixed**: the flat `GET /v1/companies` was retired from the
+  contract, so the selector showed "Error fetching options from BeeL". It now
+  resolves the credential's `account_id` via `/v1/me/identity` (memoized per
+  credential) and lists `/v1/accounts/{account_id}/companies`.
+- **Trigger events fixed**: `invoice.emitted` and `invoice.cancelled` no longer
+  exist — the API rejected them and the trigger could not activate. The catalog
+  now mirrors the current enum and adds the new events (`invoice.issued`,
+  `invoice.voided`, `recurring_invoice.paused`, `account.claimed`,
+  `company.created`, `representation.signed`).
+- **Rate limits respected**: 429 responses are retried honouring `Retry-After`
+  (up to 3 attempts), so a long "Return All" no longer dies mid-pagination.
+- **n8n verification**: removed `usableAsTool` from the trigger node
+  (`@n8n/community-nodes/node-usable-as-tool` fails the published package).
+
+
 ## 0.1.4
 
 The rest of the Spanish that reached the editor, and a check so it cannot come

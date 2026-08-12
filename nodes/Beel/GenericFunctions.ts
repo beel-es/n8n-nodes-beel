@@ -86,12 +86,31 @@ export async function beelApiRequest(
 		options.qs = qs;
 	}
 
-	try {
-		return await this.helpers.httpRequestWithAuthentication.call(this, 'beelApi', options);
-	} catch (error) {
-		throw new NodeApiError(this.getNode(), error as JsonObject, {
-			message: extractErrorMessage(error),
-		});
+	// 429: la API responde Retry-After con los segundos exactos a esperar. Sin
+	// esto, un "Return All" largo moría a mitad de paginación perdiendo todo el
+	// progreso. Tope de reintentos acotado para no colgar workflows.
+	const MAX_RATE_LIMIT_RETRIES = 3;
+	for (let attempt = 0; ; attempt++) {
+		try {
+			return await this.helpers.httpRequestWithAuthentication.call(this, 'beelApi', options);
+		} catch (error) {
+			const status = Number(
+				(error as IDataObject)?.httpCode ?? (error as IDataObject)?.statusCode ?? 0,
+			);
+			if (status === 429 && attempt < MAX_RATE_LIMIT_RETRIES) {
+				const retryAfter = Number(
+					((error as IDataObject)?.response as IDataObject | undefined)?.headers?.[
+						'retry-after' as never
+					] ?? 0,
+				);
+				const waitMs = (retryAfter > 0 && retryAfter <= 120 ? retryAfter : 2 ** attempt + 1) * 1000;
+				await new Promise((resolve) => setTimeout(resolve, waitMs));
+				continue;
+			}
+			throw new NodeApiError(this.getNode(), error as JsonObject, {
+				message: extractErrorMessage(error),
+			});
+		}
 	}
 }
 
@@ -178,9 +197,37 @@ function currentCompanyId(context: ILoadOptionsFunctions): string {
 
 // ── Dropdowns ───────────────────────────────────────────────────────────────
 
+/**
+ * account_id de cada credencial, memoizado para la vida del proceso: es estable
+ * por API key, así que /v1/me/identity se consulta UNA vez por credencial, no
+ * en cada carga del dropdown ni en cada ejecución.
+ */
+const accountIdByCredential = new Map<string, string>();
+
+async function resolveAccountId(this: BeelRequestContext): Promise<string> {
+	const credentials = await this.getCredentials('beelApi');
+	const cacheKey = `${credentials.baseUrl ?? ''}:${credentials.apiKey as string}`;
+
+	const cached = accountIdByCredential.get(cacheKey);
+	if (cached) return cached;
+
+	const identity = (await beelApiRequest.call(this, 'GET', '/v1/me/identity')) as IBeelEnvelope;
+	const accountId = ((identity?.data as IDataObject)?.account_id ?? '') as string;
+	if (accountId) accountIdByCredential.set(cacheKey, accountId);
+	return accountId;
+}
+
 /** Companies (NIFs) the API key can operate as. */
 export async function getCompanies(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-	const response = (await beelApiRequest.call(this, 'GET', '/v1/companies')) as IBeelEnvelope;
+	// El plano `GET /v1/companies` fue RETIRADO del contrato (multi-NIF: los
+	// recursos de cuenta viven bajo /v1/accounts/{account_id}/...).
+	const accountId = await resolveAccountId.call(this);
+
+	const response = (await beelApiRequest.call(
+		this,
+		'GET',
+		`/v1/accounts/${accountId}/companies`,
+	)) as IBeelEnvelope;
 
 	const data = response?.data;
 	const companies = (
@@ -261,11 +308,15 @@ export async function getWebhookEvents(
 /** Mirrors `WebhookEventTypeEnum` in openapi/public-api.yaml. */
 export const WEBHOOK_EVENTS = [
 	{
-		name: 'Invoice Cancelled',
-		value: 'invoice.cancelled',
-		description: 'An invoice was cancelled',
+		name: 'Invoice Issued',
+		value: 'invoice.issued',
+		description: 'An invoice was issued (numbered and finalised)',
 	},
-	{ name: 'Invoice Emitted', value: 'invoice.emitted', description: 'An invoice was emitted and finalised' },
+	{
+		name: 'Invoice Voided',
+		value: 'invoice.voided',
+		description: 'An issued invoice was voided',
+	},
 	{
 		name: 'Invoice Email Sent',
 		value: 'invoice.email.sent',
@@ -275,5 +326,25 @@ export const WEBHOOK_EVENTS = [
 		name: 'VeriFactu Status Updated',
 		value: 'verifactu.status.updated',
 		description: 'AEAT accepted or rejected a VeriFactu submission',
+	},
+	{
+		name: 'Recurring Invoice Paused',
+		value: 'recurring_invoice.paused',
+		description: 'A recurring invoice was paused (e.g. after repeated failures)',
+	},
+	{
+		name: 'Account Claimed',
+		value: 'account.claimed',
+		description: 'A provisioned account was claimed by its holder',
+	},
+	{
+		name: 'Company Created',
+		value: 'company.created',
+		description: 'A company (NIF) was registered in the account',
+	},
+	{
+		name: 'Representation Signed',
+		value: 'representation.signed',
+		description: 'The VeriFactu representation document was signed',
 	},
 ];

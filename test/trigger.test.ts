@@ -136,7 +136,7 @@ describe('the subscription lifecycle', () => {
 
 	it('registers the endpoint and stores the signing secret', async () => {
 		const stub = makeContext({
-			parameters: { events: ['invoice.emitted'], activeCompany: '' },
+			parameters: { events: ['invoice.issued'], activeCompany: '' },
 			responses: { data: { id: 'sub-1', secret: SECRET } },
 			staticData: {},
 		});
@@ -146,7 +146,7 @@ describe('the subscription lifecycle', () => {
 		expect(stub.requests[0]).toMatchObject({
 			method: 'POST',
 			url: 'https://app.beel.es/api/v1/webhooks',
-			body: { url: 'https://n8n.example.com/webhook/beel', events: ['invoice.emitted'] },
+			body: { url: 'https://n8n.example.com/webhook/beel', events: ['invoice.issued'] },
 		});
 		expect(stub.staticData).toEqual({ webhookId: 'sub-1', secret: SECRET });
 	});
@@ -159,7 +159,7 @@ describe('the subscription lifecycle', () => {
 
 	it('fails loudly when no signing secret comes back', async () => {
 		const stub = makeContext({
-			parameters: { events: ['invoice.emitted'], activeCompany: '' },
+			parameters: { events: ['invoice.issued'], activeCompany: '' },
 			responses: { data: { id: 'sub-1' } },
 			staticData: {},
 		});
@@ -169,7 +169,7 @@ describe('the subscription lifecycle', () => {
 
 	it('treats an unknown subscription as missing', async () => {
 		const stub = makeContext({
-			parameters: { events: ['invoice.emitted'], activeCompany: '' },
+			parameters: { events: ['invoice.issued'], activeCompany: '' },
 			responses: { data: { webhooks: [] } },
 			staticData: { webhookId: 'sub-1', secret: SECRET },
 		});
@@ -180,14 +180,14 @@ describe('the subscription lifecycle', () => {
 
 	it('accepts a subscription that still matches', async () => {
 		const stub = makeContext({
-			parameters: { events: ['invoice.emitted'], activeCompany: '' },
+			parameters: { events: ['invoice.issued'], activeCompany: '' },
 			responses: {
 				data: {
 					webhooks: [
 						{
 							id: 'sub-1',
 							url: 'https://n8n.example.com/webhook/beel',
-							events: ['invoice.emitted'],
+							events: ['invoice.issued'],
 							active: true,
 						},
 					],
@@ -202,14 +202,14 @@ describe('the subscription lifecycle', () => {
 
 	it('realigns a subscription whose events drifted, keeping the secret', async () => {
 		const stub = makeContext({
-			parameters: { events: ['invoice.emitted', 'invoice.cancelled'], activeCompany: '' },
+			parameters: { events: ['invoice.issued', 'invoice.cancelled'], activeCompany: '' },
 			responses: {
 				data: {
 					webhooks: [
 						{
 							id: 'sub-1',
 							url: 'https://n8n.example.com/webhook/beel',
-							events: ['invoice.emitted'],
+							events: ['invoice.issued'],
 							active: true,
 						},
 					],
