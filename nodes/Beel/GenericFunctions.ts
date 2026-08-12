@@ -308,11 +308,15 @@ export async function getWebhookEvents(
 /** Mirrors `WebhookEventTypeEnum` in openapi/public-api.yaml. */
 export const WEBHOOK_EVENTS = [
 	{
-		name: 'Invoice Cancelled',
-		value: 'invoice.cancelled',
-		description: 'An invoice was cancelled',
+		name: 'Invoice Issued',
+		value: 'invoice.issued',
+		description: 'An invoice was issued (numbered and finalised)',
 	},
-	{ name: 'Invoice Emitted', value: 'invoice.emitted', description: 'An invoice was emitted and finalised' },
+	{
+		name: 'Invoice Voided',
+		value: 'invoice.voided',
+		description: 'An issued invoice was voided',
+	},
 	{
 		name: 'Invoice Email Sent',
 		value: 'invoice.email.sent',
@@ -322,5 +326,25 @@ export const WEBHOOK_EVENTS = [
 		name: 'VeriFactu Status Updated',
 		value: 'verifactu.status.updated',
 		description: 'AEAT accepted or rejected a VeriFactu submission',
+	},
+	{
+		name: 'Recurring Invoice Paused',
+		value: 'recurring_invoice.paused',
+		description: 'A recurring invoice was paused (e.g. after repeated failures)',
+	},
+	{
+		name: 'Account Claimed',
+		value: 'account.claimed',
+		description: 'A provisioned account was claimed by its holder',
+	},
+	{
+		name: 'Company Created',
+		value: 'company.created',
+		description: 'A company (NIF) was registered in the account',
+	},
+	{
+		name: 'Representation Signed',
+		value: 'representation.signed',
+		description: 'The VeriFactu representation document was signed',
 	},
 ];
