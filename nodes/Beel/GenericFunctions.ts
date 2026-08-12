@@ -86,12 +86,31 @@ export async function beelApiRequest(
 		options.qs = qs;
 	}
 
-	try {
-		return await this.helpers.httpRequestWithAuthentication.call(this, 'beelApi', options);
-	} catch (error) {
-		throw new NodeApiError(this.getNode(), error as JsonObject, {
-			message: extractErrorMessage(error),
-		});
+	// 429: la API responde Retry-After con los segundos exactos a esperar. Sin
+	// esto, un "Return All" largo moría a mitad de paginación perdiendo todo el
+	// progreso. Tope de reintentos acotado para no colgar workflows.
+	const MAX_RATE_LIMIT_RETRIES = 3;
+	for (let attempt = 0; ; attempt++) {
+		try {
+			return await this.helpers.httpRequestWithAuthentication.call(this, 'beelApi', options);
+		} catch (error) {
+			const status = Number(
+				(error as IDataObject)?.httpCode ?? (error as IDataObject)?.statusCode ?? 0,
+			);
+			if (status === 429 && attempt < MAX_RATE_LIMIT_RETRIES) {
+				const retryAfter = Number(
+					((error as IDataObject)?.response as IDataObject | undefined)?.headers?.[
+						'retry-after' as never
+					] ?? 0,
+				);
+				const waitMs = (retryAfter > 0 && retryAfter <= 120 ? retryAfter : 2 ** attempt + 1) * 1000;
+				await new Promise((resolve) => setTimeout(resolve, waitMs));
+				continue;
+			}
+			throw new NodeApiError(this.getNode(), error as JsonObject, {
+				message: extractErrorMessage(error),
+			});
+		}
 	}
 }
 
@@ -180,7 +199,17 @@ function currentCompanyId(context: ILoadOptionsFunctions): string {
 
 /** Companies (NIFs) the API key can operate as. */
 export async function getCompanies(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-	const response = (await beelApiRequest.call(this, 'GET', '/v1/companies')) as IBeelEnvelope;
+	// El plano `GET /v1/companies` fue RETIRADO del contrato (multi-NIF: los
+	// recursos de cuenta viven bajo /v1/accounts/{account_id}/...). El account_id
+	// de la credencial se descubre con /v1/me/identity, que sí admite API key.
+	const identity = (await beelApiRequest.call(this, 'GET', '/v1/me/identity')) as IBeelEnvelope;
+	const accountId = ((identity?.data as IDataObject)?.account_id ?? '') as string;
+
+	const response = (await beelApiRequest.call(
+		this,
+		'GET',
+		`/v1/accounts/${accountId}/companies`,
+	)) as IBeelEnvelope;
 
 	const data = response?.data;
 	const companies = (
