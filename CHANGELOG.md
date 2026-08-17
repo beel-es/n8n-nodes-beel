@@ -1,5 +1,72 @@
 # Changelog
 
+## 0.2.0
+
+Migration to the company-scoped API. **Breaking**: BeeL retired the flat routes
+and the `Beel-Active-Company` header, so every request now carries the company
+in its path. Workflows keep working, but a company is no longer optional and a
+few operations were merged to match the contract.
+
+### The scope moved into the path
+
+The API used to take the active company in a `Beel-Active-Company` header. The
+contract retired it — `{company_id}` in the path is now the only source of
+context, and the account that owns it is derived from it. The whole flat
+surface (`/v1/invoices`, `/v1/customers`, `/v1/products`,
+`/v1/configuration/*`, `/v1/webhooks`) is marked `deprecated: true`.
+
+The node was still calling all of it, sending a header the server no longer
+reads. Nothing failed loudly: requests simply resolved to whichever company the
+key defaulted to, which on a multi-NIF account is the wrong NIF.
+
+- Every operation now targets `/v1/companies/{company_id}/…`, filled in from the
+  node's **Company** field or the credential's **Default Company ID**.
+- Account-level resources (the company list, webhook subscriptions) target
+  `/v1/accounts/{account_id}/…`, with the account resolved once per credential
+  from `/v1/me/identity`.
+- **A company is now required.** A request that would have gone out unscoped
+  fails in n8n with what to set, instead of billing under the wrong NIF.
+
+### Operations that changed shape
+
+- **Invoice → Set Status** replaces *Mark as Paid*, *Mark as Sent* and *Revert to
+  Issued*: one `PUT .../status`, as the contract models it. Issuing and voiding
+  stay separate — they are fiscal acts, not statuses.
+- **Invoice → Schedule** both schedules and reschedules; *Reschedule* is gone.
+  *Unschedule* is the `DELETE` on the same sub-resource.
+- **Recurring Invoice → Set Status** replaces *Pause* and *Resume*.
+- **Recurring Invoice → Get Next Occurrence** replaces *Preview*.
+- **Product → Search** is gone: search is the `Search Query` filter on *Get Many*,
+  which returns at least the same results in the paginated envelope.
+- **Series** gains *Get Defaults* and *Ensure Defaults*.
+- **Invoice → Convert Proforma** and the exemption reasons `EXENTA_ART_21`,
+  `EXENTA_ART_22`, `EXENTA_ART_24` and `NO_SUJETA_LOCALIZACION` are new; the old
+  `EXENTA_ART_21_24` was split into one member per article.
+- **Trigger**: the Company field is gone. Webhook subscriptions belong to the
+  account, so one trigger receives the events of every NIF — filter on the
+  payload if you only want one. The previous field would have silently done
+  nothing.
+- **Credential test** now calls `/v1/me/identity` instead of a company-scoped
+  resource, so a valid key no longer fails the test over an unset company.
+
+### So this cannot happen again
+
+The node ran on deprecated routes for a whole release and nothing said so. The
+generator now fails the build when it does:
+
+- `npm run generate` and `generate:check` **reject any endpoint the contract
+  marks `deprecated: true`**, naming the ones to migrate.
+- Deprecated endpoints are excluded from the coverage check by that same flag,
+  instead of ~90 identifiers listed by hand that would go stale at sunset.
+- Stale entries in `EXCLUDED_OPERATION_IDS` are reported, so the list self-cleans.
+- Paths used by hand-written code (dropdowns, identity, the Trigger's
+  subscription, the file operations) are emitted from the contract into
+  `CONTRACT_PATHS`. No URL is typed into a `.ts` file any more, so a retired
+  route breaks generation rather than 404ing at runtime.
+- The scoping rule lives in one module (`nodes/Beel/scope.ts`) read by both the
+  generator and the request helper, with a test asserting every placeholder is
+  either a rendered field or a scope.
+
 ## 0.1.5
 
 Fixes against the current API contract (multi-NIF migration) and n8n's

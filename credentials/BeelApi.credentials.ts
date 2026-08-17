@@ -6,6 +6,8 @@ import type {
 	Icon,
 } from 'n8n-workflow';
 
+import { contractPath } from '../nodes/Beel/GenericFunctions';
+
 export class BeelApi implements ICredentialType {
 	name = 'beelApi';
 
@@ -34,7 +36,7 @@ export class BeelApi implements ICredentialType {
 			default: '',
 			placeholder: '550e8400-e29b-41d4-a716-446655440000',
 			description:
-				'Optional. UUID of the company (NIF) every node should operate as by default, sent as the <code>Beel-Active-Company</code> header. Only relevant for multi-NIF accounts using an account-wide API key; a company-scoped key already resolves its own company. Each node can override it with its own Company field.',
+				'UUID of the company (NIF) every node should operate as by default. BeeL scopes its resources by company — invoices, customers, products and series all live under one — so each node needs one: either this default or its own Company field, which overrides it. Leave empty only if every node picks its own.',
 		},
 		{
 			displayName: 'Base URL',
@@ -54,10 +56,16 @@ export class BeelApi implements ICredentialType {
 		},
 	};
 
+	/**
+	 * Identity is the right thing to probe: it is the one endpoint that needs no
+	 * company, so a green tick means "the key is valid" and nothing else. The
+	 * previous probe read a company-scoped resource, which fails for a perfectly
+	 * good key on an account whose default company is not set.
+	 */
 	test: ICredentialTestRequest = {
 		request: {
 			baseURL: '={{$credentials.baseUrl.replace(new RegExp("/$"), "")}}',
-			url: '/v1/configuration/series',
+			url: contractPath('getMyIdentity'),
 			method: 'GET',
 		},
 	};

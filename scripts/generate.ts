@@ -21,6 +21,7 @@ import {
 	LOAD_OPTIONS_BY_FIELD,
 	MANUAL_OPERATION_IDS,
 	OPERATION_NAMES,
+	REFERENCED_OPERATION_IDS,
 	RESERVED_PARAMETER_NAMES,
 	RESOURCES,
 	TAX_PERCENTAGES,
@@ -31,6 +32,8 @@ import type {
 	GeneratedOperation,
 	GeneratedValidation,
 } from '../nodes/Beel/descriptions/generated/types';
+// The scoping rule is shared with the runtime on purpose — see nodes/Beel/scope.ts.
+import { scopeAxesOf } from '../nodes/Beel/scope';
 
 const ROOT = join(__dirname, '..');
 const SPEC_PATH = join(ROOT, 'openapi', 'public-api.yaml');
@@ -495,6 +498,7 @@ function buildOperation(operationId: string, operation: string): GeneratedOperat
 	// `page` is what makes an endpoint paginated; only then does `limit` belong to
 	// pagination rather than being a plain result cap (as in product search).
 	const paginated = parameters.some((p) => p.in === 'query' && p.name === 'page');
+	const scopes = new Set(scopeAxesOf(path).map((axis) => axis.parameter));
 
 	const pathParams: GeneratedField[] = [];
 	const filters: GeneratedField[] = [];
@@ -505,6 +509,7 @@ function buildOperation(operationId: string, operation: string): GeneratedOperat
 		const apiName = parameter.name as string;
 
 		if (paginated && parameter.in === 'query' && ['page', 'limit'].includes(apiName)) continue;
+		if (parameter.in === 'path' && scopes.has(apiName)) continue;
 
 		const parameterFields = toFields(apiName, parameter.schema ?? {}, parameter.required === true);
 		if (!parameterFields || parameterFields.length !== 1) continue;
@@ -540,7 +545,8 @@ function buildOperation(operationId: string, operation: string): GeneratedOperat
 	}
 
 	const placeholders = [...path.matchAll(/\{([^}]+)\}/g)].map((match) => match[1]);
-	const covered = new Set(pathParams.map((field) => field.apiName));
+	// Scope placeholders are covered by the request helper, not by a field.
+	const covered = new Set([...pathParams.map((field) => field.apiName), ...scopes]);
 	const uncovered = placeholders.filter((placeholder) => !covered.has(placeholder));
 
 	if (uncovered.length > 0) {
@@ -618,15 +624,57 @@ for (const operation of operations) {
 
 assertEnglishUiText(operations);
 
-// ── Coverage check ──────────────────────────────────────────────────────────
+// ── Contract paths for the hand-written code ────────────────────────────────
+// Anything a `.ts` file calls by hand gets its URL from here rather than typing
+// it out, so the contract stays the only place a path is written down.
 
-const covered = new Set([
-	...Object.keys(OPERATION_NAMES),
-	...MANUAL_OPERATION_IDS,
-	...EXCLUDED_OPERATION_IDS,
-]);
+const referenced = [...MANUAL_OPERATION_IDS, ...REFERENCED_OPERATION_IDS];
 
-const uncovered = [...specOperations.keys()].filter((operationId) => !covered.has(operationId));
+const missingReferenced = referenced.filter((operationId) => !specOperations.has(operationId));
+if (missingReferenced.length > 0) {
+	throw new Error(
+		`The contract no longer has ${missingReferenced.length} endpoint(s) the hand-written code ` +
+			`calls:\n  ${missingReferenced.join('\n  ')}\n` +
+			'Find what replaced them, update the caller, then update scripts/config.ts ' +
+			'(MANUAL_OPERATION_IDS or REFERENCED_OPERATION_IDS).',
+	);
+}
+
+const contractPaths = Object.fromEntries(
+	referenced.sort().map((operationId) => [operationId, specOperations.get(operationId)!.path]),
+);
+
+// ── Coverage checks ─────────────────────────────────────────────────────────
+
+// An endpoint can be both an operation and something a loader calls, so dedupe.
+const exposed = [...new Set([...Object.keys(OPERATION_NAMES), ...referenced])];
+
+const covered = new Set([...exposed, ...EXCLUDED_OPERATION_IDS]);
+
+/**
+ * Endpoints the contract has and the config says nothing about.
+ *
+ * Deprecated ones are not a gap: the contract marks them, and the node has
+ * moved to whatever replaced them. Only a live endpoint is a decision waiting
+ * to be made.
+ */
+const uncovered = [...specOperations.entries()]
+	.filter(([operationId, found]) => !covered.has(operationId) && !found.definition.deprecated)
+	.map(([operationId]) => operationId);
+
+/**
+ * Endpoints the node uses that the contract has since deprecated.
+ *
+ * This is the check that was missing. The API moved the multi-NIF scope from
+ * the `Beel-Active-Company` header into the path and deprecated the entire flat
+ * surface; the node kept calling it, and nothing said so until the requests
+ * started resolving to the wrong company. A deprecation is the API telling us
+ * where the work is — so it fails the build, with the endpoints to migrate.
+ */
+const deprecatedInUse = exposed.filter((operationId) => specOperations.get(operationId)?.definition.deprecated);
+
+/** Exclusions the contract has since dropped, so the list does not rot. */
+const staleExclusions = EXCLUDED_OPERATION_IDS.filter((operationId) => !specOperations.has(operationId));
 
 // ── Emit ────────────────────────────────────────────────────────────────────
 
@@ -651,15 +699,47 @@ export const GENERATED_RESOURCES: GeneratedResource[] = ${JSON.stringify(
 )};
 
 export const GENERATED_OPERATIONS: GeneratedOperation[] = ${JSON.stringify(operations, null, '\t')};
+
+/**
+ * Paths of the endpoints the hand-written code calls directly, straight from the
+ * contract — the dropdown loaders, the identity lookup and the Trigger node's
+ * subscription. Declared in \`REFERENCED_OPERATION_IDS\`; generation fails if the
+ * contract drops one, so a retired route can never be left hardcoded in a caller.
+ */
+export const CONTRACT_PATHS: Record<string, string> = ${JSON.stringify(contractPaths, null, '\t')};
 `;
 
+/**
+ * Problems that make the artefact wrong rather than merely incomplete, so they
+ * fail `npm run generate` too — regenerating onto a deprecated route would just
+ * commit the drift instead of surfacing it.
+ */
+const blocking: string[] = [];
+
+if (deprecatedInUse.length > 0) {
+	blocking.push(
+		`The contract deprecated ${deprecatedInUse.length} endpoint(s) this node still calls:\n  ` +
+			`${deprecatedInUse.join('\n  ')}\n` +
+			'Each has a replacement in the contract — find it, map it in scripts/config.ts, and ' +
+			'update any caller. Do not silence this by excluding them: EXCLUDED_OPERATION_IDS is ' +
+			'for live endpoints deliberately not exposed.',
+	);
+}
+
+if (staleExclusions.length > 0) {
+	blocking.push(
+		`EXCLUDED_OPERATION_IDS names ${staleExclusions.length} endpoint(s) the contract no longer ` +
+			`has:\n  ${staleExclusions.join('\n  ')}\nDrop them from scripts/config.ts.`,
+	);
+}
+
 if (process.argv.includes('--check')) {
-	const problems: string[] = [];
+	const problems = [...blocking];
 
 	if (uncovered.length > 0) {
 		problems.push(
-			`The contract has ${uncovered.length} endpoint(s) that are neither generated, hand-written ` +
-				`nor excluded:\n  ${uncovered.join('\n  ')}\n` +
+			`The contract has ${uncovered.length} live endpoint(s) that are neither generated, ` +
+				`hand-written nor excluded:\n  ${uncovered.join('\n  ')}\n` +
 				'Add them to scripts/config.ts (OPERATION_NAMES, MANUAL_OPERATION_IDS or EXCLUDED_OPERATION_IDS).',
 		);
 	}
@@ -675,6 +755,11 @@ if (process.argv.includes('--check')) {
 
 	console.log(`OK — ${operations.length} generated operations, contract fully covered.`);
 } else {
+	if (blocking.length > 0) {
+		console.error(`\n${blocking.join('\n\n')}\n`);
+		process.exit(1);
+	}
+
 	writeFileSync(OUTPUT_PATH, output);
 	console.log(`Wrote ${operations.length} operations to ${OUTPUT_PATH.replace(`${ROOT}/`, '')}`);
 	if (uncovered.length > 0) {

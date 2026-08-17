@@ -58,7 +58,7 @@ function buildProperties(): INodeProperties[] {
 		typeOptions: { loadOptionsMethod: 'getCompanies' },
 		default: '',
 		description:
-			'Company (NIF) to operate as, for multi-NIF accounts. Leave empty to use the default set on the credential, or the company the API key is already scoped to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+			'Company (NIF) this operation runs against — BeeL scopes invoices, customers, products and series by company. Leave empty to use the default set on the credential. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 		options: [],
 	});
 

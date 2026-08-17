@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-beel",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "n8n community node for BeeL — Spanish invoicing with VeriFactu compliance, generated from the OpenAPI contract",
   "keywords": [
     "n8n-community-node-package",

@@ -1,7 +1,7 @@
 import type { IDataObject, IExecuteFunctions, INodeExecutionData, INodeProperties } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 
-import { beelApiRequest, resolveCompanyId, unwrap } from './GenericFunctions';
+import { beelApiRequest, contractPath, resolveCompanyId, unwrap } from './GenericFunctions';
 import type { GeneratedOperation } from './descriptions/generated/types';
 
 /**
@@ -28,9 +28,9 @@ export const MANUAL_OPERATIONS: GeneratedOperation[] = [
 		displayName: 'Download PDF',
 		action: 'Download an invoice PDF',
 		description: 'Download the invoice PDF as binary data',
-		operationId: 'generateInvoicePdf',
+		operationId: 'getCompanyInvoicePdf',
 		method: 'GET',
-		path: '/v1/invoices/{invoice_id}/pdf',
+		path: contractPath('getCompanyInvoicePdf'),
 		pathParams: [INVOICE_ID_FIELD],
 		requiredFields: [],
 		optionalFields: [],
@@ -47,21 +47,12 @@ export const MANUAL_OPERATIONS: GeneratedOperation[] = [
 		displayName: 'Submit Representation',
 		action: 'Submit the signed representation',
 		description: 'Upload the signed representation PDF that registers the NIF with the AEAT',
-		operationId: 'submitRepresentation',
+		operationId: 'submitCompanyRepresentation',
 		method: 'POST',
-		path: '/v1/companies/{company_id}/representation/submit',
-		pathParams: [
-			{
-				displayName: 'Company ID',
-				name: 'companyIdPath',
-				apiName: 'company_id',
-				type: 'string',
-				default: '',
-				required: true,
-				description: 'ID of the company whose representation is being submitted',
-				validation: { format: 'uuid' },
-			},
-		],
+		path: contractPath('submitCompanyRepresentation'),
+		// `{company_id}` is the request's scope, filled in from the node's own
+		// "Company" field by beelApiRequest — not an argument of its own.
+		pathParams: [],
 		requiredFields: [],
 		optionalFields: [],
 		filters: [],
@@ -128,11 +119,15 @@ export async function downloadInvoicePdf(
 	let fileName: string;
 	let json: IDataObject;
 
+	// `{company_id}` is left for beelApiRequest to resolve; only the invoice is ours.
+	const withInvoice = (operationId: string): string =>
+		contractPath(operationId).replace('{invoice_id}', encodeURIComponent(invoiceId));
+
 	if (draftPreview) {
 		const response = (await beelApiRequest.call(
 			this,
 			'GET',
-			`/v1/invoices/${encodeURIComponent(invoiceId)}/pdf/preview`,
+			withInvoice('previewCompanyInvoicePdf'),
 			undefined,
 			{},
 			companyId,
@@ -147,7 +142,7 @@ export async function downloadInvoicePdf(
 			await beelApiRequest.call(
 				this,
 				'GET',
-				`/v1/invoices/${encodeURIComponent(invoiceId)}/pdf`,
+				withInvoice('getCompanyInvoicePdf'),
 				undefined,
 				{},
 				companyId,
@@ -195,12 +190,10 @@ export async function submitRepresentation(
 	this: IExecuteFunctions,
 	itemIndex: number,
 ): Promise<INodeExecutionData> {
-	const companyId = (this.getNodeParameter('companyIdPath', itemIndex) as string).trim();
 	const binaryField = this.getNodeParameter('inputBinaryField', itemIndex) as string;
-
-	if (companyId === '') {
-		throw new NodeOperationError(this.getNode(), '"Company ID" is required', { itemIndex });
-	}
+	// The company is the request's scope, as everywhere else: taken from the
+	// node's "Company" field or the credential default, and validated there.
+	const companyId = resolveCompanyId(this, itemIndex);
 
 	const binary = this.helpers.assertBinaryData(itemIndex, binaryField);
 	const buffer = await this.helpers.getBinaryDataBuffer(itemIndex, binaryField);
@@ -225,15 +218,12 @@ export async function submitRepresentation(
 	const response = await beelApiRequest.call(
 		this,
 		'POST',
-		`/v1/companies/${encodeURIComponent(companyId)}/representation/submit`,
+		contractPath('submitCompanyRepresentation'),
 		undefined,
 		{},
-		resolveCompanyId(this, itemIndex),
+		companyId,
 		{ body: form, json: false },
 	);
 
-	return {
-		json: { ...unwrap(response), company_id: companyId },
-		pairedItem: { item: itemIndex },
-	};
+	return { json: unwrap(response), pairedItem: { item: itemIndex } };
 }

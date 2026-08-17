@@ -10,7 +10,7 @@ import type {
 } from 'n8n-workflow';
 import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
-import { beelApiRequest, getCompanies, unwrap, WEBHOOK_EVENTS } from '../Beel/GenericFunctions';
+import { beelApiRequest, contractPath, unwrap, WEBHOOK_EVENTS } from '../Beel/GenericFunctions';
 
 /** Default freshness window for a delivery, matching the BeeL SDK. */
 const DEFAULT_TOLERANCE_SECONDS = 300;
@@ -40,6 +40,16 @@ function parseSignature(header: string): { timestamp: number; signature: string 
 
 	if (timestamp === undefined || Number.isNaN(timestamp) || !signature) return undefined;
 	return { timestamp, signature };
+}
+
+/**
+ * Path of a single-subscription endpoint, from the contract.
+ *
+ * `{account_id}` is left in place for `beelApiRequest` to resolve; only the
+ * subscription this node owns is substituted here.
+ */
+function webhookPath(operationId: string, webhookId: string): string {
+	return contractPath(operationId).replace('{webhook_id}', encodeURIComponent(webhookId));
 }
 
 function timingSafeEquals(a: string, b: string): boolean {
@@ -81,22 +91,13 @@ export class BeelTrigger implements INodeType {
 				type: 'multiOptions',
 				required: true,
 				default: [],
-				description: 'Events that should start the workflow',
+				description:
+					'Events that should start the workflow. A subscription covers the whole account: for a multi-NIF account the workflow receives these events for every company, so filter on the payload if you only want one.',
 				options: WEBHOOK_EVENTS.map((event) => ({
 					name: event.name,
 					value: event.value,
 					description: event.description,
 				})),
-			},
-			{
-				displayName: 'Company Name or ID',
-				name: 'activeCompany',
-				type: 'options',
-				typeOptions: { loadOptionsMethod: 'getCompanies' },
-				default: '',
-				description:
-					'Company (NIF) to subscribe on, for multi-NIF accounts. Leave empty to use the default set on the credential. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
-				options: [],
 			},
 			{
 				displayName: 'Options',
@@ -127,10 +128,6 @@ export class BeelTrigger implements INodeType {
 		],
 	};
 
-	methods = {
-		loadOptions: { getCompanies },
-	};
-
 	webhookMethods = {
 		default: {
 			/**
@@ -143,10 +140,13 @@ export class BeelTrigger implements INodeType {
 
 				const webhookUrl = this.getNodeWebhookUrl('default');
 				const events = this.getNodeParameter('events') as string[];
-				const companyId = (this.getNodeParameter('activeCompany', '') as string) ?? '';
-
 				const response = unwrap(
-					await beelApiRequest.call(this, 'GET', '/v1/webhooks', undefined, {}, companyId),
+					await beelApiRequest.call(
+						this,
+						'GET',
+						contractPath('listAccountWebhookSubscriptions'),
+						undefined,
+					),
 				);
 				const subscriptions = ((response.webhooks ?? response) ?? []) as IDataObject[];
 
@@ -170,10 +170,8 @@ export class BeelTrigger implements INodeType {
 				await beelApiRequest.call(
 					this,
 					'PATCH',
-					`/v1/webhooks/${state.webhookId}`,
+					webhookPath('patchAccountWebhookSubscription', state.webhookId),
 					{ url: webhookUrl, events, active: true },
-					{},
-					companyId,
 				);
 
 				return true;
@@ -182,8 +180,6 @@ export class BeelTrigger implements INodeType {
 			async create(this: IHookFunctions): Promise<boolean> {
 				const webhookUrl = this.getNodeWebhookUrl('default') as string;
 				const events = this.getNodeParameter('events') as string[];
-				const companyId = (this.getNodeParameter('activeCompany', '') as string) ?? '';
-
 				if (events.length === 0) {
 					throw new NodeOperationError(this.getNode(), 'Select at least one event to subscribe to');
 				}
@@ -203,10 +199,8 @@ export class BeelTrigger implements INodeType {
 					await beelApiRequest.call(
 						this,
 						'POST',
-						'/v1/webhooks',
+						contractPath('createAccountWebhookSubscription'),
 						{ url: webhookUrl, events },
-						{},
-						companyId,
 					),
 				);
 
@@ -229,16 +223,12 @@ export class BeelTrigger implements INodeType {
 				const state = this.getWorkflowStaticData('node') as BeelWebhookState;
 				if (!state.webhookId) return true;
 
-				const companyId = (this.getNodeParameter('activeCompany', '') as string) ?? '';
-
 				try {
 					await beelApiRequest.call(
 						this,
 						'DELETE',
-						`/v1/webhooks/${state.webhookId}`,
+						webhookPath('deleteAccountWebhookSubscription', state.webhookId),
 						undefined,
-						{},
-						companyId,
 					);
 				} catch (error) {
 					// Usually the subscription is already gone on BeeL's side, which is

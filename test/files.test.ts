@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { downloadInvoicePdf, submitRepresentation } from '../nodes/Beel/manualOperations';
-import { COMPANY_ID, INVOICE_ID, makeContext } from './helpers';
+import { COMPANY_BASE, COMPANY_ID, INVOICE_ID, makeContext } from './helpers';
 
 /**
  * The two operations that move a file rather than JSON. They are hand-written,
@@ -26,7 +26,7 @@ describe('downloading an invoice PDF', () => {
 
 		const item = await downloadInvoicePdf.call(stub.context, 0);
 
-		expect(stub.requests[0].url).toBe(`https://app.beel.es/api/v1/invoices/${INVOICE_ID}/pdf`);
+		expect(stub.requests[0].url).toBe(`${COMPANY_BASE}/invoices/${INVOICE_ID}/pdf`);
 		expect(stub.requests[1].url).toBe('https://files.beel.es/x.pdf');
 		expect(item.binary?.data).toMatchObject({
 			fileName: 'A-2026-0001.pdf',
@@ -65,7 +65,7 @@ describe('downloading an invoice PDF', () => {
 
 		expect(stub.requests).toHaveLength(1);
 		expect(stub.requests[0].url).toBe(
-			`https://app.beel.es/api/v1/invoices/${INVOICE_ID}/pdf/preview`,
+			`${COMPANY_BASE}/invoices/${INVOICE_ID}/pdf/preview`,
 		);
 		expect(item.json).toMatchObject({ preview: true });
 		expect(item.binary?.file).toBeDefined();
@@ -75,7 +75,7 @@ describe('downloading an invoice PDF', () => {
 describe('submitting a signed representation', () => {
 	it('uploads the binary field as multipart', async () => {
 		const stub = makeContext({
-			parameters: { companyIdPath: COMPANY_ID, inputBinaryField: 'data' },
+			parameters: { activeCompany: COMPANY_ID, inputBinaryField: 'data' },
 			binary: { data: { data: PDF, fileName: 'signed.pdf', mimeType: 'application/pdf' } },
 			responses: { data: { status: 'SUBMITTED' } },
 		});
@@ -84,16 +84,16 @@ describe('submitting a signed representation', () => {
 
 		expect(stub.requests[0]).toMatchObject({
 			method: 'POST',
-			url: `https://app.beel.es/api/v1/companies/${COMPANY_ID}/representation/submit`,
+			url: `${COMPANY_BASE}/representation/submit`,
 		});
 		expect(stub.requests[0].body).toBeInstanceOf(FormData);
 		expect((stub.requests[0].body as FormData).get('file')).toBeInstanceOf(Blob);
-		expect(item.json).toMatchObject({ status: 'SUBMITTED', company_id: COMPANY_ID });
+		expect(item.json).toMatchObject({ status: 'SUBMITTED' });
 	});
 
 	it('refuses a binary field that is not a PDF', async () => {
 		const stub = makeContext({
-			parameters: { companyIdPath: COMPANY_ID, inputBinaryField: 'data' },
+			parameters: { activeCompany: COMPANY_ID, inputBinaryField: 'data' },
 			binary: { data: { data: PDF, fileName: 'photo.png', mimeType: 'image/png' } },
 		});
 
@@ -101,12 +101,14 @@ describe('submitting a signed representation', () => {
 		expect(stub.requests).toHaveLength(0);
 	});
 
-	it('requires a company', async () => {
+	it('requires a company, since the path is scoped by one', async () => {
 		const stub = makeContext({
-			parameters: { companyIdPath: '  ', inputBinaryField: 'data' },
+			parameters: { activeCompany: '  ', inputBinaryField: 'data' },
+			credentials: { apiKey: 'beel_sk_test_x' },
 			binary: { data: { data: PDF, mimeType: 'application/pdf' } },
 		});
 
-		await expect(submitRepresentation.call(stub.context, 0)).rejects.toThrow(/is required/);
+		await expect(submitRepresentation.call(stub.context, 0)).rejects.toThrow(/needs a company/);
+		expect(stub.requests).toHaveLength(0);
 	});
 });

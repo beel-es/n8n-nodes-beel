@@ -42,6 +42,10 @@ export const FIELD_UI_OVERRIDES: Record<string, FieldUiOverride> = {
 	address_street: { placeholder: '123 Main Street' },
 	// "Mi Empresa SL".
 	legal_name: { placeholder: 'My Company Ltd' },
+	// "Mi Empresa" — the commercial name a company trades under.
+	trade_name: { placeholder: 'My Company' },
+	// "María García López", on the company's legal representative.
+	full_name: { placeholder: 'Jane Smith' },
 };
 
 /**
@@ -55,11 +59,15 @@ export const FIELD_UI_OVERRIDES: Record<string, FieldUiOverride> = {
  */
 export const OPTION_NAME_OVERRIDES: Record<string, string> = {
 	EXENTA_ART_20: 'Exempt — Art. 20 LIVA',
-	EXENTA_ART_21_24: 'Exempt — Art. 21 and 24 LIVA',
+	// The contract split the old EXENTA_ART_21_24 into one member per article.
+	EXENTA_ART_21: 'Exempt — Art. 21 LIVA',
+	EXENTA_ART_22: 'Exempt — Art. 22 LIVA',
+	EXENTA_ART_24: 'Exempt — Art. 24 LIVA',
 	EXENTA_ART_25: 'Exempt — Art. 25 LIVA',
 	EXENTA_ART_26: 'Exempt — Art. 26 LIVA',
 	EXENTA_ART_140: 'Exempt — Art. 140 LIVA',
 	NO_SUJETA_ART_7_9: 'Not Subject to VAT — Art. 7.9 LIVA',
+	NO_SUJETA_LOCALIZACION: 'Not Subject to VAT — Outside the Spanish VAT Territory',
 	ISP_ART_84_2_A: 'Reverse Charge — Art. 84.2.a LIVA',
 	ISP_ART_84_2_E: 'Reverse Charge — Art. 84.2.e LIVA',
 	ISP_ART_84_2_F: 'Reverse Charge — Art. 84.2.f LIVA',
@@ -102,6 +110,10 @@ const ALLOWED = [
 	/España for Spain/,
 	/\bLIVA\b/,
 	/^(IVA|IGIC|IPSI|NIF|CIF|IRPF|AEAT|VeriFactu|Verifactu|Holded)$/,
+	// The API's own line-type value. There is no English term for a "suplido" — a
+	// cost advanced on the client's behalf, invoiced without VAT — and the value
+	// is what an accountant looks for, so it is kept and explained where it is used.
+	/\bSUPLIDO\b/,
 ];
 
 /** Every user-visible string in a generated node parameter, with its location. */

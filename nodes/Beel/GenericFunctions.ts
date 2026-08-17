@@ -11,7 +11,11 @@ import type {
 	IWebhookFunctions,
 	JsonObject,
 } from 'n8n-workflow';
-import { NodeApiError } from 'n8n-workflow';
+import { NodeApiError, NodeOperationError } from 'n8n-workflow';
+
+import { CONTRACT_PATHS } from './descriptions/generated/operations.generated';
+import { placeholderOf, scopeAxesOf } from './scope';
+import type { ScopeParameter } from './scope';
 
 export type BeelRequestContext =
 	| IExecuteFunctions
@@ -30,15 +34,81 @@ export interface IBeelEnvelope {
 	pagination?: IDataObject;
 }
 
-/** Header that designates which company (NIF) an account-wide key operates as. */
-const ACTIVE_COMPANY_HEADER = 'Beel-Active-Company';
+/**
+ * Resolves each scope axis to the value that replaces its placeholder.
+ *
+ * Keyed by `ScopeParameter`, so adding an axis in `scope.ts` fails to compile
+ * until it has a resolver here — which beats discovering at runtime that a new
+ * placeholder travelled to the API unsubstituted.
+ */
+const SCOPE_RESOLVERS: Record<
+	ScopeParameter,
+	(context: BeelRequestContext, companyId: string) => Promise<string>
+> = {
+	async company_id(context, companyId) {
+		const credentials = await context.getCredentials('beelApi');
+		// A company chosen on the node overrides the account default in the credential.
+		const company = (companyId || ((credentials.companyId as string) ?? '')).trim();
+
+		if (company === '') {
+			throw new NodeOperationError(
+				context.getNode(),
+				'This operation needs a company: BeeL scopes it by NIF',
+				{
+					description:
+						'Pick one in the node\'s "Company" field, or set a default company on the BeeL credential.',
+				},
+			);
+		}
+
+		return company;
+	},
+
+	async account_id(context) {
+		const accountId = await resolveAccountId.call(context);
+
+		if (accountId === '') {
+			throw new NodeOperationError(
+				context.getNode(),
+				'BeeL did not return an account for this API key',
+				{ description: 'GET /v1/me/identity answered without an account_id.' },
+			);
+		}
+
+		return accountId;
+	},
+};
+
+/** Substitutes the scope placeholders the path opens with. */
+async function resolveScope(
+	this: BeelRequestContext,
+	endpoint: string,
+	companyId: string,
+): Promise<string> {
+	let path = endpoint;
+
+	for (const axis of scopeAxesOf(endpoint)) {
+		const value = await SCOPE_RESOLVERS[axis.parameter](this, companyId);
+		path = path.replace(placeholderOf(axis), encodeURIComponent(value));
+	}
+
+	return path;
+}
 
 /**
  * Performs an authenticated request against the BeeL Public API.
  *
  * Adds an `Idempotency-Key` to every POST so a retried request never creates a
- * duplicate invoice, and sets the active-company header so multi-NIF accounts
- * operate as the intended company.
+ * duplicate invoice, and fills in the scope the path asks for: `{company_id}`
+ * from the company chosen on the node (or the credential default), and
+ * `{account_id}` from the API key's own identity.
+ *
+ * The scope used to travel in a `Beel-Active-Company` header. The contract
+ * retired it — `{company_id}` in the path is now the only source of context, and
+ * the account that owns it is derived from it — so a request that reached the
+ * API with the header and no company in the path would silently operate on
+ * whichever company the key defaults to. Resolving it here means the generated
+ * operations, the hand-written file operations and the dropdowns all get it.
  */
 export async function beelApiRequest(
 	this: BeelRequestContext,
@@ -62,15 +132,11 @@ export async function beelApiRequest(
 		headers['Idempotency-Key'] = idempotencyKey.trim() || randomUUID();
 	}
 
-	// A company chosen on the node overrides the account default in the credential.
-	const activeProfile = (companyId || ((credentials.companyId as string) ?? '')).trim();
-	if (activeProfile !== '') {
-		headers[ACTIVE_COMPANY_HEADER] = activeProfile;
-	}
+	const url = `${baseUrl}${await resolveScope.call(this, endpoint, companyId)}`;
 
 	const options: IHttpRequestOptions = {
 		method,
-		url: `${baseUrl}${endpoint}`,
+		url,
 		headers,
 		json: true,
 		...option,
@@ -195,6 +261,23 @@ function currentCompanyId(context: ILoadOptionsFunctions): string {
 	}
 }
 
+/**
+ * The contract's path for an endpoint the hand-written code calls directly.
+ *
+ * Every such path is declared in `REFERENCED_OPERATION_IDS` and emitted by the
+ * generator, so a route the API retires breaks `npm run generate` with the
+ * endpoint to migrate, instead of shipping a URL that quietly 404s.
+ */
+export function contractPath(operationId: string): string {
+	const path = CONTRACT_PATHS[operationId];
+	if (path === undefined) {
+		throw new Error(
+			`"${operationId}" is not in CONTRACT_PATHS — add it to REFERENCED_OPERATION_IDS in scripts/config.ts and re-run \`npm run generate\`.`,
+		);
+	}
+	return path;
+}
+
 // ── Dropdowns ───────────────────────────────────────────────────────────────
 
 /**
@@ -211,7 +294,11 @@ async function resolveAccountId(this: BeelRequestContext): Promise<string> {
 	const cached = accountIdByCredential.get(cacheKey);
 	if (cached) return cached;
 
-	const identity = (await beelApiRequest.call(this, 'GET', '/v1/me/identity')) as IBeelEnvelope;
+	const identity = (await beelApiRequest.call(
+		this,
+		'GET',
+		contractPath('getMyIdentity'),
+	)) as IBeelEnvelope;
 	const accountId = ((identity?.data as IDataObject)?.account_id ?? '') as string;
 	if (accountId) accountIdByCredential.set(cacheKey, accountId);
 	return accountId;
@@ -220,19 +307,15 @@ async function resolveAccountId(this: BeelRequestContext): Promise<string> {
 /** Companies (NIFs) the API key can operate as. */
 export async function getCompanies(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 	// El plano `GET /v1/companies` fue RETIRADO del contrato (multi-NIF: los
-	// recursos de cuenta viven bajo /v1/accounts/{account_id}/...).
-	const accountId = await resolveAccountId.call(this);
-
-	const response = (await beelApiRequest.call(
+	// recursos de cuenta viven bajo /v1/accounts/{account_id}/...). La lista está
+	// siempre paginada: no hay modo "todo", escala a miles de NIFs.
+	const companies = await beelApiRequestAllItems.call(
 		this,
-		'GET',
-		`/v1/accounts/${accountId}/companies`,
-	)) as IBeelEnvelope;
-
-	const data = response?.data;
-	const companies = (
-		Array.isArray(data) ? data : ((data as IDataObject)?.companies ?? [])
-	) as IDataObject[];
+		'companies',
+		contractPath('listCompanies'),
+		{},
+		300,
+	);
 
 	return companies.map((company) => ({
 		name: `${(company.legal_name ?? company.name) as string}${company.nif ? ` — ${company.nif as string}` : ''}`,
@@ -242,16 +325,15 @@ export async function getCompanies(this: ILoadOptionsFunctions): Promise<INodePr
 
 /** Active invoice series, for the series pickers. */
 export async function getSeries(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-	const response = (await beelApiRequest.call(
+	// `data` is the array itself here, so the list key is empty.
+	const series = await beelApiRequestAllItems.call(
 		this,
-		'GET',
-		'/v1/configuration/series',
-		undefined,
+		'',
+		contractPath('listCompanySeries'),
 		{ active: true },
+		300,
 		currentCompanyId(this),
-	)) as IBeelEnvelope;
-
-	const series = (response?.data ?? []) as IDataObject[];
+	);
 
 	return series.map((item) => ({
 		name: `${item.name as string} (${item.code as string})`,
@@ -265,7 +347,7 @@ export async function getCustomers(this: ILoadOptionsFunctions): Promise<INodePr
 	const customers = await beelApiRequestAllItems.call(
 		this,
 		'customers',
-		'/v1/customers',
+		contractPath('listCompanyCustomers'),
 		{},
 		300,
 		currentCompanyId(this),
@@ -282,7 +364,7 @@ export async function getProducts(this: ILoadOptionsFunctions): Promise<INodePro
 	const products = await beelApiRequestAllItems.call(
 		this,
 		'products',
-		'/v1/products',
+		contractPath('listCompanyProducts'),
 		{},
 		300,
 		currentCompanyId(this),
