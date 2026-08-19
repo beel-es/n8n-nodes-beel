@@ -23,7 +23,10 @@ export const RESOURCES: Array<{ resource: string; displayName: string; tags: str
 	{ resource: 'recurringInvoice', displayName: 'Recurring Invoice', tags: ['CompanyRecurringInvoices'] },
 	{ resource: 'configuration', displayName: 'Configuration', tags: ['CompanyTaxConfiguration', 'CompanyVeriFactuConfiguration', 'TaxTypes', 'InvoiceCustomization'] },
 	{ resource: 'nif', displayName: 'NIF', tags: ['NIF'] },
-	{ resource: 'company', displayName: 'Company', tags: ['PublicCompanies', 'Company', 'CompanyRepresentation'] },
+	{ resource: 'company', displayName: 'Company', tags: ['PublicCompanies', 'Company', 'CompanyRepresentation', 'CompanyFiscalSummary'] },
+	{ resource: 'account', displayName: 'Account', tags: ['Provisioning', 'Accounts'] },
+	{ resource: 'paymentConnection', displayName: 'Payment Connection', tags: ['CompanyPaymentConnections'] },
+	{ resource: 'paymentEvent', displayName: 'Payment Event', tags: ['CompanyPaymentEvents'] },
 ];
 
 /**
@@ -108,6 +111,33 @@ export const OPERATION_NAMES: Record<string, string> = {
 	downloadCompanyRepresentationDocument: 'downloadRepresentation',
 	getCompanyRepresentation: 'getRepresentationStatus',
 	cancelCompanyRepresentation: 'cancelRepresentation',
+	// Whether the NIF can issue right now, and what is missing if not. The gate
+	// an onboarding flow checks before telling a client they are live.
+	getCompanyIssuingReadiness: 'getIssuingReadiness',
+	listCompanyStats: 'getStats',
+	getCompanyFiscalSummary: 'getFiscalSummary',
+	// Account (provisioning). A platform — gestoría, SaaS, marketplace — creates
+	// and hands over accounts by API, repeatedly. `provisionAccount` is
+	// idempotent by `external_ref`, so a re-run never duplicates one.
+	provisionAccount: 'provision',
+	listAccounts: 'getAll',
+	getAccount: 'get',
+	getAccountUsage: 'getUsage',
+	// Claim tokens expire after 30 days and re-issuing invalidates the previous
+	// one, so a portfolio needs to re-send them on a schedule.
+	createAccountClaimToken: 'createClaimToken',
+	// Payment connections: the white-label flow that lets a managed NIF's holder
+	// connect Stripe, after which BeeL auto-invoices every charge.
+	listCompanyPaymentConnections: 'getAll',
+	initiatePaymentConnection: 'initiate',
+	disconnectCompanyPaymentConnection: 'disconnect',
+	// Payment events. There is NO webhook for a charge that failed to invoice, and
+	// the list has no server-side filter, so finding them means sweeping this
+	// collection and sifting on `needs_action` — which is why these are exposed.
+	listCompanyPaymentEvents: 'getAll',
+	getCompanyPaymentEvent: 'get',
+	retryCompanyPaymentEvent: 'retry',
+	generateCompanyPaymentEventDraft: 'generateDraft',
 };
 
 /**
@@ -136,6 +166,7 @@ export const REFERENCED_OPERATION_IDS = [
 	'getMyIdentity',
 	// Dropdowns.
 	'listCompanies',
+	'listAccounts',
 	'listCompanySeries',
 	'listCompanyCustomers',
 	'listCompanyProducts',
@@ -166,29 +197,30 @@ export const EXCLUDED_OPERATION_IDS = [
 	// does not mark deprecated, though every sibling is and the company-scoped
 	// `patchCompanySeries` replaces it. Excluded by hand until the flag catches up.
 	'updateSeries',
-	// Account-wide settings and identity, changed in the dashboard, not per workflow.
+	// One-off configuration, genuinely done once in the dashboard: branding,
+	// template customisation, and the tax/VeriFactu settings of a NIF.
 	'updateMe', 'updateCompanyTaxConfiguration', 'updateCompanyVeriFactuConfiguration',
 	'uploadCompanyLogoById', 'deleteCompanyLogoById',
 	'getCompanyInvoiceCustomization', 'updateCompanyInvoiceCustomization',
 	'activateCompanyById', 'deactivateCompanyById',
+	// Ending or re-levelling the management of a provisioned account. Left out
+	// deliberately: offboarding is as automatable as onboarding, but these are
+	// destructive over someone else's fiscal data and rare enough that doing them
+	// deliberately in the dashboard is the safer default. Reconsider on request.
+	'changeManagedAccountAccessLevel', 'endAccountManagement',
 	// Webhook subscriptions are managed by the BeeL Trigger node, which uses the
 	// four in REFERENCED_OPERATION_IDS; the rest have no place in a workflow.
 	'getAccountWebhookSubscription', 'listAccountWebhookDeliveries',
 	'retryAccountWebhookDelivery', 'testAccountWebhookSubscription', 'rotateAccountWebhookSecret',
-	// Account administration: provisioning, membership, invitations and billing.
-	// These belong to whoever runs the platform account, not to a workflow.
-	'provisionAccount', 'listAccounts', 'getAccount', 'getAccountUsage',
-	'changeManagedAccountAccessLevel', 'endAccountManagement', 'createAccountClaimToken',
+	// Team administration inside an account: who else can log in and what they
+	// reach. Occasional, and done by a person, not by a workflow.
 	'listAccountMembers', 'getAccountMember', 'patchAccountMember', 'deleteAccountMember',
 	'listAccountMemberGrants', 'putAccountMemberGrant', 'deleteAccountMemberGrant', 'putAccountOwner',
 	'listAccountInvitations', 'createAccountInvitation', 'getAccountInvitation', 'deleteAccountInvitation',
-	// Observability, reporting and payment integrations — read in the dashboard.
+	// Observability: request and email delivery logs, read in the dashboard when
+	// debugging rather than driven from a workflow.
 	'listAccountRequestLogs', 'getAccountRequestLog',
 	'listAccountEmailDeliveries', 'getAccountEmailDeliveryIndicators', 'getAccountEmailDelivery',
-	'listCompanyStats', 'getCompanyFiscalSummary', 'getCompanyIssuingReadiness',
-	'listCompanyPaymentConnections', 'initiatePaymentConnection', 'disconnectCompanyPaymentConnection',
-	'listCompanyPaymentEvents', 'getCompanyPaymentEvent', 'retryCompanyPaymentEvent',
-	'generateCompanyPaymentEventDraft',
 ];
 
 /**
@@ -200,6 +232,7 @@ export const RESERVED_PARAMETER_NAMES = [
 	'resource',
 	'operation',
 	'activeCompany',
+	'activeAccount',
 	'idempotencyKey',
 	'returnAll',
 	'limit',

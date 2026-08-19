@@ -1,7 +1,7 @@
 import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 
-import { beelApiRequest, beelApiRequestAllItems, resolveCompanyId, unwrap } from './GenericFunctions';
+import { beelApiRequest, beelApiRequestAllItems, resolveScopeFor, unwrap } from './GenericFunctions';
 import type { GeneratedField, GeneratedOperation } from './descriptions/generated/types';
 import { isVisible, validateField } from './validation';
 
@@ -215,7 +215,7 @@ export async function executeGeneratedOperation(
 		collect(this, operation, operation.filters, values, itemIndex, collected);
 	}
 
-	const companyId = resolveCompanyId(this, itemIndex);
+	const scope = resolveScopeFor(this, itemIndex);
 
 	if (operation.paginated) {
 		const returnAll = this.getNodeParameter('returnAll', itemIndex, false) as boolean;
@@ -227,7 +227,7 @@ export async function executeGeneratedOperation(
 			path,
 			collected.query,
 			limit,
-			companyId,
+			scope,
 		);
 	}
 
@@ -237,7 +237,7 @@ export async function executeGeneratedOperation(
 		path,
 		['GET', 'DELETE'].includes(operation.method) ? undefined : collected.body,
 		collected.query,
-		companyId,
+		scope,
 		{},
 		this.getNodeParameter('idempotencyKey', itemIndex, '') as string,
 	);

@@ -24,7 +24,7 @@ n8n community node for [BeeL](https://beel.es) — invoicing for self-employed p
 
 Issue invoices, keep customers and products in sync, onboard new NIFs, and react to AEAT decisions, without writing a single HTTP request.
 
-- **BeeL** — 60 operations across invoices, recurring invoices, customers, products, series, companies, configuration and NIF validation
+- **BeeL** — 75 operations across invoices, recurring invoices, customers, products, series, companies, accounts, payment connections, configuration and NIF validation
 - **BeeL Trigger** — starts a workflow when BeeL emits an event, with the delivery's HMAC-SHA256 signature verified before anything runs
 - Every field constraint comes from BeeL's OpenAPI contract and is checked before the request leaves n8n
 - Multi-NIF aware, idempotent, no runtime dependencies
@@ -71,6 +71,10 @@ The **Company** dropdown is filled from `/v1/accounts/{account_id}/companies`, w
 
 The **BeeL Trigger** is the exception: webhook subscriptions belong to the account, not to a company, so one trigger receives the events of every NIF. Filter on the payload if you only want one.
 
+### Provisioners (gestorías, platforms)
+
+If your key provisioned accounts for other people, the **Account** field picks which one an operation acts on — the contract allows `account_id` to be "your own account or an account you provisioned". Leave it empty and it resolves to the account the key belongs to, which is what you want on an ordinary key. The **Company** dropdown follows whichever account you pick, so onboarding a client's NIF and then operating on it is one workflow.
+
 ---
 
 ## Operations
@@ -112,6 +116,18 @@ Create ──▶ Generate Representation ──▶ Download Representation
 Create · Create From Invoice · Get · Get Many · Update · Delete · Set Status · Generate Now · Skip Next · Get Next Occurrence · Get History.
 
 Pausing and resuming are **Set Status** (`PAUSED` / `ACTIVE`), matching invoices. `COMPLETED` is reached on its own when the schedule runs out and cannot be set.
+
+### Account
+
+For platforms that onboard clients: Provision · Get · Get Many · Get Usage · Create Claim Token.
+
+`Provision` is **idempotent by `external_ref`**, so pointing it at your own tenant ID makes a re-run safe. It returns a one-time `claim_token` the holder uses to take ownership — and those **expire after 30 days**, with a new one invalidating the previous, which is exactly the sort of thing a scheduled workflow should re-issue rather than a person remember.
+
+### Payment Connection, Payment Event
+
+`Payment Connection → Initiate` opens a white-label authorization so a managed NIF's holder can connect Stripe; from then on BeeL auto-invoices every charge.
+
+`Payment Event` is the other half, and the reason it is here: automatic invoicing sometimes fails, **there is no webhook for it**, and the list takes no server-side filter. A charge that took money without producing an invoice is only visible by sweeping this collection and sifting on `needs_action`. Each event carries `failure_category` and `failure_reason`, plus `retry_available` and `draft_available` telling you which recovery it accepts — `Retry` when the cause was transient (a missing default series, say), `Generate Draft` when it needs a human to look before issuing.
 
 ### Customer, Product, Series, Configuration, NIF
 

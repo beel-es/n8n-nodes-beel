@@ -49,6 +49,43 @@ key defaulted to, which on a multi-NIF account is the wrong NIF.
 - **Credential test** now calls `/v1/me/identity` instead of a company-scoped
   resource, so a valid key no longer fails the test over an unset company.
 
+### Operations for platforms
+
+The first cut of this migration exposed only what a self-employed user does for
+their own invoicing, and pushed account provisioning and payment integrations
+to "that is the dashboard". For a gestoría, a SaaS or a marketplace invoicing on
+behalf of others, the dashboard is precisely what does not scale: they do these
+things hundreds of times, by API. Fifteen operations come back:
+
+- **Account** — Provision (idempotent by `external_ref`), Get, Get Many, Get
+  Usage, Create Claim Token. Claim tokens expire after 30 days and re-issuing
+  invalidates the previous one, so re-sending them belongs in a schedule.
+- **Payment Connection** — Get Many, Initiate (the white-label authorization a
+  managed NIF's holder completes to connect Stripe), Disconnect.
+- **Payment Event** — Get Many, Get, Retry, Generate Draft. BeeL emits **no
+  webhook** when automatic invoicing fails and the list takes no server-side
+  filter, so a charge that produced no invoice is only findable by sweeping this
+  collection for `needs_action`. That is a compliance hole a workflow can close
+  and a dashboard cannot.
+- **Company** — Get Issuing Readiness (whether the NIF can issue right now and
+  what is missing if not, the gate an onboarding flow checks), Get Stats,
+  Get Fiscal Summary.
+
+Still out, now on a stated criterion — expose what a platform repeats by API,
+keep out genuine one-off configuration: branding and template customisation,
+team members and invitations, request/email logs, and ending or re-levelling the
+management of a provisioned account (destructive over someone else's fiscal
+data, and rare).
+
+### New: the Account field
+
+`{account_id}` used to resolve only from the API key, which quietly made every
+account-scoped operation unable to reach anything but your own account — and the
+contract is explicit that it "may be your own account or an account you
+provisioned". There is now an **Account** field beside **Company**, with the same
+rule: what the node names wins, empty falls back to the key's own account. The
+Company dropdown follows whichever account is selected.
+
 ### So this cannot happen again
 
 The node ran on deprecated routes for a whole release and nothing said so. The

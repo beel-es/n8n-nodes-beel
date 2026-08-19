@@ -301,6 +301,34 @@ describe('scoping', () => {
 		expect(request.url).toBe(`${ACCOUNT_BASE}/companies`);
 	});
 
+	it('lets a provisioner name the account instead of using the key\'s own', async () => {
+		// The contract: account_id "may be your own account or an account you
+		// provisioned". Without this a gestoría could only ever reach itself.
+		const managed = '99999999-8888-7777-6666-555555555555';
+		const { request } = await run('company', 'getAll', {
+			parameters: { activeAccount: managed, returnAll: false, limit: 10, filters: {} },
+			responses: { data: { companies: [], pagination: { total_pages: 1 } } },
+		});
+
+		expect(request.url).toBe(`https://app.beel.es/api/v1/accounts/${managed}/companies`);
+	});
+
+	it('substitutes both axes on a path that carries the two', async () => {
+		const { request } = await run('paymentEvent', 'getAll', {
+			parameters: {
+				activeCompany: COMPANY_ID,
+				// the generator suffixes the name when two operations word it differently
+				provider_paymentEvent_getAll: 'stripe',
+				returnAll: false,
+				limit: 10,
+				filters: {},
+			},
+			responses: { data: [], pagination: { total_pages: 1 } },
+		});
+
+		expect(request.url).toBe(`${COMPANY_BASE}/payment-connections/stripe/events`);
+	});
+
 	it('never leaves a placeholder in the URL it sends', async () => {
 		const { request } = await run('customer', 'get', {
 			parameters: { customerId: CUSTOMER_ID, activeCompany: COMPANY_ID },

@@ -17,7 +17,7 @@ import {
 	buildOperationSelector,
 	mergeProperties,
 } from './descriptions/propertyBuilder';
-import { getCompanies, getCustomers, getProducts, getSeries } from './GenericFunctions';
+import { getAccounts, getCompanies, getCustomers, getProducts, getSeries } from './GenericFunctions';
 import { executeGeneratedOperation } from './genericExecutor';
 import {
 	downloadInvoicePdf,
@@ -50,6 +50,17 @@ function buildProperties(): INodeProperties[] {
 		);
 		properties.push(buildOperationSelector(resource.resource, operations));
 	}
+
+	properties.push({
+		displayName: 'Account Name or ID',
+		name: 'activeAccount',
+		type: 'options',
+		typeOptions: { loadOptionsMethod: 'getAccounts' },
+		default: '',
+		description:
+			'Account to act on. Leave empty for the account this API key belongs to — which is what you want unless you are a provisioner operating on an account you created for a client. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+		options: [],
+	});
 
 	properties.push({
 		displayName: 'Company Name or ID',
@@ -106,7 +117,7 @@ export class Beel implements INodeType {
 	};
 
 	methods = {
-		loadOptions: { getCompanies, getCustomers, getProducts, getSeries },
+		loadOptions: { getAccounts, getCompanies, getCustomers, getProducts, getSeries },
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {

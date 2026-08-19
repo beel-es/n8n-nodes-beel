@@ -35,6 +35,30 @@ export interface IBeelEnvelope {
 }
 
 /**
+ * What the caller knows about the scope of this request.
+ *
+ * Both axes follow the same rule: what the node was told wins, and what the
+ * credential or the API key implies is the fallback. A bare string is read as
+ * the company, which is how most call sites still spell it.
+ */
+export interface BeelScope {
+	/** Company (NIF) chosen on the node. */
+	companyId?: string;
+	/**
+	 * Account chosen on the node. Empty means the account the API key belongs to.
+	 *
+	 * A provisioner operates on accounts it created, not only its own — the
+	 * contract is explicit that `account_id` "may be your own account or an
+	 * account you provisioned" — so a gestoría has to be able to name one.
+	 */
+	accountId?: string;
+}
+
+function asScope(scope: string | BeelScope): BeelScope {
+	return typeof scope === 'string' ? { companyId: scope } : scope;
+}
+
+/**
  * Resolves each scope axis to the value that replaces its placeholder.
  *
  * Keyed by `ScopeParameter`, so adding an axis in `scope.ts` fails to compile
@@ -43,12 +67,12 @@ export interface IBeelEnvelope {
  */
 const SCOPE_RESOLVERS: Record<
 	ScopeParameter,
-	(context: BeelRequestContext, companyId: string) => Promise<string>
+	(context: BeelRequestContext, scope: BeelScope) => Promise<string>
 > = {
-	async company_id(context, companyId) {
+	async company_id(context, scope) {
 		const credentials = await context.getCredentials('beelApi');
 		// A company chosen on the node overrides the account default in the credential.
-		const company = (companyId || ((credentials.companyId as string) ?? '')).trim();
+		const company = ((scope.companyId ?? '') || ((credentials.companyId as string) ?? '')).trim();
 
 		if (company === '') {
 			throw new NodeOperationError(
@@ -64,7 +88,11 @@ const SCOPE_RESOLVERS: Record<
 		return company;
 	},
 
-	async account_id(context) {
+	async account_id(context, scope) {
+		// An account named on the node wins; otherwise the key's own account.
+		const chosen = (scope.accountId ?? '').trim();
+		if (chosen !== '') return chosen;
+
 		const accountId = await resolveAccountId.call(context);
 
 		if (accountId === '') {
@@ -83,12 +111,12 @@ const SCOPE_RESOLVERS: Record<
 async function resolveScope(
 	this: BeelRequestContext,
 	endpoint: string,
-	companyId: string,
+	scope: BeelScope,
 ): Promise<string> {
 	let path = endpoint;
 
 	for (const axis of scopeAxesOf(endpoint)) {
-		const value = await SCOPE_RESOLVERS[axis.parameter](this, companyId);
+		const value = await SCOPE_RESOLVERS[axis.parameter](this, scope);
 		path = path.replace(placeholderOf(axis), encodeURIComponent(value));
 	}
 
@@ -116,7 +144,7 @@ export async function beelApiRequest(
 	endpoint: string,
 	body: IDataObject | undefined = undefined,
 	qs: IDataObject = {},
-	companyId = '',
+	scope: string | BeelScope = '',
 	option: Partial<IHttpRequestOptions> = {},
 	idempotencyKey = '',
 ): Promise<any> {
@@ -132,7 +160,7 @@ export async function beelApiRequest(
 		headers['Idempotency-Key'] = idempotencyKey.trim() || randomUUID();
 	}
 
-	const url = `${baseUrl}${await resolveScope.call(this, endpoint, companyId)}`;
+	const url = `${baseUrl}${await resolveScope.call(this, endpoint, asScope(scope))}`;
 
 	const options: IHttpRequestOptions = {
 		method,
@@ -208,7 +236,7 @@ export async function beelApiRequestAllItems(
 	endpoint: string,
 	qs: IDataObject = {},
 	limit = 0,
-	companyId = '',
+	scope: string | BeelScope = '',
 ): Promise<IDataObject[]> {
 	const results: IDataObject[] = [];
 	const pageSize = limit > 0 && limit < 100 ? limit : 100;
@@ -223,7 +251,7 @@ export async function beelApiRequestAllItems(
 			endpoint,
 			undefined,
 			{ ...qs, page, limit: pageSize },
-			companyId,
+			scope,
 		)) as IBeelEnvelope;
 
 		const data = response?.data;
@@ -252,13 +280,29 @@ export function resolveCompanyId(context: IExecuteFunctions, itemIndex: number):
 	return ((context.getNodeParameter('activeCompany', itemIndex, '') as string) ?? '').trim();
 }
 
-/** Company chosen on the node, as seen from a dropdown that is being populated. */
-function currentCompanyId(context: ILoadOptionsFunctions): string {
+/** Both scope axes as this item set them; empty values fall back downstream. */
+export function resolveScopeFor(context: IExecuteFunctions, itemIndex: number): BeelScope {
+	return {
+		companyId: resolveCompanyId(context, itemIndex),
+		accountId: ((context.getNodeParameter('activeAccount', itemIndex, '') as string) ?? '').trim(),
+	};
+}
+
+/** A node parameter as seen from a dropdown that is being populated. */
+function currentParameter(context: ILoadOptionsFunctions, name: string): string {
 	try {
-		return ((context.getCurrentNodeParameter('activeCompany') as string) ?? '').trim();
+		return ((context.getCurrentNodeParameter(name) as string) ?? '').trim();
 	} catch {
 		return '';
 	}
+}
+
+/** Both scope axes as the editor currently has them, for the dropdown loaders. */
+function currentScope(context: ILoadOptionsFunctions): BeelScope {
+	return {
+		companyId: currentParameter(context, 'activeCompany'),
+		accountId: currentParameter(context, 'activeAccount'),
+	};
 }
 
 /**
@@ -315,11 +359,33 @@ export async function getCompanies(this: ILoadOptionsFunctions): Promise<INodePr
 		contractPath('listCompanies'),
 		{},
 		300,
+		currentScope(this),
 	);
 
 	return companies.map((company) => ({
 		name: `${(company.legal_name ?? company.name) as string}${company.nif ? ` — ${company.nif as string}` : ''}`,
 		value: company.id as string,
+	}));
+}
+
+/**
+ * Accounts this API key can act on: its own, plus any it provisioned.
+ *
+ * Only a provisioner key sees more than one, so on an ordinary key this list
+ * has a single entry and the field can be left alone.
+ */
+export async function getAccounts(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+	const accounts = await beelApiRequestAllItems.call(
+		this,
+		'accounts',
+		contractPath('listAccounts'),
+		{},
+		300,
+	);
+
+	return accounts.map((account) => ({
+		name: `${(account.legal_name ?? account.name ?? account.email ?? account.id) as string}`,
+		value: account.id as string,
 	}));
 }
 
@@ -332,7 +398,7 @@ export async function getSeries(this: ILoadOptionsFunctions): Promise<INodePrope
 		contractPath('listCompanySeries'),
 		{ active: true },
 		300,
-		currentCompanyId(this),
+		currentScope(this),
 	);
 
 	return series.map((item) => ({
@@ -350,7 +416,7 @@ export async function getCustomers(this: ILoadOptionsFunctions): Promise<INodePr
 		contractPath('listCompanyCustomers'),
 		{},
 		300,
-		currentCompanyId(this),
+		currentScope(this),
 	);
 
 	return customers.map((customer) => ({
@@ -367,7 +433,7 @@ export async function getProducts(this: ILoadOptionsFunctions): Promise<INodePro
 		contractPath('listCompanyProducts'),
 		{},
 		300,
-		currentCompanyId(this),
+		currentScope(this),
 	);
 
 	return products.map((product) => ({

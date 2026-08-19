@@ -42,6 +42,18 @@ export const GENERATED_RESOURCES: GeneratedResource[] = [
 	{
 		"resource": "company",
 		"displayName": "Company"
+	},
+	{
+		"resource": "account",
+		"displayName": "Account"
+	},
+	{
+		"resource": "paymentConnection",
+		"displayName": "Payment Connection"
+	},
+	{
+		"resource": "paymentEvent",
+		"displayName": "Payment Event"
 	}
 ];
 
@@ -10282,6 +10294,1309 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"paginated": false,
 		"isList": false,
 		"listKey": ""
+	},
+	{
+		"resource": "company",
+		"operation": "getIssuingReadiness",
+		"displayName": "Get Issuing Readiness",
+		"action": "Get issuing readiness",
+		"description": "Returns whether this company (NIF) can issue its STANDARD invoice right now, in this environment — and if not, exactly what is missing",
+		"operationId": "getCompanyIssuingReadiness",
+		"method": "GET",
+		"path": "/v1/companies/{company_id}/issuing-readiness",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "company",
+		"operation": "getStats",
+		"displayName": "Get Stats",
+		"action": "Per-company invoice aggregates",
+		"description": "Returns invoice aggregates (count + last emission date) per company under the authenticated account",
+		"operationId": "listCompanyStats",
+		"method": "GET",
+		"path": "/v1/accounts/{account_id}/companies/stats",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": true,
+		"listKey": ""
+	},
+	{
+		"resource": "company",
+		"operation": "getFiscalSummary",
+		"displayName": "Get Fiscal Summary",
+		"action": "Get the fiscal summary of a company for a period",
+		"description": "Returns the VAT and IRPF summary of the invoices issued under this company (NIF) for the requested period, together with the annual IRPF projection and its progressive bracket breakdown",
+		"operationId": "getCompanyFiscalSummary",
+		"method": "GET",
+		"path": "/v1/companies/{company_id}/fiscal-summary",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [
+			{
+				"name": "start_date",
+				"apiName": "start_date",
+				"displayName": "Start Date",
+				"description": "Period start date (inclusive)",
+				"validation": {
+					"format": "date"
+				},
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "end_date",
+				"apiName": "end_date",
+				"displayName": "End Date",
+				"description": "Period end date (inclusive)",
+				"validation": {
+					"format": "date"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
+		"optionalCollectionName": "options",
+		"queryParamNames": [
+			"start_date",
+			"end_date"
+		],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "account",
+		"operation": "provision",
+		"displayName": "Provision",
+		"action": "Provision an account",
+		"description": "Provisions a new account on BeeL",
+		"operationId": "provisionAccount",
+		"method": "POST",
+		"path": "/v1/accounts",
+		"pathParams": [],
+		"requiredFields": [
+			{
+				"name": "display_name",
+				"apiName": "display_name",
+				"displayName": "Display Name",
+				"description": "Human-readable name for the account (max 255 characters)",
+				"required": true,
+				"validation": {
+					"minLength": 1,
+					"maxLength": 255
+				},
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "external_ref",
+				"apiName": "external_ref",
+				"displayName": "External Ref",
+				"description": "Your own identifier for this account in your system",
+				"required": true,
+				"type": "string",
+				"default": ""
+			}
+		],
+		"optionalFields": [
+			{
+				"name": "email",
+				"apiName": "email",
+				"displayName": "Email",
+				"description": "Optional (email address)",
+				"validation": {
+					"format": "email"
+				},
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "language",
+				"apiName": "language",
+				"displayName": "Language",
+				"description": "Preferred language for the account holder",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "Es",
+						"value": "es"
+					},
+					{
+						"name": "En",
+						"value": "en"
+					},
+					{
+						"name": "Ca",
+						"value": "ca"
+					}
+				],
+				"default": ""
+			},
+			{
+				"name": "access_level",
+				"apiName": "access_level",
+				"displayName": "Access Level",
+				"description": "Optional",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "NONE",
+						"value": "NONE"
+					},
+					{
+						"name": "VIEW",
+						"value": "VIEW"
+					},
+					{
+						"name": "OPERATE",
+						"value": "OPERATE"
+					}
+				],
+				"default": ""
+			},
+			{
+				"name": "tax_profile",
+				"apiName": "tax_profile",
+				"displayName": "Tax Profile",
+				"description": "Optional fiscal identity",
+				"type": "fixedCollection",
+				"fields": [
+					{
+						"name": "nif",
+						"apiName": "nif",
+						"displayName": "NIF",
+						"description": "Spanish tax id (NIF/CIF)",
+						"required": true,
+						"type": "string",
+						"default": ""
+					},
+					{
+						"name": "legal_name",
+						"apiName": "legal_name",
+						"displayName": "Legal Name",
+						"description": "Registered fiscal name",
+						"required": true,
+						"type": "string",
+						"default": "",
+						"placeholder": "My Company Ltd"
+					},
+					{
+						"name": "entity_type",
+						"apiName": "entity_type",
+						"displayName": "Entity Type",
+						"description": "Taxpayer type",
+						"required": true,
+						"type": "options",
+						"options": [
+							{
+								"name": "INDIVIDUAL",
+								"value": "INDIVIDUAL"
+							},
+							{
+								"name": "LEGAL ENTITY",
+								"value": "LEGAL_ENTITY"
+							}
+						],
+						"default": "INDIVIDUAL"
+					},
+					{
+						"name": "address_street",
+						"apiName": "address.street",
+						"displayName": "Address Street",
+						"description": "Full address (street, number, floor, etc.) - Latin characters only (max 255 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"minLength": 1,
+							"maxLength": 255
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "123 Main Street",
+						"required": true,
+						"groupRequired": true
+					},
+					{
+						"name": "address_number",
+						"apiName": "address.number",
+						"displayName": "Address Number",
+						"description": "Street number (max 20 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 20
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "123",
+						"required": true,
+						"groupRequired": true
+					},
+					{
+						"name": "address_floor",
+						"apiName": "address.floor",
+						"displayName": "Address Floor",
+						"description": "Floor or level (max 10 characters)",
+						"validation": {
+							"maxLength": 10
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "2nd floor, Apt A",
+						"required": false
+					},
+					{
+						"name": "address_door",
+						"apiName": "address.door",
+						"displayName": "Address Door",
+						"description": "Door or apartment (max 10 characters)",
+						"validation": {
+							"maxLength": 10
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "A",
+						"required": false
+					},
+					{
+						"name": "address_postal_code",
+						"apiName": "address.postal_code",
+						"displayName": "Address Postal Code",
+						"description": "Postal code (5 digits for Spain, free format for other countries) (max 20 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 20
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "28001",
+						"required": true,
+						"groupRequired": true
+					},
+					{
+						"name": "address_city",
+						"apiName": "address.city",
+						"displayName": "Address City",
+						"description": "City or town - Latin characters only (max 100 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª()]+$",
+							"minLength": 1,
+							"maxLength": 100
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Madrid",
+						"required": true,
+						"groupRequired": true
+					},
+					{
+						"name": "address_province",
+						"apiName": "address.province",
+						"displayName": "Address Province",
+						"description": "Province or state - Latin characters only (max 100 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"minLength": 1,
+							"maxLength": 100
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Madrid",
+						"required": true,
+						"groupRequired": true
+					},
+					{
+						"name": "address_country",
+						"apiName": "address.country",
+						"displayName": "Address Country",
+						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"minLength": 1,
+							"maxLength": 100
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Spain",
+						"required": false
+					},
+					{
+						"name": "address_country_code",
+						"apiName": "address.country_code",
+						"displayName": "Address Country Code",
+						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"validation": {
+							"pattern": "^[A-Z]{2}$",
+							"minLength": 2,
+							"maxLength": 2
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "ES",
+						"required": false
+					},
+					{
+						"name": "legal_form",
+						"apiName": "legal_form",
+						"displayName": "Legal Form",
+						"description": "Legal form (e.g",
+						"type": "string",
+						"default": ""
+					},
+					{
+						"name": "legal_representative_full_name",
+						"apiName": "legal_representative.full_name",
+						"displayName": "Legal Representative Full Name",
+						"description": "Full name of the legal representative (max 255 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 255
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Jane Smith",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "legal_representative_nif",
+						"apiName": "legal_representative.nif",
+						"displayName": "Legal Representative NIF",
+						"description": "Tax ID of the legal representative (DNI/CIF/NIE) (exactly 9 characters)",
+						"validation": {
+							"pattern": "^(\\d{8}[A-Z]|[ABCDEFGHJKLMNPQRSUVW]\\d{7}[A-Z0-9]|[XYZ]\\d{7}[A-Z])$",
+							"minLength": 9,
+							"maxLength": 9
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "12345678A",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "legal_representative_address_street",
+						"apiName": "legal_representative.address.street",
+						"displayName": "Legal Representative Address Street",
+						"description": "Full address (street, number, floor, etc.) - Latin characters only (max 255 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"minLength": 1,
+							"maxLength": 255
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "123 Main Street",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "legal_representative_address_number",
+						"apiName": "legal_representative.address.number",
+						"displayName": "Legal Representative Address Number",
+						"description": "Street number (max 20 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 20
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "123",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "legal_representative_address_floor",
+						"apiName": "legal_representative.address.floor",
+						"displayName": "Legal Representative Address Floor",
+						"description": "Floor or level (max 10 characters)",
+						"validation": {
+							"maxLength": 10
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "2nd floor, Apt A",
+						"required": false
+					},
+					{
+						"name": "legal_representative_address_door",
+						"apiName": "legal_representative.address.door",
+						"displayName": "Legal Representative Address Door",
+						"description": "Door or apartment (max 10 characters)",
+						"validation": {
+							"maxLength": 10
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "A",
+						"required": false
+					},
+					{
+						"name": "legal_representative_address_postal_code",
+						"apiName": "legal_representative.address.postal_code",
+						"displayName": "Legal Representative Address Postal Code",
+						"description": "Postal code (5 digits for Spain, free format for other countries) (max 20 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 20
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "28001",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "legal_representative_address_city",
+						"apiName": "legal_representative.address.city",
+						"displayName": "Legal Representative Address City",
+						"description": "City or town - Latin characters only (max 100 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª()]+$",
+							"minLength": 1,
+							"maxLength": 100
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Madrid",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "legal_representative_address_province",
+						"apiName": "legal_representative.address.province",
+						"displayName": "Legal Representative Address Province",
+						"description": "Province or state - Latin characters only (max 100 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"minLength": 1,
+							"maxLength": 100
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Madrid",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "legal_representative_address_country",
+						"apiName": "legal_representative.address.country",
+						"displayName": "Legal Representative Address Country",
+						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"minLength": 1,
+							"maxLength": 100
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Spain",
+						"required": false
+					},
+					{
+						"name": "legal_representative_address_country_code",
+						"apiName": "legal_representative.address.country_code",
+						"displayName": "Legal Representative Address Country Code",
+						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"validation": {
+							"pattern": "^[A-Z]{2}$",
+							"minLength": 2,
+							"maxLength": 2
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "ES",
+						"required": false
+					},
+					{
+						"name": "trade_name",
+						"apiName": "trade_name",
+						"displayName": "Trade Name",
+						"description": "Commercial/trade name shown on invoices (defaults to `legal_name`)",
+						"type": "string",
+						"default": "",
+						"placeholder": "My Company"
+					},
+					{
+						"name": "default_main_tax_type",
+						"apiName": "default_main_tax.type",
+						"displayName": "Default Main Tax Type",
+						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100%",
+						"type": "options",
+						"options": [
+							{
+								"name": "IVA",
+								"value": "IVA",
+								"description": "Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%)"
+							},
+							{
+								"name": "IGIC",
+								"value": "IGIC",
+								"description": "Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%)"
+							},
+							{
+								"name": "IPSI",
+								"value": "IPSI",
+								"description": "Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%)"
+							},
+							{
+								"name": "OTHER",
+								"value": "OTHER",
+								"description": "Configurable 0%-100%"
+							}
+						],
+						"default": "IVA",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "default_main_tax_percentage_IVA",
+						"apiName": "default_main_tax.percentage",
+						"displayName": "Default Main Tax Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IVA",
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 21,
+						"required": false,
+						"groupRequired": true,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "4%",
+								"value": 4
+							},
+							{
+								"name": "10%",
+								"value": 10
+							},
+							{
+								"name": "21%",
+								"value": 21
+							}
+						],
+						"showWhen": {
+							"field": "default_main_tax_type",
+							"values": [
+								"IVA"
+							]
+						}
+					},
+					{
+						"name": "default_main_tax_percentage_IGIC",
+						"apiName": "default_main_tax.percentage",
+						"displayName": "Default Main Tax Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IGIC",
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 0,
+						"required": false,
+						"groupRequired": true,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "3%",
+								"value": 3
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7%",
+								"value": 7
+							},
+							{
+								"name": "9.5%",
+								"value": 9.5
+							},
+							{
+								"name": "15%",
+								"value": 15
+							},
+							{
+								"name": "20%",
+								"value": 20
+							}
+						],
+						"showWhen": {
+							"field": "default_main_tax_type",
+							"values": [
+								"IGIC"
+							]
+						}
+					},
+					{
+						"name": "default_main_tax_percentage_IPSI",
+						"apiName": "default_main_tax.percentage",
+						"displayName": "Default Main Tax Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IPSI",
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 0.5,
+						"required": false,
+						"groupRequired": true,
+						"options": [
+							{
+								"name": "0.5%",
+								"value": 0.5
+							},
+							{
+								"name": "1%",
+								"value": 1
+							},
+							{
+								"name": "2%",
+								"value": 2
+							},
+							{
+								"name": "4%",
+								"value": 4
+							},
+							{
+								"name": "8%",
+								"value": 8
+							},
+							{
+								"name": "10%",
+								"value": 10
+							}
+						],
+						"showWhen": {
+							"field": "default_main_tax_type",
+							"values": [
+								"IPSI"
+							]
+						}
+					},
+					{
+						"name": "default_main_tax_percentage_OTHER",
+						"apiName": "default_main_tax.percentage",
+						"displayName": "Default Main Tax Percentage",
+						"description": "Tax percentage (between 0 and 100)",
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "number",
+						"default": 0,
+						"required": false,
+						"groupRequired": true,
+						"showWhen": {
+							"field": "default_main_tax_type",
+							"values": [
+								"OTHER"
+							]
+						}
+					},
+					{
+						"name": "default_main_tax_regime_key",
+						"apiName": "default_main_tax.regime_key",
+						"displayName": "Default Main Tax Regime Key",
+						"description": "Regime key according to VeriFactu regulations",
+						"type": "options",
+						"options": [
+							{
+								"name": "— Not set —",
+								"value": ""
+							},
+							{
+								"name": "01",
+								"value": "01",
+								"description": "General regime operation"
+							},
+							{
+								"name": "02",
+								"value": "02",
+								"description": "Export"
+							},
+							{
+								"name": "03",
+								"value": "03",
+								"description": "Used goods, art, antiques"
+							},
+							{
+								"name": "04",
+								"value": "04",
+								"description": "Investment gold"
+							},
+							{
+								"name": "05",
+								"value": "05",
+								"description": "Travel agencies"
+							},
+							{
+								"name": "06",
+								"value": "06",
+								"description": "Group of entities"
+							},
+							{
+								"name": "07",
+								"value": "07",
+								"description": "Cash basis"
+							},
+							{
+								"name": "08",
+								"value": "08",
+								"description": "IPSI/IVA/IGIC operations"
+							},
+							{
+								"name": "09",
+								"value": "09",
+								"description": "Mediating agencies"
+							},
+							{
+								"name": "10",
+								"value": "10",
+								"description": "Third-party collections"
+							},
+							{
+								"name": "11",
+								"value": "11",
+								"description": "Local rental"
+							},
+							{
+								"name": "14",
+								"value": "14",
+								"description": "VAT pending in certifications"
+							},
+							{
+								"name": "15",
+								"value": "15",
+								"description": "VAT pending successive tract"
+							},
+							{
+								"name": "17",
+								"value": "17",
+								"description": "OSS and IOSS"
+							},
+							{
+								"name": "18",
+								"value": "18",
+								"description": "Equivalence surcharge"
+							},
+							{
+								"name": "19",
+								"value": "19",
+								"description": "REAGYP"
+							},
+							{
+								"name": "20",
+								"value": "20",
+								"description": "Simplified regime"
+							}
+						],
+						"default": "",
+						"required": false
+					},
+					{
+						"name": "default_irpf_rate",
+						"apiName": "default_irpf_rate",
+						"displayName": "Default IRPF Rate",
+						"description": "Default IRPF withholding percentage (use `0` for exempt)",
+						"type": "number",
+						"default": 0
+					}
+				],
+				"default": {}
+			},
+			{
+				"name": "send_email",
+				"apiName": "send_email",
+				"displayName": "Send Email",
+				"description": "Optional",
+				"type": "boolean",
+				"default": false
+			}
+		],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "account",
+		"operation": "getAll",
+		"displayName": "Get Many",
+		"action": "List the accounts you provisioned, with lifecycle status",
+		"description": "Returns the accounts you provisioned, each with its lifecycle `status` (`PROVISIONED` → `CLAIMED` → `ACTIVE`) and the access you hold",
+		"operationId": "listAccounts",
+		"method": "GET",
+		"path": "/v1/accounts",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [
+			{
+				"name": "status",
+				"apiName": "status",
+				"displayName": "Status",
+				"description": "Lifecycle stage of a provisioned account",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "PROVISIONED",
+						"value": "PROVISIONED"
+					},
+					{
+						"name": "CLAIMED",
+						"value": "CLAIMED"
+					},
+					{
+						"name": "ACTIVE",
+						"value": "ACTIVE"
+					}
+				],
+				"default": ""
+			},
+			{
+				"name": "external_ref",
+				"apiName": "external_ref",
+				"displayName": "External Ref",
+				"description": "Your own id for the account; returns the 0..1 matching accounts",
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "limit",
+				"apiName": "limit",
+				"displayName": "Limit",
+				"description": "Maximum number of accounts to return per page (1–200)",
+				"validation": {
+					"minimum": 1,
+					"maximum": 200
+				},
+				"type": "number",
+				"default": 50,
+				"numberPrecision": 0
+			},
+			{
+				"name": "cursor",
+				"apiName": "cursor",
+				"displayName": "Cursor",
+				"description": "Opaque pagination cursor from a previous response's `next_cursor`",
+				"type": "string",
+				"default": ""
+			}
+		],
+		"optionalCollectionName": "options",
+		"queryParamNames": [
+			"status",
+			"external_ref",
+			"limit",
+			"cursor"
+		],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "account",
+		"operation": "get",
+		"displayName": "Get",
+		"action": "Get a provisioned account's authoritative status",
+		"description": "Returns the current lifecycle status and access for one account you provisioned",
+		"operationId": "getAccount",
+		"method": "GET",
+		"path": "/v1/accounts/{account_id}",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "account",
+		"operation": "getUsage",
+		"displayName": "Get Usage",
+		"action": "Provisioning usage of your own account",
+		"description": "Returns how many accounts you have provisioned and how many NIFs (companies) they hold — the billable figure for your offline B2B invoice",
+		"operationId": "getAccountUsage",
+		"method": "GET",
+		"path": "/v1/accounts/{account_id}/usage",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "account",
+		"operation": "createClaimToken",
+		"displayName": "Create Claim Token",
+		"action": "Issue a claim token for an account you provisioned",
+		"description": "Issues a single-use `claim_token` for an account you provisioned, so its holder can set a password and take ownership",
+		"operationId": "createAccountClaimToken",
+		"method": "POST",
+		"path": "/v1/accounts/{account_id}/claim-tokens",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [
+			{
+				"name": "email",
+				"apiName": "email",
+				"displayName": "Email",
+				"description": "The holder's email address, used as their login (email address)",
+				"validation": {
+					"format": "email"
+				},
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "language",
+				"apiName": "language",
+				"displayName": "Language",
+				"description": "Preferred language for a holder created by this call",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "Es",
+						"value": "es"
+					},
+					{
+						"name": "En",
+						"value": "en"
+					},
+					{
+						"name": "Ca",
+						"value": "ca"
+					}
+				],
+				"default": ""
+			}
+		],
+		"filters": [],
+		"optionalCollectionName": "additionalFields",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "paymentConnection",
+		"operation": "getAll",
+		"displayName": "Get Many",
+		"action": "List a NIF's payment connections",
+		"description": "Lists the payment provider connections of a NIF (company) that your account **owns or manages**",
+		"operationId": "listCompanyPaymentConnections",
+		"method": "GET",
+		"path": "/v1/companies/{company_id}/payment-connections",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": true,
+		"listKey": ""
+	},
+	{
+		"resource": "paymentConnection",
+		"operation": "initiate",
+		"displayName": "Initiate",
+		"action": "Open an authorization to connect a payment provider",
+		"description": "Opens an authorization session so the holder of a NIF (company) your platform **manages** can connect a payment provider (`stripe`), white-label by API",
+		"operationId": "initiatePaymentConnection",
+		"method": "POST",
+		"path": "/v1/companies/{company_id}/payment-connections/authorizations",
+		"pathParams": [],
+		"requiredFields": [
+			{
+				"name": "provider",
+				"apiName": "provider",
+				"displayName": "Provider",
+				"description": "Payment provider slug in **lowercase**",
+				"required": true,
+				"type": "string",
+				"default": "",
+				"placeholder": "stripe"
+			}
+		],
+		"optionalFields": [
+			{
+				"name": "return_url",
+				"apiName": "return_url",
+				"displayName": "Return URL",
+				"description": "URL of your portal to redirect the account holder back to after the OAuth callback completes",
+				"validation": {
+					"pattern": "^https://.*"
+				},
+				"type": "string",
+				"default": "",
+				"placeholder": "https://your-platform.example.com/connections/stripe/return"
+			}
+		],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "paymentConnection",
+		"operation": "disconnect",
+		"displayName": "Disconnect",
+		"action": "Disconnect a NIF's payment provider",
+		"description": "Disconnects the payment provider connection (`stripe`) of a NIF (company) that your account **owns or manages**",
+		"operationId": "disconnectCompanyPaymentConnection",
+		"method": "DELETE",
+		"path": "/v1/companies/{company_id}/payment-connections/{provider}",
+		"pathParams": [
+			{
+				"name": "provider_paymentConnection_disconnect",
+				"apiName": "provider",
+				"displayName": "Provider",
+				"description": "Payment provider slug in **lowercase**",
+				"required": true,
+				"type": "options",
+				"options": [
+					{
+						"name": "Stripe",
+						"value": "stripe"
+					}
+				],
+				"default": "stripe"
+			}
+		],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "paymentEvent",
+		"operation": "getAll",
+		"displayName": "Get Many",
+		"action": "List the payment events of a NIF's connection",
+		"description": "Lists the payment events received through the payment provider connection of a NIF (company) that your account **owns or manages**, most recent first",
+		"operationId": "listCompanyPaymentEvents",
+		"method": "GET",
+		"path": "/v1/companies/{company_id}/payment-connections/{provider}/events",
+		"pathParams": [
+			{
+				"name": "provider_paymentEvent_getAll",
+				"apiName": "provider",
+				"displayName": "Provider",
+				"description": "Payment provider slug in **lowercase**",
+				"required": true,
+				"type": "options",
+				"options": [
+					{
+						"name": "Stripe",
+						"value": "stripe"
+					}
+				],
+				"default": "stripe"
+			}
+		],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": true,
+		"isList": true,
+		"listKey": ""
+	},
+	{
+		"resource": "paymentEvent",
+		"operation": "get",
+		"displayName": "Get",
+		"action": "Get a payment event of a NIF's connection",
+		"description": "Retrieves a single payment event of the NIF's connection, including the outcome of its automatic invoicing and, when it failed, the stable failure code you can act on",
+		"operationId": "getCompanyPaymentEvent",
+		"method": "GET",
+		"path": "/v1/companies/{company_id}/payment-connections/{provider}/events/{event_id}",
+		"pathParams": [
+			{
+				"name": "provider_paymentEvent_get",
+				"apiName": "provider",
+				"displayName": "Provider",
+				"description": "Payment provider slug in **lowercase**",
+				"required": true,
+				"type": "options",
+				"options": [
+					{
+						"name": "Stripe",
+						"value": "stripe"
+					}
+				],
+				"default": "stripe"
+			},
+			{
+				"name": "eventId",
+				"apiName": "event_id",
+				"displayName": "Event ID",
+				"description": "Identifier of the payment event, as returned by the list operation",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "paymentEvent",
+		"operation": "retry",
+		"displayName": "Retry",
+		"action": "Retry a payment event of a NIF's connection",
+		"description": "Reprocesses a payment event whose automatic invoicing did not complete, applying the current configuration of the NIF",
+		"operationId": "retryCompanyPaymentEvent",
+		"method": "POST",
+		"path": "/v1/companies/{company_id}/payment-connections/{provider}/events/{event_id}/retry",
+		"pathParams": [
+			{
+				"name": "provider_paymentEvent_retry",
+				"apiName": "provider",
+				"displayName": "Provider",
+				"description": "Payment provider slug in **lowercase**",
+				"required": true,
+				"type": "options",
+				"options": [
+					{
+						"name": "Stripe",
+						"value": "stripe"
+					}
+				],
+				"default": "stripe"
+			},
+			{
+				"name": "eventId",
+				"apiName": "event_id",
+				"displayName": "Event ID",
+				"description": "Identifier of the payment event, as returned by the list operation",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "paymentEvent",
+		"operation": "generateDraft",
+		"displayName": "Generate Draft",
+		"action": "Create a draft invoice from a payment event of a NIF's connection",
+		"description": "Builds a draft invoice from a payment event that could not be invoiced automatically, applying the same recipient resolution and tax treatment the automatic flow would have applied",
+		"operationId": "generateCompanyPaymentEventDraft",
+		"method": "POST",
+		"path": "/v1/companies/{company_id}/payment-connections/{provider}/events/{event_id}/draft",
+		"pathParams": [
+			{
+				"name": "provider_paymentEvent_generateDraft",
+				"apiName": "provider",
+				"displayName": "Provider",
+				"description": "Payment provider slug in **lowercase**",
+				"required": true,
+				"type": "options",
+				"options": [
+					{
+						"name": "Stripe",
+						"value": "stripe"
+					}
+				],
+				"default": "stripe"
+			},
+			{
+				"name": "eventId",
+				"apiName": "event_id",
+				"displayName": "Event ID",
+				"description": "Identifier of the payment event, as returned by the list operation",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
 	}
 ];
 
@@ -10297,6 +11612,7 @@ export const CONTRACT_PATHS: Record<string, string> = {
 	"getCompanyInvoicePdf": "/v1/companies/{company_id}/invoices/{invoice_id}/pdf",
 	"getMyIdentity": "/v1/me/identity",
 	"listAccountWebhookSubscriptions": "/v1/accounts/{account_id}/webhooks",
+	"listAccounts": "/v1/accounts",
 	"listCompanies": "/v1/accounts/{account_id}/companies",
 	"listCompanyCustomers": "/v1/companies/{company_id}/customers",
 	"listCompanyProducts": "/v1/companies/{company_id}/products",
