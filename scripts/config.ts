@@ -15,6 +15,23 @@
  * `Beel-Active-Company` header no longer exists), and the scope now travels in
  * the path — `/v1/companies/{company_id}/...` and `/v1/accounts/{account_id}/...`.
  */
+/**
+ * Where `openapi/public-api.yaml` is copied from.
+ *
+ * The contract is vendored, and nothing kept the copy in step with its source:
+ * it fell four endpoints, three tags and one deprecation behind in silence.
+ * `npm run contract:check` compares the two and fails on any operation that
+ * appeared, moved, changed tag or was deprecated.
+ *
+ * `master` and not `develop` on purpose: the node talks to the deployed API, so
+ * generating from a branch that is not live would ship operations that 404.
+ */
+export const CONTRACT_SOURCE = {
+	repo: 'carlosmgv02/beel.es-autonomos',
+	ref: 'master',
+	path: 'openapi-bundled/public-api.yaml',
+} as const;
+
 export const RESOURCES: Array<{ resource: string; displayName: string; tags: string[] }> = [
 	{ resource: 'invoice', displayName: 'Invoice', tags: ['CompanyInvoices', 'CompanyInvoiceLifecycle', 'CompanyInvoiceDelivery', 'CompanyProforma'] },
 	{ resource: 'customer', displayName: 'Customer', tags: ['CompanyCustomers'] },

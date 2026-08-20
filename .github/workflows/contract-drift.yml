@@ -1,0 +1,34 @@
+name: Contract drift
+
+# The contract is vendored from another repository, and a copy nobody refreshes
+# goes stale in silence: this one fell four endpoints, three tags and one
+# deprecation behind without a test going red. Asking once a week is what turns
+# that into a notification instead of a surprise during a release.
+on:
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --ignore-scripts
+
+      # Reading the source needs a token that reaches the API repository, which
+      # a fork's pull request will never have. Say so and stop, rather than fail
+      # with an authentication error that reads like drift.
+      - name: Check for drift
+        env:
+          GH_TOKEN: ${{ secrets.CONTRACT_SOURCE_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::CONTRACT_SOURCE_TOKEN is not set — skipping the drift check."
+            exit 0
+          fi
+          npm run contract:check
