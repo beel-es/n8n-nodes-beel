@@ -1,0 +1,18 @@
+[     232ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/static/js/bundle.js:39477
+[     253ms] [LOG] lnxduemj6z8f @ http://localhost:3001/static/js/bundle.js:921
+[     253ms] [LOG] Bqq_APiNoYfOgPngdcLhaUd1CrAq71cKy0uCzFX47nc @ http://localhost:3001/static/js/bundle.js:922
+[     278ms] [ERROR] Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+
+* Move code with side effects to componentDidMount, and set initial state in the constructor.
+
+Please update the following components: %s SideEffect(NullComponent) @ http://localhost:3001/static/js/bundle.js:13791
+[    6201ms] [ERROR] WebSocket connection to 'ws://localhost:3001/ws' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/static/js/bundle.js:46168
+[    8287ms] [ERROR] WebSocket connection to 'ws://localhost:3001/ws' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/static/js/bundle.js:46168
+[   12352ms] [ERROR] WebSocket connection to 'ws://localhost:3001/ws' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/static/js/bundle.js:46168
+[   20408ms] [ERROR] WebSocket connection to 'ws://localhost:3001/ws' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/static/js/bundle.js:46168
+[   36499ms] [ERROR] WebSocket connection to 'ws://localhost:3001/ws' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/static/js/bundle.js:46168
+[   68528ms] [ERROR] WebSocket connection to 'ws://localhost:3001/ws' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/static/js/bundle.js:46168
+[  132608ms] [ERROR] WebSocket connection to 'ws://localhost:3001/ws' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/static/js/bundle.js:46168
+[  384078ms] [ERROR] WebSocket connection to 'ws://localhost:3001/ws' failed: Connection closed before receiving a handshake response @ http://localhost:3001/static/js/bundle.js:46168
+[  640210ms] [ERROR] WebSocket connection to 'ws://localhost:3001/ws' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/static/js/bundle.js:46168
+[ 1152323ms] [ERROR] WebSocket connection to 'ws://localhost:3001/ws' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/static/js/bundle.js:46168

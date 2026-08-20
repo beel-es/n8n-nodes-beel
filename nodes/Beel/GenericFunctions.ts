@@ -225,6 +225,30 @@ export function unwrap(response: IBeelEnvelope | undefined): IDataObject {
 }
 
 /**
+ * Saca la lista de un sobre de respuesta, tolerando que el contrato no acierte.
+ *
+ * `listKey` viene del contrato, pero el contrato puede equivocarse: en
+ * `GET /v1/accounts/{account_id}/companies` declara `data` como array y la API
+ * devuelve `data.companies[]`, así que el nodo listaba CERO NIFs — con un 200 y
+ * sin ningún error. Los tests contra stub no lo veían porque respondían lo que
+ * decía el contrato.
+ *
+ * Por eso, cuando lo declarado no aparece, se busca el primer array dentro de
+ * `data` en lugar de devolver una lista vacía en silencio.
+ */
+function itemsOf(data: unknown, listKey: string): IDataObject[] {
+	if (Array.isArray(data)) return data as IDataObject[];
+	if (data === null || typeof data !== 'object') return [];
+
+	const envelope = data as IDataObject;
+	const declared = listKey === '' ? undefined : envelope[listKey];
+	if (Array.isArray(declared)) return declared as IDataObject[];
+
+	const found = Object.values(envelope).find(Array.isArray);
+	return (found ?? []) as IDataObject[];
+}
+
+/**
  * Walks a paginated BeeL list endpoint.
  *
  * @param listKey Key holding the array inside `data`; empty when `data` is the array.
@@ -255,9 +279,7 @@ export async function beelApiRequestAllItems(
 		)) as IBeelEnvelope;
 
 		const data = response?.data;
-		const items = (
-			Array.isArray(data) ? data : ((data as IDataObject)?.[listKey] ?? [])
-		) as IDataObject[];
+		const items = itemsOf(data, listKey);
 
 		results.push(...items);
 

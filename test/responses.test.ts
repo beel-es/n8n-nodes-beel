@@ -128,6 +128,60 @@ describe('pagination', () => {
 	});
 });
 
+/**
+ * El contrato puede equivocarse sobre la forma de la respuesta, y cuando lo hace
+ * el nodo no falla: lista cero elementos con un 200 y nadie se entera.
+ *
+ * Pasó de verdad. `GET /v1/accounts/{account_id}/companies` declara `data` como
+ * array y la API devuelve `data.companies[]`, así que "Company → Get Many"
+ * respondía CERO NIFs contra la API real. Ningún test lo veía porque todos
+ * responden lo que dice el contrato, no lo que devuelve el servidor.
+ */
+describe('when the contract gets the response shape wrong', () => {
+	it('finds the list anyway instead of silently returning none', async () => {
+		const stub = makeContext({
+			parameters: { returnAll: false, limit: 10, filters: {} },
+			// El contrato dice que `data` es el array; la API manda un sobre.
+			responses: {
+				data: {
+					companies: [{ id: 'a', legal_name: 'Uno' }, { id: 'b', legal_name: 'Dos' }],
+					pagination: { total_pages: 1 },
+				},
+			},
+		});
+
+		const items = await executeGeneratedOperation.call(
+			stub.context,
+			operationFor('company', 'getAll'),
+			0,
+		);
+
+		expect(items).toHaveLength(2);
+	});
+
+	it('still prefers the key the contract declares when it is there', async () => {
+		const stub = makeContext({
+			parameters: { returnAll: false, limit: 10, filters: {} },
+			responses: {
+				data: {
+					customers: [{ id: 'right' }],
+					// Un array vecino que no debe ganarle al declarado.
+					deleted: [{ id: 'wrong' }, { id: 'wrong' }],
+					pagination: { total_pages: 1 },
+				},
+			},
+		});
+
+		const items = await executeGeneratedOperation.call(
+			stub.context,
+			operationFor('customer', 'getAll'),
+			0,
+		);
+
+		expect(items).toEqual([{ id: 'right' }]);
+	});
+});
+
 describe('errors', () => {
 	it('surfaces the message the API sent', async () => {
 		const stub = makeContext({

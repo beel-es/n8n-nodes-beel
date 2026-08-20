@@ -1,0 +1,254 @@
+- generic [active] [ref=f8e1]:
+  - generic [ref=f8e3]:
+    - link "Nuevo Factura en nombre de tus clientes — cuentas gestionadas y varios NIFs por cuenta" [ref=f8e4] [cursor=pointer]:
+      - /url: /novedades
+      - generic [ref=f8e5]: Nuevo
+      - generic [ref=f8e6]:
+        - strong [ref=f8e7]: Factura en nombre de tus clientes
+        - text: — cuentas gestionadas y varios NIFs por cuenta
+    - button "Cerrar aviso" [ref=f8e10] [cursor=pointer]
+  - generic [ref=f8e14]:
+    - banner [ref=f8e15]:
+      - generic [ref=f8e16]:
+        - link "BeeL." [ref=f8e17] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f8e26]:
+          - link "Productos" [ref=f8e27] [cursor=pointer]:
+            - /url: /#productos
+          - link "Precios" [ref=f8e28] [cursor=pointer]:
+            - /url: /precios
+          - button "Integraciones" [ref=f8e30] [cursor=pointer]
+          - button "Desarrolladores" [ref=f8e36] [cursor=pointer]
+          - button "IA" [ref=f8e42] [cursor=pointer]
+          - button "Recursos" [ref=f8e48] [cursor=pointer]
+        - generic [ref=f8e53]:
+          - link "Reservar demo" [ref=f8e54] [cursor=pointer]:
+            - /url: /demo
+          - button "Empezar gratis" [ref=f8e55] [cursor=pointer]
+    - main [ref=f8e56]:
+      - generic [ref=f8e59]:
+        - generic [ref=f8e60]:
+          - generic [ref=f8e61]: Facturación para n8n
+          - heading "Que la factura salga sola." [level=1] [ref=f8e63]
+          - paragraph [ref=f8e64]: Conecta el nodo de BeeL. a tus automatizaciones de n8n y cada venta, formulario o proyecto cerrado se convierte en una factura legal, registrada en Hacienda y enviada a tu cliente. Sin escribir una línea de código.
+          - link "Empezar gratis" [ref=f8e66] [cursor=pointer]:
+            - /url: https://app.beel.es/signup
+        - generic [ref=f8e71]:
+          - generic [ref=f8e72]:
+            - generic [ref=f8e73]: Funciona con
+            - img "n8n" [ref=f8e74]
+            - generic [ref=f8e75]: Nodo para workflows de n8n
+          - generic [ref=f8e76]:
+            - generic [ref=f8e77]:
+              - generic [ref=f8e78]: Workflow ejecutado · n8n
+              - generic [ref=f8e79]: Factura emitida
+            - paragraph [ref=f8e82]: Registrada en la AEAT · QR + hash
+      - generic [ref=f8e84]:
+        - generic [ref=f8e85]: Qué es
+        - heading "¿Qué es facturar con n8n y BeeL.?" [level=2] [ref=f8e87]
+        - paragraph [ref=f8e88]: "n8n es una herramienta para automatizar tareas sin programar: arrastras bloques, los conectas y decides qué pasa cuando ocurre algo — entra un formulario, se cierra una venta en tu CRM, alguien firma un presupuesto. El nodo de BeeL. añade el bloque que faltaba en España: emitir la factura. Y no un PDF con pinta de factura, sino una factura legal de verdad, con su numeración correlativa, su código QR y su registro en Hacienda en el mismo momento, tal y como exige el Real Decreto 1007/2023. Se instala desde el propio n8n en un par de clics, sin tocar servidores ni instalar nada más, y trae listo todo lo que necesitas: facturas, clientes, productos, series de numeración, facturas recurrentes y alta de nuevos NIF. Si al montarlo te equivocas en algo, el propio workflow te avisa antes de emitir nada — un tipo de IVA que no existe o un NIF mal escrito se detectan ahí mismo, no cuando ya es tarde. La ley obliga desde el 1 de enero de 2027 a las sociedades y desde el 1 de julio de 2027 a los autónomos, y puedes montarlo entero en modo de pruebas, sin emitir facturas reales ni gastar cuota, hasta que haga exactamente lo que quieres."
+      - generic [ref=f8e90]:
+        - generic [ref=f8e91]: Cómo funciona
+        - heading "De lo que ya usas a la factura legal, sin tocar nada." [level=2] [ref=f8e93]
+        - list [ref=f8e94]:
+          - listitem [ref=f8e95]:
+            - generic [ref=f8e96]: Paso 1
+            - heading "Instalas el nodo" [level=3] [ref=f8e101]
+            - paragraph [ref=f8e102]: "En n8n: Ajustes → Community Nodes → n8n-nodes-beel. Pegas tu clave y ya está."
+          - listitem [ref=f8e103]
+          - listitem [ref=f8e106]:
+            - generic [ref=f8e107]: Paso 2
+            - heading "Eliges qué dispara la factura" [level=3] [ref=f8e112]
+            - paragraph [ref=f8e113]: Un formulario, tu CRM, una hoja de cálculo, una fecha del calendario. Lo decides tú.
+          - listitem [ref=f8e114]
+          - listitem [ref=f8e117]:
+            - generic [ref=f8e118]: Paso 3
+            - heading "BeeL. la emite y la registra" [level=3] [ref=f8e125]
+            - paragraph [ref=f8e126]: Factura legal con QR, registrada en Hacienda y enviada a tu cliente si quieres.
+      - generic [ref=f8e128]:
+        - generic [ref=f8e129]: Por qué BeeL.
+        - heading "Todo lo que necesitas para cumplir, resuelto." [level=2] [ref=f8e131]
+        - generic [ref=f8e132]:
+          - article [ref=f8e133]:
+            - heading "Sin escribir código, de verdad" [level=3] [ref=f8e138]
+            - paragraph [ref=f8e139]: "Eliges qué quieres hacer en un desplegable y rellenas los huecos, como en cualquier otro nodo de n8n. Tus clientes, tus productos y tus series aparecen en listas: no tienes que copiar códigos raros de ningún sitio."
+          - article [ref=f8e140]:
+            - heading "Cualquier cosa puede disparar una factura" [level=3] [ref=f8e144]
+            - paragraph [ref=f8e145]: n8n se conecta con cientos de herramientas. Factura cuando se cierre un trato en tu CRM, cuando alguien rellene un formulario, cuando termines un proyecto o el día 1 de cada mes. La regla la pones tú, no un conector cerrado.
+          - article [ref=f8e146]:
+            - heading "Si se ejecuta dos veces, no factura dos veces" [level=3] [ref=f8e151]
+            - paragraph [ref=f8e152]: "Los workflows se repiten: se reintentan, los relanzas, algo falla a medias. El nodo lo tiene en cuenta y devuelve la factura que ya existía en lugar de emitir otra. Importa más de lo que parece: una factura duplicada con número legal solo se arregla emitiendo una rectificativa."
+          - article [ref=f8e153]:
+            - heading "Te avisa antes de emitir, no después" [level=3] [ref=f8e160]
+            - paragraph [ref=f8e161]: El nodo sabe qué acepta Hacienda y qué no. Si un tipo de IVA no encaja, si falta un dato obligatorio o si un NIF está mal escrito, tu workflow se para y te lo dice con nombre y apellidos, en vez de emitir algo mal o fallar a medias.
+          - article [ref=f8e162]:
+            - heading "Te enteras de lo que pasa después" [level=3] [ref=f8e174]
+            - paragraph [ref=f8e175]: "Hay un segundo nodo que arranca workflows cuando algo ocurre en BeeL.: una factura emitida, Hacienda que responde, una recurrente que se para. Así puedes avisar por Slack, apuntarlo en una hoja o guardar el PDF donde quieras. Cada aviso se comprueba antes de entrar, para que nadie pueda colártelos."
+          - article [ref=f8e176]:
+            - heading "Varios negocios, un mismo workflow" [level=3] [ref=f8e181]
+            - paragraph [ref=f8e182]: Si facturas con más de un NIF — una gestoría, un grupo de empresas, un marketplace que factura por sus vendedores — eliges de cuál va cada factura sobre la marcha. Y si das de alta clientes nuevos, puedes hacerlo desde el mismo flujo.
+      - region "Preguntas frecuentes" [ref=f8e183]:
+        - generic [ref=f8e184]:
+          - generic [ref=f8e185]: Preguntas frecuentes
+          - heading "Las dudas más comunes." [level=2] [ref=f8e187]
+          - generic [ref=f8e188]:
+            - group [ref=f8e189]:
+              - generic "¿Necesito saber programar?" [ref=f8e190] [cursor=pointer]: +
+            - group [ref=f8e193]:
+              - generic "¿Es como Zapier o Make?" [ref=f8e194] [cursor=pointer]: +
+            - group [ref=f8e197]:
+              - generic "Si cobro con Stripe, ¿me hace falta n8n?" [ref=f8e198] [cursor=pointer]: +
+            - group [ref=f8e201]:
+              - generic "¿Las facturas valen de verdad ante Hacienda?" [ref=f8e202] [cursor=pointer]: +
+            - group [ref=f8e205]:
+              - generic "¿Puedo probarlo sin emitir facturas de verdad?" [ref=f8e206] [cursor=pointer]: +
+            - group [ref=f8e209]:
+              - generic "¿Es un nodo oficial de n8n?" [ref=f8e210] [cursor=pointer]: +
+            - group [ref=f8e213]:
+              - generic "¿Funciona en n8n Cloud o solo si lo tengo en mi servidor?" [ref=f8e214] [cursor=pointer]: +
+      - generic [ref=f8e217]:
+        - generic [ref=f8e219]:
+          - heading "Deja de escribir facturas a mano" [level=2] [ref=f8e220]
+          - paragraph [ref=f8e221]: Instala el nodo, móntalo en modo de pruebas y pásalo a real cuando lo tengas. Sin código.
+          - generic [ref=f8e222]:
+            - link "Empezar gratis" [ref=f8e223] [cursor=pointer]:
+              - /url: https://app.beel.es/signup
+            - link "Reservar demo" [ref=f8e224] [cursor=pointer]:
+              - /url: /demo
+        - paragraph [ref=f8e225]: n8n es una marca de sus respectivos titulares. BeeL. no está afiliada ni patrocinada por ellos. n8n-nodes-beel es un nodo de la comunidad publicado y mantenido por BeeL., no un nodo integrado en n8n.
+    - contentinfo [ref=f8e226]:
+      - generic [ref=f8e227]:
+        - generic [ref=f8e228]:
+          - link "BeeL. — Inicio" [ref=f8e230] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f8e239]:
+            - heading "Producto" [level=3] [ref=f8e240]
+            - list [ref=f8e241]:
+              - listitem [ref=f8e242]:
+                - link "Nosotros" [ref=f8e243] [cursor=pointer]:
+                  - /url: /nosotros
+              - listitem [ref=f8e244]:
+                - link "Blog" [ref=f8e245] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=f8e246]:
+                - link "API" [ref=f8e247] [cursor=pointer]:
+                  - /url: /public-api
+              - listitem [ref=f8e248]:
+                - link "Docs API" [ref=f8e249] [cursor=pointer]:
+                  - /url: https://docs.beel.es
+              - listitem [ref=f8e250]:
+                - link "Reservar demo" [ref=f8e251] [cursor=pointer]:
+                  - /url: /demo
+              - listitem [ref=f8e252]:
+                - link "Roadmap" [ref=f8e253] [cursor=pointer]:
+                  - /url: https://beeles.featurebase.app/roadmap
+              - listitem [ref=f8e254]:
+                - link "Status" [ref=f8e255] [cursor=pointer]:
+                  - /url: https://status.beel.es/
+              - listitem [ref=f8e256]:
+                - link "Contacto" [ref=f8e257] [cursor=pointer]:
+                  - /url: /contacto
+          - generic [ref=f8e258]:
+            - heading "Integraciones" [level=3] [ref=f8e259]
+            - list [ref=f8e260]:
+              - listitem [ref=f8e261]:
+                - link "Stripe" [ref=f8e262] [cursor=pointer]:
+                  - /url: /integraciones/stripe-verifactu
+              - listitem [ref=f8e263]:
+                - link "WooCommerce" [ref=f8e264] [cursor=pointer]:
+                  - /url: /integraciones/verifactu-woocommerce
+              - listitem [ref=f8e265]:
+                - link "Shopify" [ref=f8e266] [cursor=pointer]:
+                  - /url: /integraciones/verifactu-shopify
+              - listitem [ref=f8e267]:
+                - link "PrestaShop" [ref=f8e268] [cursor=pointer]:
+                  - /url: /integraciones/verifactu-prestashop
+              - listitem [ref=f8e269]:
+                - link "n8n" [ref=f8e270] [cursor=pointer]:
+                  - /url: /integraciones/n8n-verifactu
+          - generic [ref=f8e271]:
+            - heading "Comparaciones" [level=3] [ref=f8e272]
+            - list [ref=f8e273]:
+              - listitem [ref=f8e274]:
+                - link "Comparar software" [ref=f8e275] [cursor=pointer]:
+                  - /url: /vs/software-verifactu
+              - listitem [ref=f8e276]:
+                - link "vs Verifacti" [ref=f8e277] [cursor=pointer]:
+                  - /url: /vs/verifacti
+              - listitem [ref=f8e278]:
+                - link "vs Quaderno" [ref=f8e279] [cursor=pointer]:
+                  - /url: /vs/quaderno
+              - listitem [ref=f8e280]:
+                - link "vs Quipu" [ref=f8e281] [cursor=pointer]:
+                  - /url: /vs/quipu
+          - generic [ref=f8e282]:
+            - heading "Verifactu" [level=3] [ref=f8e283]
+            - list [ref=f8e284]:
+              - listitem [ref=f8e285]:
+                - link "¿Qué es Verifactu?" [ref=f8e286] [cursor=pointer]:
+                  - /url: /guia/verifactu
+              - listitem [ref=f8e287]:
+                - link "Fechas y plazos" [ref=f8e288] [cursor=pointer]:
+                  - /url: /guia/verifactu/fechas-plazos
+              - listitem [ref=f8e289]:
+                - link "Guía para profesionales" [ref=f8e290] [cursor=pointer]:
+                  - /url: /guia/verifactu/autonomos
+              - listitem [ref=f8e291]:
+                - link "Multas y sanciones" [ref=f8e292] [cursor=pointer]:
+                  - /url: /guia/verifactu/multas-sanciones
+              - listitem [ref=f8e293]:
+                - link "Artículos sobre Verifactu →" [ref=f8e294] [cursor=pointer]:
+                  - /url: /blog/tags/verifactu
+          - generic [ref=f8e295]:
+            - heading "Comunidad" [level=3] [ref=f8e296]
+            - list [ref=f8e297]:
+              - listitem [ref=f8e298]:
+                - link "LinkedIn" [ref=f8e299] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/company/beel-es/
+              - listitem [ref=f8e304]:
+                - link "Instagram" [ref=f8e305] [cursor=pointer]:
+                  - /url: https://www.instagram.com/beel.es?igsh=Y2lvaWwydW1oam1t
+              - listitem [ref=f8e309]:
+                - link "TikTok" [ref=f8e310] [cursor=pointer]:
+                  - /url: https://www.tiktok.com/@app.beel.es
+              - listitem [ref=f8e314]:
+                - link "YouTube" [ref=f8e315] [cursor=pointer]:
+                  - /url: https://www.youtube.com/@beel_es
+          - generic [ref=f8e319]:
+            - heading "Legal" [level=3] [ref=f8e320]
+            - list [ref=f8e321]:
+              - listitem [ref=f8e322]:
+                - link "Prensa" [ref=f8e323] [cursor=pointer]:
+                  - /url: /prensa
+              - listitem [ref=f8e324]:
+                - link "Logo" [ref=f8e325] [cursor=pointer]:
+                  - /url: /logo
+              - listitem [ref=f8e326]:
+                - link "Privacidad" [ref=f8e327] [cursor=pointer]:
+                  - /url: /privacidad
+              - listitem [ref=f8e328]:
+                - link "Cookies" [ref=f8e329] [cursor=pointer]:
+                  - /url: /cookies
+              - listitem [ref=f8e330]:
+                - link "Términos" [ref=f8e331] [cursor=pointer]:
+                  - /url: /terminos
+              - listitem [ref=f8e332]:
+                - link "Cancelación" [ref=f8e333] [cursor=pointer]:
+                  - /url: /reembolsos
+              - listitem [ref=f8e334]:
+                - link "Declaración Responsable" [ref=f8e335] [cursor=pointer]:
+                  - /url: /declaraciones-responsables
+              - listitem [ref=f8e336]:
+                - button "Configurar Cookies" [ref=f8e337] [cursor=pointer]
+        - generic [ref=f8e339]:
+          - paragraph [ref=f8e340]: © 2026 Honey Solutions, S.L.
+          - generic [ref=f8e341]:
+            - link "hola@beel.es" [ref=f8e342] [cursor=pointer]:
+              - /url: mailto:hola@beel.es
+            - generic [ref=f8e346]: •
+            - link "WhatsApp" [ref=f8e347] [cursor=pointer]:
+              - /url: https://wa.me/34711212300
+  - button "Volver arriba"
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=f8e355] [cursor=pointer]
+  - alert [ref=f8e359]

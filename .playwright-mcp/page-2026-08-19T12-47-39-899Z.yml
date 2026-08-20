@@ -1,0 +1,622 @@
+- generic [active] [ref=f5e1]:
+  - generic [ref=f5e3]:
+    - link "Nuevo Factura en nombre de tus clientes — cuentas gestionadas y varios NIFs por cuenta" [ref=f5e4] [cursor=pointer]:
+      - /url: /novedades
+      - generic [ref=f5e5]: Nuevo
+      - generic [ref=f5e6]:
+        - strong [ref=f5e7]: Factura en nombre de tus clientes
+        - text: — cuentas gestionadas y varios NIFs por cuenta
+    - button "Cerrar aviso" [ref=f5e10] [cursor=pointer]
+  - generic [ref=f5e14]:
+    - banner [ref=f5e15]:
+      - generic [ref=f5e16]:
+        - link "BeeL." [ref=f5e17] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=f5e26]:
+          - link "Productos" [ref=f5e27] [cursor=pointer]:
+            - /url: "#productos"
+          - link "Precios" [ref=f5e28] [cursor=pointer]:
+            - /url: /precios
+          - button "Integraciones" [ref=f5e30] [cursor=pointer]
+          - button "Desarrolladores" [ref=f5e36] [cursor=pointer]
+          - button "IA" [ref=f5e42] [cursor=pointer]
+          - button "Recursos" [ref=f5e48] [cursor=pointer]
+        - generic [ref=f5e53]:
+          - link "Reservar demo" [ref=f5e54] [cursor=pointer]:
+            - /url: /demo
+          - button "Empezar gratis" [ref=f5e55] [cursor=pointer]
+    - generic [ref=f5e57]:
+      - generic [ref=f5e59]:
+        - link "Novedades · Factura en nombre de tus clientes — varios NIFs por cuenta" [ref=f5e60] [cursor=pointer]:
+          - /url: /novedades
+          - generic [ref=f5e61]: Novedades
+          - generic [ref=f5e65]: ·
+          - generic [ref=f5e66]: Factura en nombre de tus clientes — varios NIFs por cuenta
+        - heading "Facturación Verifactu en cada cobro _" [level=1] [ref=f5e67]:
+          - generic [ref=f5e68]: Facturación Verifactu
+          - generic [ref=f5e70]:
+            - emphasis [ref=f5e71]: en cada cobro
+            - text: _
+        - paragraph [ref=f5e72]: "Facturación para empresas que operan en España: cada cobro se convierte en factura legal, registrada en la AEAT y enviada a tu cliente. Vía Stripe o vía API, de 1 a miles de NIFs."
+        - generic [ref=f5e73]:
+          - button "Empezar gratis" [ref=f5e74] [cursor=pointer]
+          - link "Ver documentación" [ref=f5e77] [cursor=pointer]:
+            - /url: https://docs.beel.es
+        - paragraph [ref=f5e78]:
+          - generic [ref=f5e81]: Sandbox gratis e ilimitado, sin tarjeta.
+        - generic [ref=f5e83]:
+          - generic [ref=f5e84]:
+            - tablist [ref=f5e85]:
+              - tab "curl" [selected] [ref=f5e86] [cursor=pointer]
+              - tab "node.js" [ref=f5e87] [cursor=pointer]
+              - tab "python" [ref=f5e88] [cursor=pointer]
+              - button "Copiar código" [ref=f5e90] [cursor=pointer]: Copiar
+            - generic [ref=f5e94]: "# Una llamada: factura emitida, en regla y enviada a la AEAT curl -X POST https://app.beel.es/api/v1/invoices \\ -H \"Authorization: Bearer $BEEL_API_KEY\" \\ -H \"Idempotency-Key: ord-9f3a-2b1c\" \\ -H \"Content-Type: application/json\" \\ -d '{ \"type\": \"STANDARD\", \"operation_date\": \"2026-05-19\", \"recipient\": { \"recipient_type\": \"EXISTING\", \"customer_id\": \"550e8400-e29b-41d4-a716-446655440000\" }, \"lines\": [{ \"description\": \"Plan Pro · mayo 2026\", \"quantity\": 1, \"unit_price\": 49.00 }] }'"
+          - generic [ref=f5e95]:
+            - generic [ref=f5e96]:
+              - generic [ref=f5e97]: 201 Created
+              - generic [ref=f5e99]: POST /api/v1/invoices · 142ms
+              - tablist [ref=f5e100]:
+                - tab "json" [selected] [ref=f5e101] [cursor=pointer]
+                - tab "pdf" [ref=f5e102] [cursor=pointer]
+            - generic [ref=f5e104]:
+              - generic [ref=f5e105]: "{"
+              - generic [ref=f5e106]: "\"id\": \"inv_8f2c4d9b3e1a\","
+              - generic [ref=f5e107]: "\"number\": \"F-2026-0042\","
+              - generic [ref=f5e108]: "\"status\": \"emitted\","
+              - generic [ref=f5e109]: "\"verifactu\": \"accepted\","
+              - generic [ref=f5e110]: "\"total\": 59.29,"
+              - generic [ref=f5e111]: "\"currency\": \"EUR\","
+              - generic [ref=f5e112]: "\"pdf_url\": \"…/inv_8f2c4d.pdf\","
+              - generic [ref=f5e113]: "\"created_at\": \"2026-05-19T10:30:00Z\""
+              - generic [ref=f5e114]: "}"
+      - generic [ref=f5e115]:
+        - paragraph [ref=f5e118]:
+          - generic [ref=f5e119]: Facturar
+          - generic [ref=f5e120]: con
+          - generic [ref=f5e121]: Verifactu
+          - generic [ref=f5e122]: debería
+          - generic [ref=f5e123]: ser
+          - generic [ref=f5e124]: una
+          - generic [ref=f5e125]: línea
+          - generic [ref=f5e126]: de
+          - generic [ref=f5e127]: código,
+          - generic [ref=f5e128]: "no"
+          - generic [ref=f5e129]: un
+          - generic [ref=f5e130]: proyecto
+          - generic [ref=f5e131]: de
+          - generic [ref=f5e132]: tres
+          - text: meses.
+        - generic [ref=f5e134]:
+          - paragraph [ref=f5e135]: Empresas que ya facturan con BeeL.
+          - generic [ref=f5e136]:
+            - img "Encast" [ref=f5e137]
+            - img "OpenFleet" [ref=f5e138]
+            - img "Supernova" [ref=f5e139]
+        - generic [ref=f5e141]:
+          - paragraph [ref=f5e142]: En los medios
+          - link "La Vanguardia — leer artículo" [ref=f5e144] [cursor=pointer]:
+            - /url: https://www.lavanguardia.com/dinero/20260711/11584585/startup-facturacion-mas-rapida.html
+            - img "La Vanguardia" [ref=f5e145]
+          - link [ref=f5e146] [cursor=pointer]:
+            - /url: https://www.lavanguardia.com/dinero/20260711/11584585/startup-facturacion-mas-rapida.html
+            - paragraph [ref=f5e147]: «Startup para una facturación más rápida»
+            - paragraph [ref=f5e148]: La Vanguardia · Dinero — julio 2026
+        - region "Qué es BeeL." [ref=f5e149]:
+          - paragraph [ref=f5e151]:
+            - strong [ref=f5e152]: BeeL.
+            - text: "es la solución de facturación para empresas que operan en España. Gestiona el ciclo de vida completo de la factura: la crea conforme a Verifactu, la registra en la AEAT, genera el PDF y la envía por correo, desde 1 hasta miles de NIFs. Se integra por API REST en tu producto, o conectando Stripe en un clic para que cada cobro genere su factura legal automáticamente."
+        - generic [ref=f5e154]:
+          - generic [ref=f5e155]:
+            - generic [ref=f5e156]:
+              - generic [ref=f5e157]:
+                - generic [ref=f5e158]: Dos productos
+                - heading "Un clic con Stripe, o tu propia integración por API." [level=2] [ref=f5e160]
+              - paragraph [ref=f5e161]:
+                - text: ¿Cobras con Stripe? Conéctalo y olvídate. ¿Tienes producto propio? Intégrate por API — o deja que
+                - link "Claude Code" [ref=f5e162] [cursor=pointer]:
+                  - /url: /public-api/claude-code
+                - text: lo haga por ti.
+            - button "Empezar gratis" [ref=f5e164] [cursor=pointer]
+          - generic [ref=f5e167]:
+            - article [ref=f5e168]:
+              - generic [ref=f5e169]: 0 código
+              - heading "Plug-and-play con Stripe" [level=3] [ref=f5e174]
+              - paragraph [ref=f5e175]: "Conecta tu Stripe y olvídate: cada cobro sale facturado y enviado a Verifactu solo. Aditiva, no toca tu sistema."
+              - generic [ref=f5e176]:
+                - generic [ref=f5e177]: Conectas Stripe
+                - generic [ref=f5e179]: Activas Verifactu
+                - generic [ref=f5e181]: Listo
+              - paragraph [ref=f5e183]: desde 15,90€/mes · panel incluido
+              - link "Ver integración Stripe" [ref=f5e184] [cursor=pointer]:
+                - /url: /integraciones/stripe-verifactu
+            - article [ref=f5e187]:
+              - generic [ref=f5e188]: REST + SDKs
+              - heading "API de facturación" [level=3] [ref=f5e194]
+              - paragraph [ref=f5e195]: "Factura desde tu producto: JSON predecible, idempotencia nativa, webhooks firmados y SDKs (Node, Python, Java), de 1 a miles de NIFs con la misma integración. Y si quieres, instala el plugin y Claude Code escribe la integración por ti."
+              - generic [ref=f5e196]:
+                - generic [ref=f5e197]:
+                  - generic [ref=f5e198]: POST
+                  - generic [ref=f5e199]: /api/v1/invoices
+                - generic [ref=f5e200]:
+                  - img "Claude Code" [ref=f5e201]
+                  - generic [ref=f5e203]: /plugin install beel-api@beel
+              - paragraph [ref=f5e204]: 19€/mes el primer NIF · baja hasta 4,50€/NIF a escala
+              - link "Conoce la API" [ref=f5e205] [cursor=pointer]:
+                - /url: /public-api
+        - generic [ref=f5e209]:
+          - generic [ref=f5e211]:
+            - generic [ref=f5e212]:
+              - generic [ref=f5e213]: Producto
+              - heading "El tiempo que te ahorras integrando BeeL." [level=2] [ref=f5e215]
+            - paragraph [ref=f5e216]: "El cumplimiento legal, resuelto: menos trabajo manual, menos errores, cero sustos. Por API o conectando Stripe."
+          - generic [ref=f5e218]:
+            - generic [ref=f5e219]:
+              - heading "Intégrate en una tarde" [level=3] [ref=f5e225]
+              - paragraph [ref=f5e226]: Docs claras, SDK y un plugin de Claude Code que escribe la integración por ti. Una tarde, no un sprint.
+              - generic [ref=f5e227]: ~1 tarde
+            - generic [ref=f5e230]:
+              - heading "De 1 a miles de NIFs" [level=3] [ref=f5e234]
+              - paragraph [ref=f5e235]: "Factura por varias empresas desde una sola cuenta: SaaS, agencias y plataformas que emiten en nombre de sus clientes."
+              - generic [ref=f5e236]: multi-NIF
+            - generic [ref=f5e239]:
+              - heading "Lo legal, resuelto" [level=3] [ref=f5e244]
+              - paragraph [ref=f5e245]: "Verifactu, AEAT, IVA y validación de NIF: la parte fiscal la cumple BeeL. Tú no tocas nada."
+              - generic [ref=f5e246]: Verifactu ✓
+            - generic [ref=f5e249]:
+              - heading "Prueba gratis, sin límite" [level=3] [ref=f5e254]
+              - paragraph [ref=f5e255]: "Sandbox ilimitado: pruébalo todo en test y paga solo al emitir en producción."
+              - generic [ref=f5e256]: 0 € en test
+          - generic [ref=f5e259]:
+            - paragraph [ref=f5e260]: La parte fiscal, resuelta por BeeL.
+            - generic [ref=f5e262]:
+              - generic [ref=f5e267]:
+                - generic [ref=f5e268]: Registro AEAT
+                - generic [ref=f5e269]: Verifactu
+              - generic [ref=f5e281]:
+                - generic [ref=f5e282]: NIF validado
+                - generic [ref=f5e283]: censo AEAT
+              - generic [ref=f5e297]:
+                - generic [ref=f5e298]: IVA · IGIC · IPSI · IRPF
+                - generic [ref=f5e299]: cubierto
+              - generic [ref=f5e312]:
+                - generic [ref=f5e313]: Rectificativa
+                - generic [ref=f5e314]: encadenada
+              - generic [ref=f5e327]:
+                - generic [ref=f5e328]: Intracomunitario
+                - generic [ref=f5e329]: VAT-ID validado
+              - generic [ref=f5e342]:
+                - generic [ref=f5e343]: Numeración
+                - generic [ref=f5e344]: sin huecos
+              - generic [ref=f5e357]:
+                - generic [ref=f5e358]: F-2026-0042
+                - generic [ref=f5e359]: PDF + QR · CSV AEAT
+              - generic [ref=f5e371]:
+                - generic [ref=f5e372]: Registro AEAT
+                - generic [ref=f5e373]: Verifactu
+              - generic [ref=f5e385]:
+                - generic [ref=f5e386]: NIF validado
+                - generic [ref=f5e387]: censo AEAT
+              - generic [ref=f5e401]:
+                - generic [ref=f5e402]: IVA · IGIC · IPSI · IRPF
+                - generic [ref=f5e403]: cubierto
+              - generic [ref=f5e416]:
+                - generic [ref=f5e417]: Rectificativa
+                - generic [ref=f5e418]: encadenada
+              - generic [ref=f5e431]:
+                - generic [ref=f5e432]: Intracomunitario
+                - generic [ref=f5e433]: VAT-ID validado
+              - generic [ref=f5e446]:
+                - generic [ref=f5e447]: Numeración
+                - generic [ref=f5e448]: sin huecos
+              - generic [ref=f5e461]:
+                - generic [ref=f5e462]: F-2026-0042
+                - generic [ref=f5e463]: PDF + QR · CSV AEAT
+        - generic [ref=f5e471]:
+          - generic [ref=f5e473]:
+            - generic [ref=f5e474]:
+              - generic [ref=f5e475]:
+                - generic [ref=f5e476]: Stripe · Integración
+                - heading [level=2] [ref=f5e478]:
+                  - text: Una factura legal
+                  - emphasis [ref=f5e479]: por cada cobro
+                  - text: .
+                - paragraph [ref=f5e480]: "Conectas tu Stripe en un clic. Cero código: cada cobro sale facturado y en regla, sin que tu equipo escriba una línea."
+                - generic [ref=f5e481]:
+                  - link "Conectar mi Stripe gratis" [ref=f5e482] [cursor=pointer]:
+                    - /url: https://app.beel.es/signup
+                  - link "Cómo funciona Stripe Verifactu" [ref=f5e485] [cursor=pointer]:
+                    - /url: /integraciones/stripe-verifactu
+              - generic [ref=f5e487]:
+                - generic [ref=f5e489]:
+                  - generic [ref=f5e493]:
+                    - generic [ref=f5e494]: Cobro recibido
+                    - generic [ref=f5e495]: Stripe · 49,00 €
+                  - generic [ref=f5e496]: Recibido
+                - generic [ref=f5e504]:
+                  - generic [ref=f5e509]:
+                    - generic [ref=f5e510]: BeeL. · Verifactu
+                    - generic [ref=f5e511]: AEAT · aceptada
+                  - generic [ref=f5e512]: Emitida
+                - generic [ref=f5e520]:
+                  - generic [ref=f5e525]:
+                    - generic [ref=f5e526]: Factura enviada
+                    - generic [ref=f5e527]: F-2026-0042 · PDF + QR
+                  - generic [ref=f5e528]: Legal
+            - generic [ref=f5e532]:
+              - generic [ref=f5e533]: Modos de cobro
+              - generic [ref=f5e535]:
+                - article [ref=f5e536]:
+                  - heading "Enlaces de pago" [level=3] [ref=f5e542]
+                  - paragraph [ref=f5e543]: Mandas el enlace, te pagan, sale la factura.
+                  - generic [ref=f5e544]:
+                    - generic [ref=f5e545]:
+                      - generic [ref=f5e546]: Payment Link
+                      - generic [ref=f5e547]:
+                        - generic [ref=f5e548]: 49,00 €
+                        - generic [ref=f5e549]: Facturado
+                    - link "Ver más" [ref=f5e551] [cursor=pointer]:
+                      - /url: /integraciones/stripe-verifactu/payment-links
+                - article [ref=f5e554]:
+                  - heading "Suscripciones" [level=3] [ref=f5e559]
+                  - paragraph [ref=f5e560]: Cada cobro mensual, trimestral o anual sale facturado.
+                  - generic [ref=f5e561]:
+                    - generic [ref=f5e562]:
+                      - generic [ref=f5e563]: Suscripción Pro
+                      - generic [ref=f5e564]:
+                        - generic [ref=f5e565]: 29,90 €/mes
+                        - generic [ref=f5e566]: Facturado
+                    - link "Ver más" [ref=f5e568] [cursor=pointer]:
+                      - /url: /integraciones/stripe-verifactu/suscripciones
+                - article [ref=f5e571]:
+                  - heading "Checkout" [level=3] [ref=f5e577]
+                  - paragraph [ref=f5e578]: Cada compra que se completa en tu checkout sale ya con su factura legal.
+                  - generic [ref=f5e579]:
+                    - generic [ref=f5e580]:
+                      - generic [ref=f5e581]: Checkout
+                      - generic [ref=f5e582]:
+                        - generic [ref=f5e583]: 199,00 €
+                        - generic [ref=f5e584]: Facturado
+                    - link "Ver más" [ref=f5e586] [cursor=pointer]:
+                      - /url: /integraciones/stripe-verifactu/checkout
+              - generic [ref=f5e589]:
+                - generic [ref=f5e590]:
+                  - generic [ref=f5e591]: Los casos raros, resueltos solos
+                  - link "Ver casos especiales" [ref=f5e592] [cursor=pointer]:
+                    - /url: /integraciones/stripe-verifactu#casos-especiales
+                - generic [ref=f5e595]:
+                  - generic [ref=f5e596]:
+                    - generic [ref=f5e598]: Reembolso total
+                    - generic [ref=f5e599]: → rectificativa automática
+                  - generic [ref=f5e600]:
+                    - generic [ref=f5e602]: Reembolso parcial
+                    - generic [ref=f5e603]: → rectificativa proporcional
+                  - generic [ref=f5e604]:
+                    - generic [ref=f5e606]: Cliente sin NIF
+                    - generic [ref=f5e607]: → simplificada hasta 400 €
+          - generic [ref=f5e609]:
+            - generic [ref=f5e611]:
+              - generic [ref=f5e612]:
+                - generic [ref=f5e613]: API · Cómo funciona
+                - heading "Mandas el cobro. BeeL. hace el resto." [level=2] [ref=f5e615]
+              - paragraph [ref=f5e616]: "Sin reglas fiscales en tu código: BeeL. se encarga del ciclo completo. Aquí lo ves paso a paso."
+            - generic [ref=f5e617]:
+              - generic [ref=f5e618]:
+                - generic [ref=f5e619]:
+                  - generic [ref=f5e620]: Pipeline
+                  - heading "El ciclo completo, automático" [level=3] [ref=f5e622]
+                  - paragraph [ref=f5e623]: Mandas el cobro; BeeL. valida el NIF, calcula el IVA, emite con Verifactu y envía la factura. Tú no orquestas nada.
+                - generic [ref=f5e626]:
+                  - generic [ref=f5e628]:
+                    - generic [ref=f5e629]: "1"
+                    - generic [ref=f5e633]:
+                      - generic [ref=f5e634]: Cobro recibido
+                      - generic [ref=f5e635]: Stripe · 49,00 €
+                  - generic [ref=f5e646]:
+                    - generic [ref=f5e647]: "2"
+                    - generic [ref=f5e651]:
+                      - generic [ref=f5e652]: NIF validado
+                      - generic [ref=f5e653]: AEAT · B12345678
+                  - generic [ref=f5e664]:
+                    - generic [ref=f5e665]: "3"
+                    - generic [ref=f5e671]:
+                      - generic [ref=f5e672]: IVA y totales calculados
+                      - generic [ref=f5e673]: 21% · 59,29 €
+                  - generic [ref=f5e684]:
+                    - generic [ref=f5e685]: "4"
+                    - generic [ref=f5e690]:
+                      - generic [ref=f5e691]: Verifactu emitido
+                      - generic [ref=f5e692]: AEAT · aceptada
+                  - generic [ref=f5e703]:
+                    - generic [ref=f5e704]: "5"
+                    - generic [ref=f5e709]:
+                      - generic [ref=f5e710]: Factura enviada
+                      - generic [ref=f5e711]: cliente@email.com
+                  - button "Añadir paso" [ref=f5e721] [cursor=pointer]
+                  - generic [ref=f5e728]:
+                    - generic [ref=f5e729]: Factura F-2026-0042 emitida
+                    - generic [ref=f5e730]: 59,29 € · PDF + QR · CSV AEAT
+              - generic [ref=f5e733]:
+                - generic [ref=f5e734]:
+                  - generic [ref=f5e735]: Webhooks
+                  - heading "Tu sistema se entera al instante" [level=3] [ref=f5e737]
+                  - paragraph [ref=f5e738]: Cada cambio de estado —en cola, reintentos, aceptación de la AEAT— llega firmado a tu endpoint o lo ves en el panel. Sin polling.
+                - generic [ref=f5e741]:
+                  - generic [ref=f5e742]:
+                    - generic [ref=f5e746]: Verifactu · AEAT
+                    - generic [ref=f5e747]: inv_8f2c4d
+                  - generic [ref=f5e748]:
+                    - generic [ref=f5e749]:
+                      - generic [ref=f5e750]: RUN
+                      - generic [ref=f5e751]: Registro enviado
+                      - generic [ref=f5e752]: 10:30:01
+                    - generic [ref=f5e753]:
+                      - generic [ref=f5e754]: QUEUED
+                      - generic [ref=f5e755]: En cola · AEAT
+                      - generic [ref=f5e756]: 10:30:01
+                    - generic [ref=f5e757]:
+                      - generic [ref=f5e758]: RUN
+                      - generic [ref=f5e759]: Reintento automático
+                      - generic [ref=f5e760]: 10:30:02
+                    - generic [ref=f5e761]:
+                      - generic [ref=f5e762]: OK
+                      - generic [ref=f5e763]: Aceptada · CSV asignado
+                      - generic [ref=f5e764]: 10:30:03
+              - generic [ref=f5e765]:
+                - generic [ref=f5e766]:
+                  - generic [ref=f5e767]: Datos validados
+                  - heading "Validado antes de emitir" [level=3] [ref=f5e769]
+                  - paragraph [ref=f5e770]: NIF y datos fiscales contra el censo de la AEAT antes de emitir. Cero facturas rechazadas por un identificador erróneo.
+                  - link "Ver la API de validación de NIF" [ref=f5e771] [cursor=pointer]:
+                    - /url: /api-validacion-nif
+                - generic [ref=f5e776]:
+                  - generic [ref=f5e777]: NIF / CIF
+                  - generic [ref=f5e778]:
+                    - generic [ref=f5e779]: B12345678
+                    - generic [ref=f5e780]: Válido
+                  - generic [ref=f5e784]:
+                    - generic [ref=f5e785]: Honey Solutions, S.L.
+                    - generic [ref=f5e786]: Activo en censo
+        - generic [ref=f5e789]:
+          - generic [ref=f5e790]:
+            - generic [ref=f5e791]:
+              - generic [ref=f5e792]: Integración · Nativo para IA
+              - heading [level=2] [ref=f5e794]:
+                - text: Hablas y tu IA
+                - emphasis [ref=f5e795]: factura en BeeL
+                - text: .
+              - paragraph [ref=f5e796]: Conecta tu asistente por MCP y emite facturas en regla —Verifactu, registradas en la AEAT— sin salir del chat. La misma plataforma está detrás del SDK y de la API REST.
+              - generic [ref=f5e797]:
+                - link "Ver la API pública" [ref=f5e798] [cursor=pointer]:
+                  - /url: /public-api
+                - link "Documentación MCP" [ref=f5e801] [cursor=pointer]:
+                  - /url: https://docs.beel.es/claude-code
+            - generic [ref=f5e804]:
+              - generic [ref=f5e805]:
+                - tablist "Clientes MCP" [ref=f5e806]:
+                  - tab "Claude Code" [selected] [ref=f5e807] [cursor=pointer]
+                  - tab "Claude" [ref=f5e810] [cursor=pointer]
+                  - tab "Cursor" [ref=f5e813] [cursor=pointer]
+                  - tab "ChatGPT" [ref=f5e816] [cursor=pointer]
+                  - tab "Codex" [ref=f5e819] [cursor=pointer]
+                  - tab "VS Code (Copilot)" [ref=f5e822] [cursor=pointer]
+                  - tab "Antigravity" [ref=f5e825] [cursor=pointer]
+                  - tab "Devin" [ref=f5e828] [cursor=pointer]
+                - tabpanel [ref=f5e831]:
+                  - generic [ref=f5e832]:
+                    - generic [ref=f5e833]: terminal
+                    - button "Copiar" [ref=f5e834] [cursor=pointer]
+                  - generic [ref=f5e839]:
+                    - generic [ref=f5e840]: $
+                    - code [ref=f5e841]:
+                      - generic [ref=f5e842]: claude
+                      - generic [ref=f5e843]: mcp
+                      - generic [ref=f5e844]: add
+                      - generic [ref=f5e845]: "--transport"
+                      - generic [ref=f5e846]: http
+                      - generic [ref=f5e847]: beel
+                      - generic [ref=f5e848]: https://mcp.beel.es/mcp
+                  - paragraph [ref=f5e849]: Ejecútalo en tu terminal.
+              - paragraph [ref=f5e850]:
+                - text: Un mismo servidor MCP, en cualquier cliente.
+                - link "Documentación MCP" [ref=f5e851] [cursor=pointer]:
+                  - /url: https://docs.beel.es/claude-code
+          - generic [ref=f5e855]:
+            - heading "¿Prefieres montarlo tú? La caja de herramientas" [level=3] [ref=f5e856]
+            - paragraph [ref=f5e857]: "El SDK tipado, la CLI y el plugin de Claude Code comparten el mismo backend que el servidor MCP: elige la vía que encaje con tu stack."
+            - generic [ref=f5e858]:
+              - article [ref=f5e859]:
+                - heading "SDK de Node/TypeScript" [level=4] [ref=f5e871]
+                - paragraph [ref=f5e872]: "El código que tu producto envía a producción: tipado, con reintentos automáticos e idempotencia."
+                - generic [ref=f5e873]:
+                  - generic [ref=f5e874]:
+                    - generic [ref=f5e875]: $
+                    - generic [ref=f5e876]: npm i @beel_es/sdk
+                    - button "Copiar" [ref=f5e877] [cursor=pointer]
+                  - link "Ver" [ref=f5e881] [cursor=pointer]:
+                    - /url: /public-api/sdks
+              - article [ref=f5e884]:
+                - heading "CLI" [level=4] [ref=f5e889]
+                - paragraph [ref=f5e890]: Opera y automatiza desde la terminal o tu CI. Agent-first y sandbox por defecto.
+                - generic [ref=f5e891]:
+                  - generic [ref=f5e892]:
+                    - generic [ref=f5e893]: $
+                    - generic [ref=f5e894]: npx @beel_es/cli invoices create
+                    - button "Copiar" [ref=f5e895] [cursor=pointer]
+                  - link "Ver" [ref=f5e899] [cursor=pointer]:
+                    - /url: /public-api/cli
+              - article [ref=f5e902]:
+                - heading "Plugin de Claude Code" [level=4] [ref=f5e906]
+                - paragraph [ref=f5e907]: Claude lee la doc y monta la integración por ti, y la verifica con la CLI contra el sandbox.
+                - generic [ref=f5e908]:
+                  - generic [ref=f5e909]:
+                    - generic [ref=f5e910]: $
+                    - generic [ref=f5e911]: /plugin install beel-api@beel
+                    - button "Copiar" [ref=f5e912] [cursor=pointer]
+                  - link "Ver" [ref=f5e916] [cursor=pointer]:
+                    - /url: /public-api/claude-code
+        - region "Preguntas frecuentes" [ref=f5e919]:
+          - generic [ref=f5e920]:
+            - generic [ref=f5e921]: Preguntas frecuentes
+            - heading "¿Qué necesitas saber antes de empezar?" [level=2] [ref=f5e923]
+            - generic [ref=f5e924]:
+              - group [ref=f5e925]:
+                - generic "¿Qué pasa si no adapto mi software a Verifactu?" [ref=f5e926] [cursor=pointer]: +
+              - group [ref=f5e929]:
+                - generic "¿Es obligatorio enviar todas las facturas a la AEAT?" [ref=f5e930] [cursor=pointer]: +
+              - group [ref=f5e933]:
+                - generic "¿Cómo funciona el código QR en las facturas?" [ref=f5e934] [cursor=pointer]: +
+              - group [ref=f5e937]:
+                - generic "¿Cuánto cuesta BeeL.?" [ref=f5e938] [cursor=pointer]: +
+              - group [ref=f5e941]:
+                - generic "¿Puedo probar BeeL. gratis?" [ref=f5e942] [cursor=pointer]: +
+              - group [ref=f5e945]:
+                - generic "¿Qué diferencia hay entre Verifactu y el SII?" [ref=f5e946] [cursor=pointer]: +
+        - generic [ref=f5e951]:
+          - heading [level=2] [ref=f5e952]:
+            - text: La próxima era de la facturación pertenece a
+            - img "BeeL." [ref=f5e953]
+          - generic [ref=f5e959]:
+            - button "Empezar gratis" [ref=f5e960] [cursor=pointer]
+            - link "Reservar demo" [ref=f5e961] [cursor=pointer]:
+              - /url: /demo
+          - paragraph [ref=f5e962]: Pruébalo entero gratis en sandbox, sin tarjeta. Solo pagas al emitir en producción.
+    - generic [ref=f5e964]:
+      - button "Completa" [pressed] [ref=f5e965] [cursor=pointer]
+      - button "60 seg" [ref=f5e966] [cursor=pointer]
+    - contentinfo [ref=f5e968]:
+      - generic [ref=f5e969]:
+        - generic [ref=f5e970]:
+          - link "BeeL. — Inicio" [ref=f5e972] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f5e981]:
+            - heading "Producto" [level=3] [ref=f5e982]
+            - list [ref=f5e983]:
+              - listitem [ref=f5e984]:
+                - link "Nosotros" [ref=f5e985] [cursor=pointer]:
+                  - /url: /nosotros
+              - listitem [ref=f5e986]:
+                - link "Blog" [ref=f5e987] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=f5e988]:
+                - link "API" [ref=f5e989] [cursor=pointer]:
+                  - /url: /public-api
+              - listitem [ref=f5e990]:
+                - link "Docs API" [ref=f5e991] [cursor=pointer]:
+                  - /url: https://docs.beel.es
+              - listitem [ref=f5e992]:
+                - link "Reservar demo" [ref=f5e993] [cursor=pointer]:
+                  - /url: /demo
+              - listitem [ref=f5e994]:
+                - link "Roadmap" [ref=f5e995] [cursor=pointer]:
+                  - /url: https://beeles.featurebase.app/roadmap
+              - listitem [ref=f5e996]:
+                - link "Status" [ref=f5e997] [cursor=pointer]:
+                  - /url: https://status.beel.es/
+              - listitem [ref=f5e998]:
+                - link "Contacto" [ref=f5e999] [cursor=pointer]:
+                  - /url: /contacto
+          - generic [ref=f5e1000]:
+            - heading "Integraciones" [level=3] [ref=f5e1001]
+            - list [ref=f5e1002]:
+              - listitem [ref=f5e1003]:
+                - link "Stripe" [ref=f5e1004] [cursor=pointer]:
+                  - /url: /integraciones/stripe-verifactu
+              - listitem [ref=f5e1005]:
+                - link "WooCommerce" [ref=f5e1006] [cursor=pointer]:
+                  - /url: /integraciones/verifactu-woocommerce
+              - listitem [ref=f5e1007]:
+                - link "Shopify" [ref=f5e1008] [cursor=pointer]:
+                  - /url: /integraciones/verifactu-shopify
+              - listitem [ref=f5e1009]:
+                - link "PrestaShop" [ref=f5e1010] [cursor=pointer]:
+                  - /url: /integraciones/verifactu-prestashop
+              - listitem [ref=f5e1011]:
+                - link "n8n" [ref=f5e1012] [cursor=pointer]:
+                  - /url: /integraciones/n8n-verifactu
+          - generic [ref=f5e1013]:
+            - heading "Comparaciones" [level=3] [ref=f5e1014]
+            - list [ref=f5e1015]:
+              - listitem [ref=f5e1016]:
+                - link "Comparar software" [ref=f5e1017] [cursor=pointer]:
+                  - /url: /vs/software-verifactu
+              - listitem [ref=f5e1018]:
+                - link "vs Verifacti" [ref=f5e1019] [cursor=pointer]:
+                  - /url: /vs/verifacti
+              - listitem [ref=f5e1020]:
+                - link "vs Quaderno" [ref=f5e1021] [cursor=pointer]:
+                  - /url: /vs/quaderno
+              - listitem [ref=f5e1022]:
+                - link "vs Quipu" [ref=f5e1023] [cursor=pointer]:
+                  - /url: /vs/quipu
+          - generic [ref=f5e1024]:
+            - heading "Verifactu" [level=3] [ref=f5e1025]
+            - list [ref=f5e1026]:
+              - listitem [ref=f5e1027]:
+                - link "¿Qué es Verifactu?" [ref=f5e1028] [cursor=pointer]:
+                  - /url: /guia/verifactu
+              - listitem [ref=f5e1029]:
+                - link "Fechas y plazos" [ref=f5e1030] [cursor=pointer]:
+                  - /url: /guia/verifactu/fechas-plazos
+              - listitem [ref=f5e1031]:
+                - link "Guía para profesionales" [ref=f5e1032] [cursor=pointer]:
+                  - /url: /guia/verifactu/autonomos
+              - listitem [ref=f5e1033]:
+                - link "Multas y sanciones" [ref=f5e1034] [cursor=pointer]:
+                  - /url: /guia/verifactu/multas-sanciones
+              - listitem [ref=f5e1035]:
+                - link "Artículos sobre Verifactu →" [ref=f5e1036] [cursor=pointer]:
+                  - /url: /blog/tags/verifactu
+          - generic [ref=f5e1037]:
+            - heading "Comunidad" [level=3] [ref=f5e1038]
+            - list [ref=f5e1039]:
+              - listitem [ref=f5e1040]:
+                - link "LinkedIn" [ref=f5e1041] [cursor=pointer]:
+                  - /url: https://www.linkedin.com/company/beel-es/
+              - listitem [ref=f5e1046]:
+                - link "Instagram" [ref=f5e1047] [cursor=pointer]:
+                  - /url: https://www.instagram.com/beel.es?igsh=Y2lvaWwydW1oam1t
+              - listitem [ref=f5e1051]:
+                - link "TikTok" [ref=f5e1052] [cursor=pointer]:
+                  - /url: https://www.tiktok.com/@app.beel.es
+              - listitem [ref=f5e1056]:
+                - link "YouTube" [ref=f5e1057] [cursor=pointer]:
+                  - /url: https://www.youtube.com/@beel_es
+          - generic [ref=f5e1061]:
+            - heading "Legal" [level=3] [ref=f5e1062]
+            - list [ref=f5e1063]:
+              - listitem [ref=f5e1064]:
+                - link "Prensa" [ref=f5e1065] [cursor=pointer]:
+                  - /url: /prensa
+              - listitem [ref=f5e1066]:
+                - link "Logo" [ref=f5e1067] [cursor=pointer]:
+                  - /url: /logo
+              - listitem [ref=f5e1068]:
+                - link "Privacidad" [ref=f5e1069] [cursor=pointer]:
+                  - /url: /privacidad
+              - listitem [ref=f5e1070]:
+                - link "Cookies" [ref=f5e1071] [cursor=pointer]:
+                  - /url: /cookies
+              - listitem [ref=f5e1072]:
+                - link "Términos" [ref=f5e1073] [cursor=pointer]:
+                  - /url: /terminos
+              - listitem [ref=f5e1074]:
+                - link "Cancelación" [ref=f5e1075] [cursor=pointer]:
+                  - /url: /reembolsos
+              - listitem [ref=f5e1076]:
+                - link "Declaración Responsable" [ref=f5e1077] [cursor=pointer]:
+                  - /url: /declaraciones-responsables
+              - listitem [ref=f5e1078]:
+                - button "Configurar Cookies" [ref=f5e1079] [cursor=pointer]
+        - generic [ref=f5e1081]:
+          - paragraph [ref=f5e1082]: © 2026 Honey Solutions, S.L.
+          - generic [ref=f5e1083]:
+            - link "hola@beel.es" [ref=f5e1084] [cursor=pointer]:
+              - /url: mailto:hola@beel.es
+            - generic [ref=f5e1088]: •
+            - link "WhatsApp" [ref=f5e1089] [cursor=pointer]:
+              - /url: https://wa.me/34711212300
+  - button "Volver arriba"
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=f5e1097] [cursor=pointer]
+  - alert [ref=f5e1101]
