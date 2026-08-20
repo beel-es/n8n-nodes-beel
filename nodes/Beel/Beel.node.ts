@@ -17,7 +17,7 @@ import {
 	buildOperationSelector,
 	mergeProperties,
 } from './descriptions/propertyBuilder';
-import { getCompanies, getCustomers, getProducts, getSeries } from './GenericFunctions';
+import { getAccounts, getCompanies, getCustomers, getProducts, getSeries } from './GenericFunctions';
 import { executeGeneratedOperation } from './genericExecutor';
 import {
 	downloadInvoicePdf,
@@ -52,13 +52,24 @@ function buildProperties(): INodeProperties[] {
 	}
 
 	properties.push({
+		displayName: 'Account Name or ID',
+		name: 'activeAccount',
+		type: 'options',
+		typeOptions: { loadOptionsMethod: 'getAccounts' },
+		default: '',
+		description:
+			'Account to act on. Leave empty for the account this API key belongs to — which is what you want unless you are a provisioner operating on an account you created for a client. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+		options: [],
+	});
+
+	properties.push({
 		displayName: 'Company Name or ID',
 		name: 'activeCompany',
 		type: 'options',
 		typeOptions: { loadOptionsMethod: 'getCompanies' },
 		default: '',
 		description:
-			'Company (NIF) to operate as, for multi-NIF accounts. Leave empty to use the default set on the credential, or the company the API key is already scoped to. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+			'Company (NIF) this operation runs against — BeeL scopes invoices, customers, products and series by company. Leave empty to use the default set on the credential. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 		options: [],
 	});
 
@@ -70,7 +81,7 @@ function buildProperties(): INodeProperties[] {
 		default: '',
 		placeholder: '={{ $json.order_id }}',
 		description:
-			'Optional. Retrying with the same key returns the resource created the first time instead of creating another one. Leave empty and each run sends a fresh key, which makes a network-level retry safe but still creates a new resource if the workflow runs again. Derive it from your own data — an order ID, for instance — to make re-runs safe too.',
+			'Optional. Retrying with the same key returns the resource created the first time instead of creating another one. Leave empty and each run sends a fresh key, which makes a network-level retry safe but still creates a new resource if the workflow runs again. Derive it from your own data — an order ID, for instance — to make re-runs safe too. Must be a UUID or plain alphanumeric text: a timestamp like <code>2026-08-20T15:42:39.123Z</code> is rejected for its colons and dots.',
 		displayOptions: {
 			show: {
 				resource: [...new Set(creating.map((operation) => operation.resource))],
@@ -106,7 +117,7 @@ export class Beel implements INodeType {
 	};
 
 	methods = {
-		loadOptions: { getCompanies, getCustomers, getProducts, getSeries },
+		loadOptions: { getAccounts, getCompanies, getCustomers, getProducts, getSeries },
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {

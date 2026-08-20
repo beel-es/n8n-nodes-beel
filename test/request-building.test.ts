@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import { executeGeneratedOperation } from '../nodes/Beel/genericExecutor';
-import { COMPANY_ID, CUSTOMER_ID, INVOICE_ID, SERIES_ID, makeContext, operationFor } from './helpers';
+import {
+	ACCOUNT_BASE,
+	COMPANY_BASE,
+	COMPANY_ID,
+	CUSTOMER_ID,
+	INVOICE_ID,
+	SERIES_ID,
+	makeContext,
+	operationFor,
+} from './helpers';
 
 /**
  * The executor turns UI values into an HTTP request entirely from the metadata
@@ -42,7 +51,7 @@ describe('building a request', () => {
 		});
 
 		expect(request.method).toBe('POST');
-		expect(request.url).toBe('https://app.beel.es/api/v1/invoices');
+		expect(request.url).toBe(`${COMPANY_BASE}/invoices`);
 		expect(request.body).toEqual({
 			type: 'STANDARD',
 			recipient: { customer_id: CUSTOMER_ID },
@@ -62,32 +71,33 @@ describe('building a request', () => {
 
 	it('substitutes path parameters', async () => {
 		const { request } = await run('invoice', 'void', {
-			parameters: { invoiceId: INVOICE_ID, reason_invoice_void: 'Duplicada por error' },
+			parameters: { invoiceId: INVOICE_ID, reason: 'Duplicada por error' },
 		});
 
-		expect(request.url).toBe(`https://app.beel.es/api/v1/invoices/${INVOICE_ID}/void`);
+		expect(request.url).toBe(`${COMPANY_BASE}/invoices/${INVOICE_ID}/void`);
 		expect(request.body).toEqual({ reason: 'Duplicada por error' });
 	});
 
 	it('substitutes a path parameter declared once for the whole path item', async () => {
-		// Regression: these endpoints declare company_id at path-item level rather
-		// than per operation, and the URL used to go out with "{company_id}" in it.
+		// Regression: these endpoints declare their parameters at path-item level
+		// rather than per operation, and the URL used to go out with the
+		// placeholder still in it.
 		const { request } = await run('company', 'getRepresentationStatus', {
-			parameters: { companyId: COMPANY_ID },
+			parameters: { activeCompany: COMPANY_ID },
 		});
 
-		expect(request.url).toBe(
-			`https://app.beel.es/api/v1/companies/${COMPANY_ID}/representation/status`,
-		);
+		expect(request.url).toBe(`${COMPANY_BASE}/representation`);
 	});
 
 	it('separates query parameters from the body', async () => {
-		const { request } = await run('product', 'search', {
-			parameters: { filters: { q: 'consult', limit: 5 } },
+		// Product search is `?q=` on the list now that `/v1/products/search` is gone.
+		const { request } = await run('product', 'getAll', {
+			parameters: { returnAll: false, limit: 5, filters: { q: 'consult' } },
+			responses: { data: { products: [], pagination: { total_pages: 1 } } },
 		});
 
 		expect(request.method).toBe('GET');
-		expect(request.qs).toEqual({ q: 'consult', limit: 5 });
+		expect(request.qs).toMatchObject({ q: 'consult', limit: 5 });
 		expect(request.body).toBeUndefined();
 	});
 
@@ -171,6 +181,62 @@ describe('values the user never chose', () => {
 		});
 	});
 
+	/**
+	 * Opening an invoice's "Options" collection and touching nothing materialised
+	 * `email_config.recipients` as `[]`, and validation then rejected the whole
+	 * invoice for "needs at least 1 value" — from a group nobody filled in.
+	 *
+	 * An untouched list means "not provided", not "provided badly".
+	 */
+	it('leaves out an email config nobody filled in', async () => {
+		const { request } = await run('invoice', 'create', {
+			parameters: {
+				type: 'STANDARD',
+				recipient: { value: { customer_id: CUSTOMER_ID } },
+				lines: { value: [{ description: 'x', quantity: 1, unit_price: 10 }] },
+				additionalFields: {
+					options: {
+						value: {
+							email_config_recipients: [],
+							email_config_cc: [],
+							email_config_subject: '',
+							email_config_message: '',
+						},
+					},
+				},
+			},
+		});
+
+		const options = (request.body as Record<string, Record<string, unknown>>).options;
+		expect(options ?? {}).not.toHaveProperty('email_config');
+	});
+
+	it('still sends the email config when it does have recipients', async () => {
+		const { request } = await run('invoice', 'create', {
+			parameters: {
+				type: 'STANDARD',
+				recipient: { value: { customer_id: CUSTOMER_ID } },
+				lines: { value: [{ description: 'x', quantity: 1, unit_price: 10 }] },
+				additionalFields: {
+					options: {
+						value: {
+							email_config_recipients: ['cliente@example.com'],
+							email_config_cc: [],
+							email_config_subject: 'Tu factura',
+							email_config_message: '',
+						},
+					},
+				},
+			},
+		});
+
+		const options = (request.body as Record<string, Record<string, any>>).options;
+		expect(options.email_config).toEqual({
+			recipients: ['cliente@example.com'],
+			subject: 'Tu factura',
+		});
+	});
+
 	it('says which fields are missing when an address is half filled', async () => {
 		await expect(
 			run('invoice', 'create', {
@@ -182,6 +248,48 @@ describe('values the user never chose', () => {
 				},
 			}),
 		).rejects.toThrow(/missing required address fields/);
+	});
+
+	/**
+	 * The API accepts EXACTLY ONE of unit_price / total_excluding_tax /
+	 * total_including_tax, but the contract only says so in prose: the server is
+	 * what enforces it.
+	 *
+	 * n8n materialises every field of the collection with its default, and a
+	 * number's default is 0 — a legitimate value, so it cannot just be dropped.
+	 * All three went out at once and the API rejected the invoice. A selector now
+	 * decides which one is shown, so sending two is no longer possible.
+	 */
+	it('sends exactly one of the three ways of stating a line price', async () => {
+		const line = (mode: string, extra: Record<string, unknown>) => ({
+			description: 'x', quantity: 1,
+			price_mode: mode, unit_price: 0, total_excluding_tax: 0, total_including_tax: 0,
+			...extra,
+		});
+
+		for (const [mode, kept] of [
+			['unit_price', 'unit_price'],
+			['total_excluding_tax', 'total_excluding_tax'],
+			['total_including_tax', 'total_including_tax'],
+		] as const) {
+			const { request } = await run('invoice', 'create', {
+				parameters: {
+					type: 'STANDARD',
+					recipient: { value: { customer_id: CUSTOMER_ID } },
+					lines: { value: [line(mode, { [kept]: 100 })] },
+					additionalFields: {},
+				},
+			});
+
+			const sent = (request.body as Record<string, Array<Record<string, unknown>>>).lines[0];
+			const present = ['unit_price', 'total_excluding_tax', 'total_including_tax'].filter(
+				(f) => sent[f] !== undefined,
+			);
+
+			expect(present).toEqual([kept]);
+			// The selector steers the form; it is not a field of the API.
+			expect(sent).not.toHaveProperty('price_mode');
+		}
 	});
 
 	it('only sends the tax rate of the chosen tax type', async () => {
@@ -238,36 +346,134 @@ describe('values the user never chose', () => {
 	});
 });
 
-describe('headers', () => {
-	it('sends the active company chosen on the node', async () => {
-		const { request } = await run('nif', 'validate', {
-			parameters: { nif: 'B86561412', activeCompany: COMPANY_ID },
+/**
+ * The scope used to be a `Beel-Active-Company` header. The contract retired it:
+ * `{company_id}` in the path is the only source of context. These cover the
+ * substitution, because getting it wrong is silent — a literal `{company_id}`
+ * in a URL is a 404, and the wrong company is worse than that.
+ */
+describe('scoping', () => {
+	it('puts the company chosen on the node into the path', async () => {
+		const { request } = await run('customer', 'getAll', {
+			parameters: { activeCompany: COMPANY_ID, returnAll: false, limit: 10, filters: {} },
+			responses: { data: { customers: [], pagination: { total_pages: 1 } } },
 		});
 
-		expect((request.headers as Record<string, string>)['Beel-Active-Company']).toBe(COMPANY_ID);
+		expect(request.url).toBe(`${COMPANY_BASE}/customers`);
 	});
 
 	it('falls back to the company set on the credential', async () => {
-		const { request } = await run('nif', 'validate', {
-			parameters: { nif: 'B86561412' },
+		const { request } = await run('customer', 'get', {
+			parameters: { customerId: CUSTOMER_ID },
 			credentials: { apiKey: 'beel_sk_test_x', companyId: COMPANY_ID },
 		});
 
-		expect((request.headers as Record<string, string>)['Beel-Active-Company']).toBe(COMPANY_ID);
+		expect(request.url).toBe(`${COMPANY_BASE}/customers/${CUSTOMER_ID}`);
 	});
 
-	it('omits the company header when none is configured', async () => {
-		const { request } = await run('nif', 'validate', { parameters: { nif: 'B86561412' } });
+	it('prefers the company on the node over the credential default', async () => {
+		const other = '11111111-2222-3333-4444-555555555555';
+		const { request } = await run('customer', 'get', {
+			parameters: { customerId: CUSTOMER_ID, activeCompany: other },
+			credentials: { apiKey: 'beel_sk_test_x', companyId: COMPANY_ID },
+		});
+
+		expect(request.url).toBe(`https://app.beel.es/api/v1/companies/${other}/customers/${CUSTOMER_ID}`);
+	});
+
+	it('refuses to send a company-scoped request with no company', async () => {
+		await expect(
+			run('customer', 'get', {
+				parameters: { customerId: CUSTOMER_ID },
+				credentials: { apiKey: 'beel_sk_test_x' },
+			}),
+		).rejects.toThrow(/needs a company/);
+	});
+
+	it('resolves the account from the API key for account-scoped paths', async () => {
+		const { request } = await run('company', 'getAll', {
+			parameters: { returnAll: false, limit: 10, filters: {} },
+			responses: { data: { companies: [], pagination: { total_pages: 1 } } },
+		});
+
+		expect(request.url).toBe(`${ACCOUNT_BASE}/companies`);
+	});
+
+	it('lets a provisioner name the account instead of using the key\'s own', async () => {
+		// The contract: account_id "may be your own account or an account you
+		// provisioned". Without this a gestoría could only ever reach itself.
+		const managed = '99999999-8888-7777-6666-555555555555';
+		const { request } = await run('company', 'getAll', {
+			parameters: { activeAccount: managed, returnAll: false, limit: 10, filters: {} },
+			responses: { data: { companies: [], pagination: { total_pages: 1 } } },
+		});
+
+		expect(request.url).toBe(`https://app.beel.es/api/v1/accounts/${managed}/companies`);
+	});
+
+	it('substitutes both axes on a path that carries the two', async () => {
+		const { request } = await run('paymentEvent', 'getAll', {
+			parameters: {
+				activeCompany: COMPANY_ID,
+				// The generator suffixes the name when two operations word it differently.
+				provider_paymentEvent_getAll: 'stripe',
+				returnAll: false,
+				limit: 10,
+				filters: {},
+			},
+			responses: { data: [], pagination: { total_pages: 1 } },
+		});
+
+		expect(request.url).toBe(`${COMPANY_BASE}/payment-connections/stripe/events`);
+	});
+
+	it('never leaves a placeholder in the URL it sends', async () => {
+		const { request } = await run('customer', 'get', {
+			parameters: { customerId: CUSTOMER_ID, activeCompany: COMPANY_ID },
+		});
+
+		expect(request.url).not.toMatch(/[{}]/);
+	});
+
+	it('no longer sends the retired active-company header', async () => {
+		const { request } = await run('customer', 'get', {
+			parameters: { customerId: CUSTOMER_ID, activeCompany: COMPANY_ID },
+		});
 
 		expect(request.headers).not.toHaveProperty('Beel-Active-Company');
 	});
+});
 
+describe('headers', () => {
 	it('adds an idempotency key to every POST', async () => {
 		const { request } = await run('nif', 'validate', { parameters: { nif: 'B86561412' } });
 
 		expect((request.headers as Record<string, string>)['Idempotency-Key']).toMatch(
 			/^[0-9a-f-]{36}$/,
 		);
+	});
+
+	/**
+	 * The node adds this header itself — the contract does not declare it — so it
+	 * is the one value the generated validation never sees. Without this, a key
+	 * built from a timestamp reaches the API and comes back as a 400 with the
+	 * invoice request already in flight.
+	 */
+	it('rejects an idempotency key the API would refuse, before sending', async () => {
+		await expect(
+			run('nif', 'validate', {
+				parameters: { nif: 'B86561412', idempotencyKey: '2026-08-20T15:42:39.123Z-B86561412' },
+			}),
+		).rejects.toThrow(/idempotency key has characters BeeL will reject/);
+	});
+
+	it('accepts a UUID and plain alphanumeric text', async () => {
+		for (const key of ['550e8400-e29b-41d4-a716-446655440000', 'ORD42', 'pedido2026']) {
+			const { request } = await run('nif', 'validate', {
+				parameters: { nif: 'B86561412', idempotencyKey: key },
+			});
+			expect((request.headers as Record<string, string>)['Idempotency-Key']).toBe(key);
+		}
 	});
 
 	it('uses the idempotency key supplied by the workflow', async () => {

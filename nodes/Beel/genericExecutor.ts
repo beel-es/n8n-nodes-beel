@@ -1,7 +1,7 @@
 import type { IDataObject, IExecuteFunctions } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
 
-import { beelApiRequest, beelApiRequestAllItems, resolveCompanyId, unwrap } from './GenericFunctions';
+import { beelApiRequest, beelApiRequestAllItems, resolveScopeFor, unwrap } from './GenericFunctions';
 import type { GeneratedField, GeneratedOperation } from './descriptions/generated/types';
 import { isVisible, validateField } from './validation';
 
@@ -58,12 +58,17 @@ function groupsToDrop(
 	for (const child of field.fields ?? []) {
 		const group = groupOf(child);
 		if (group === '' || child.groupRequired !== true) continue;
-		if (!isVisible(child, entry)) continue;
+		if (!isVisible(child, entry, field.fields ?? [])) continue;
 		groups.set(group, [...(groups.get(group) ?? []), child]);
 	}
 
 	const isEmpty = (child: GeneratedField): boolean => {
 		const value = entry[child.name];
+		// An untouched list arrives as `[]` rather than undefined, and is just as
+		// empty. Without this an `email_config` nobody filled in survived with zero
+		// recipients, and validation then rejected the whole invoice over a group
+		// the user never opened.
+		if (Array.isArray(value)) return value.length === 0;
 		return value === undefined || value === null || value === '';
 	};
 
@@ -116,8 +121,10 @@ function readValue(
 				const nested: IDataObject = {};
 
 				for (const child of field.fields ?? []) {
+					// Selectors that only steer the form: rendered, never sent.
+					if (child.uiOnly === true) continue;
 					// Hidden variants can keep a stale value from a previous choice.
-					if (!isVisible(child, entry)) continue;
+					if (!isVisible(child, entry, field.fields ?? [])) continue;
 					if (skip.has(groupOf(child))) continue;
 
 					const childValue = readValue(context, child, entry[child.name], itemIndex);
@@ -167,6 +174,7 @@ function collect(
 	const queryNames = new Set(operation.queryParamNames);
 
 	for (const field of fields) {
+		if (field.uiOnly === true) continue;
 		const raw = values[field.name];
 		validateField(context.getNode(), field, raw, itemIndex);
 
@@ -215,7 +223,7 @@ export async function executeGeneratedOperation(
 		collect(this, operation, operation.filters, values, itemIndex, collected);
 	}
 
-	const companyId = resolveCompanyId(this, itemIndex);
+	const scope = resolveScopeFor(this, itemIndex);
 
 	if (operation.paginated) {
 		const returnAll = this.getNodeParameter('returnAll', itemIndex, false) as boolean;
@@ -227,7 +235,7 @@ export async function executeGeneratedOperation(
 			path,
 			collected.query,
 			limit,
-			companyId,
+			scope,
 		);
 	}
 
@@ -237,7 +245,7 @@ export async function executeGeneratedOperation(
 		path,
 		['GET', 'DELETE'].includes(operation.method) ? undefined : collected.body,
 		collected.query,
-		companyId,
+		scope,
 		{},
 		this.getNodeParameter('idempotencyKey', itemIndex, '') as string,
 	);

@@ -128,6 +128,60 @@ describe('pagination', () => {
 	});
 });
 
+/**
+ * The contract can be wrong about the shape of a response, and when it is, the
+ * node does not fail: it lists zero items behind a 200 and nobody notices.
+ *
+ * This happened. `GET /v1/accounts/{account_id}/companies` declares `data` as an
+ * array while the API returns `data.companies[]`, so "Company → Get Many"
+ * answered ZERO companies against the real API. No test caught it, because every
+ * test answers what the contract says rather than what the server sends.
+ */
+describe('when the contract gets the response shape wrong', () => {
+	it('finds the list anyway instead of silently returning none', async () => {
+		const stub = makeContext({
+			parameters: { returnAll: false, limit: 10, filters: {} },
+			// The contract says `data` is the array; the API sends an envelope.
+			responses: {
+				data: {
+					companies: [{ id: 'a', legal_name: 'Uno' }, { id: 'b', legal_name: 'Dos' }],
+					pagination: { total_pages: 1 },
+				},
+			},
+		});
+
+		const items = await executeGeneratedOperation.call(
+			stub.context,
+			operationFor('company', 'getAll'),
+			0,
+		);
+
+		expect(items).toHaveLength(2);
+	});
+
+	it('still prefers the key the contract declares when it is there', async () => {
+		const stub = makeContext({
+			parameters: { returnAll: false, limit: 10, filters: {} },
+			responses: {
+				data: {
+					customers: [{ id: 'right' }],
+					// A neighbouring array that must not win over the declared key.
+					deleted: [{ id: 'wrong' }, { id: 'wrong' }],
+					pagination: { total_pages: 1 },
+				},
+			},
+		});
+
+		const items = await executeGeneratedOperation.call(
+			stub.context,
+			operationFor('customer', 'getAll'),
+			0,
+		);
+
+		expect(items).toEqual([{ id: 'right' }]);
+	});
+});
+
 describe('errors', () => {
 	it('surfaces the message the API sent', async () => {
 		const stub = makeContext({

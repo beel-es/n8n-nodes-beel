@@ -4,8 +4,12 @@ import { describe, expect, it } from 'vitest';
 import { Beel } from '../nodes/Beel/Beel.node';
 import { BeelTrigger } from '../nodes/BeelTrigger/BeelTrigger.node';
 import { BeelApi } from '../credentials/BeelApi.credentials';
-import { GENERATED_OPERATIONS } from '../nodes/Beel/descriptions/generated/operations.generated';
+import {
+	CONTRACT_PATHS,
+	GENERATED_OPERATIONS,
+} from '../nodes/Beel/descriptions/generated/operations.generated';
 import { MANUAL_OPERATIONS } from '../nodes/Beel/manualOperations';
+import { scopeAxesOf } from '../nodes/Beel/scope';
 import { makeContext } from './helpers';
 
 /**
@@ -67,17 +71,23 @@ describe('the node description', () => {
 		});
 	});
 
-	it('gives every path placeholder a parameter the node actually renders', () => {
+	// The invariant that keeps the two halves of the scoping rule together: a
+	// placeholder is either a field the user fills or a scope beelApiRequest
+	// substitutes. Anything else travels to the API as a literal `{company_id}`.
+	it('gives every path placeholder either a rendered parameter or a scope', () => {
 		const names = new Set(properties.map((property) => property.name));
 
 		for (const operation of ALL_OPERATIONS) {
 			const placeholders = [...operation.path.matchAll(/\{([^}]+)\}/g)].map((match) => match[1]);
-			const covered = new Set(operation.pathParams.map((field) => field.apiName));
+			const covered = new Set([
+				...operation.pathParams.map((field) => field.apiName),
+				...scopeAxesOf(operation.path).map((axis) => axis.parameter),
+			]);
 
 			for (const placeholder of placeholders) {
 				expect(
 					covered.has(placeholder),
-					`${operation.resource}.${operation.operation} has no parameter for {${placeholder}}`,
+					`${operation.resource}.${operation.operation} has no parameter or scope for {${placeholder}}`,
 				).toBe(true);
 			}
 
@@ -121,8 +131,13 @@ describe('the credential', () => {
 		);
 	});
 
-	it('tests itself against a read-only endpoint', () => {
-		expect(new BeelApi().test.request.url).toBe('/v1/configuration/series');
+	// Probing anything company-scoped would fail a valid key whose account has no
+	// default company set; identity is the one endpoint that needs no scope.
+	it('tests itself against an unscoped read-only endpoint', () => {
+		const url = new BeelApi().test.request.url;
+
+		expect(url).toBe(CONTRACT_PATHS.getMyIdentity);
+		expect(url).not.toMatch(/\{[a-z_]+\}/);
 	});
 });
 

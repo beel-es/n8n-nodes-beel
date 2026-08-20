@@ -3,7 +3,7 @@ import { createHmac } from 'crypto';
 import { describe, expect, it } from 'vitest';
 
 import { BeelTrigger } from '../nodes/BeelTrigger/BeelTrigger.node';
-import { makeContext } from './helpers';
+import { ACCOUNT_BASE, makeContext } from './helpers';
 
 /**
  * The trigger is the security boundary of this package: anything that reaches a
@@ -145,7 +145,7 @@ describe('the subscription lifecycle', () => {
 
 		expect(stub.requests[0]).toMatchObject({
 			method: 'POST',
-			url: 'https://app.beel.es/api/v1/webhooks',
+			url: `${ACCOUNT_BASE}/webhooks`,
 			body: { url: 'https://n8n.example.com/webhook/beel', events: ['invoice.issued'] },
 		});
 		expect(stub.staticData).toEqual({ webhookId: 'sub-1', secret: SECRET });
@@ -221,7 +221,7 @@ describe('the subscription lifecycle', () => {
 		expect(await methods.checkExists.call(stub.context)).toBe(true);
 		expect(stub.requests[1]).toMatchObject({
 			method: 'PATCH',
-			url: 'https://app.beel.es/api/v1/webhooks/sub-1',
+			url: `${ACCOUNT_BASE}/webhooks/sub-1`,
 		});
 		expect(stub.staticData.secret).toBe(SECRET);
 	});
@@ -236,7 +236,7 @@ describe('the subscription lifecycle', () => {
 
 		expect(stub.requests[0]).toMatchObject({
 			method: 'DELETE',
-			url: 'https://app.beel.es/api/v1/webhooks/sub-1',
+			url: `${ACCOUNT_BASE}/webhooks/sub-1`,
 		});
 		expect(stub.staticData).toEqual({});
 	});
