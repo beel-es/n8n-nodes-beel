@@ -18,6 +18,7 @@ import { parse } from 'yaml';
 import {
 	DISPLAY_NAME_OVERRIDES,
 	EXCLUDED_OPERATION_IDS,
+	EXCLUSIVE_FIELD_GROUPS,
 	LOAD_OPTIONS_BY_FIELD,
 	MANUAL_OPERATION_IDS,
 	OPERATION_NAMES,
@@ -171,6 +172,55 @@ function constraintHint(validation: GeneratedValidation | undefined, type: strin
 	}
 
 	return hints.length > 0 ? hints.join(', ') : undefined;
+}
+
+/**
+ * Replaces a group of mutually exclusive fields with a selector plus the
+ * alternatives, each shown only when it is the one chosen.
+ *
+ * Same device as `applyTaxPercentageOptions`: the rule lives in the server rather
+ * than the schema, so the form is the only place it can be enforced before the
+ * request goes out. Returns the fields untouched when the collection does not
+ * hold the whole group.
+ */
+function applyExclusiveGroups(fields: GeneratedField[]): GeneratedField[] {
+	let result = fields;
+
+	for (const group of EXCLUSIVE_FIELD_GROUPS) {
+		const present = group.choices.filter((choice) =>
+			result.some((field) => field.apiName === choice.apiName),
+		);
+		// Only applies when every alternative is present: half an exclusion is none.
+		if (present.length !== group.choices.length) continue;
+
+		const selector: GeneratedField = {
+			name: group.name,
+			apiName: group.name,
+			displayName: group.displayName,
+			description: group.description,
+			type: 'options',
+			uiOnly: true,
+			options: group.choices.map((choice) => ({
+				name: choice.label,
+				value: choice.apiName,
+				description: choice.description,
+			})),
+			default: group.choices[0].apiName,
+		};
+
+		let inserted = false;
+		result = result.flatMap((field) => {
+			const choice = group.choices.find((c) => c.apiName === field.apiName);
+			if (!choice) return [field];
+
+			const shown = { ...field, showWhen: { field: group.name, values: [choice.apiName] } };
+			if (inserted) return [shown];
+			inserted = true;
+			return [selector, shown];
+		});
+	}
+
+	return result;
 }
 
 /**
@@ -367,7 +417,7 @@ function toField(apiName: string, rawSchema: Json, required: boolean, depth = 0)
 				return {
 					...base,
 					type: 'fixedCollection',
-					fields: applyTaxPercentageOptions(nested),
+					fields: applyExclusiveGroups(applyTaxPercentageOptions(nested)),
 					multipleValues: true,
 					default: {},
 				};
@@ -408,7 +458,7 @@ function toField(apiName: string, rawSchema: Json, required: boolean, depth = 0)
 				nested.push(...children);
 			}
 
-			return { ...base, type: 'fixedCollection', fields: applyTaxPercentageOptions(nested), default: {} };
+			return { ...base, type: 'fixedCollection', fields: applyExclusiveGroups(applyTaxPercentageOptions(nested)), default: {} };
 		}
 
 		default:

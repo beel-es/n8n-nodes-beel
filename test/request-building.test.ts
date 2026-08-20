@@ -181,6 +181,62 @@ describe('values the user never chose', () => {
 		});
 	});
 
+	/**
+	 * Opening an invoice's "Options" collection and touching nothing materialised
+	 * `email_config.recipients` as `[]`, and validation then rejected the whole
+	 * invoice for "needs at least 1 value" — from a group nobody filled in.
+	 *
+	 * An untouched list means "not provided", not "provided badly".
+	 */
+	it('leaves out an email config nobody filled in', async () => {
+		const { request } = await run('invoice', 'create', {
+			parameters: {
+				type: 'STANDARD',
+				recipient: { value: { customer_id: CUSTOMER_ID } },
+				lines: { value: [{ description: 'x', quantity: 1, unit_price: 10 }] },
+				additionalFields: {
+					options: {
+						value: {
+							email_config_recipients: [],
+							email_config_cc: [],
+							email_config_subject: '',
+							email_config_message: '',
+						},
+					},
+				},
+			},
+		});
+
+		const options = (request.body as Record<string, Record<string, unknown>>).options;
+		expect(options ?? {}).not.toHaveProperty('email_config');
+	});
+
+	it('still sends the email config when it does have recipients', async () => {
+		const { request } = await run('invoice', 'create', {
+			parameters: {
+				type: 'STANDARD',
+				recipient: { value: { customer_id: CUSTOMER_ID } },
+				lines: { value: [{ description: 'x', quantity: 1, unit_price: 10 }] },
+				additionalFields: {
+					options: {
+						value: {
+							email_config_recipients: ['cliente@example.com'],
+							email_config_cc: [],
+							email_config_subject: 'Tu factura',
+							email_config_message: '',
+						},
+					},
+				},
+			},
+		});
+
+		const options = (request.body as Record<string, Record<string, any>>).options;
+		expect(options.email_config).toEqual({
+			recipients: ['cliente@example.com'],
+			subject: 'Tu factura',
+		});
+	});
+
 	it('says which fields are missing when an address is half filled', async () => {
 		await expect(
 			run('invoice', 'create', {
@@ -192,6 +248,48 @@ describe('values the user never chose', () => {
 				},
 			}),
 		).rejects.toThrow(/missing required address fields/);
+	});
+
+	/**
+	 * The API accepts EXACTLY ONE of unit_price / total_excluding_tax /
+	 * total_including_tax, but the contract only says so in prose: the server is
+	 * what enforces it.
+	 *
+	 * n8n materialises every field of the collection with its default, and a
+	 * number's default is 0 — a legitimate value, so it cannot just be dropped.
+	 * All three went out at once and the API rejected the invoice. A selector now
+	 * decides which one is shown, so sending two is no longer possible.
+	 */
+	it('sends exactly one of the three ways of stating a line price', async () => {
+		const line = (mode: string, extra: Record<string, unknown>) => ({
+			description: 'x', quantity: 1,
+			price_mode: mode, unit_price: 0, total_excluding_tax: 0, total_including_tax: 0,
+			...extra,
+		});
+
+		for (const [mode, kept] of [
+			['unit_price', 'unit_price'],
+			['total_excluding_tax', 'total_excluding_tax'],
+			['total_including_tax', 'total_including_tax'],
+		] as const) {
+			const { request } = await run('invoice', 'create', {
+				parameters: {
+					type: 'STANDARD',
+					recipient: { value: { customer_id: CUSTOMER_ID } },
+					lines: { value: [line(mode, { [kept]: 100 })] },
+					additionalFields: {},
+				},
+			});
+
+			const sent = (request.body as Record<string, Array<Record<string, unknown>>>).lines[0];
+			const present = ['unit_price', 'total_excluding_tax', 'total_including_tax'].filter(
+				(f) => sent[f] !== undefined,
+			);
+
+			expect(present).toEqual([kept]);
+			// The selector steers the form; it is not a field of the API.
+			expect(sent).not.toHaveProperty('price_mode');
+		}
 	});
 
 	it('only sends the tax rate of the chosen tax type', async () => {
@@ -317,7 +415,7 @@ describe('scoping', () => {
 		const { request } = await run('paymentEvent', 'getAll', {
 			parameters: {
 				activeCompany: COMPANY_ID,
-				// the generator suffixes the name when two operations word it differently
+				// The generator suffixes the name when two operations word it differently.
 				provider_paymentEvent_getAll: 'stripe',
 				returnAll: false,
 				limit: 10,
@@ -353,6 +451,29 @@ describe('headers', () => {
 		expect((request.headers as Record<string, string>)['Idempotency-Key']).toMatch(
 			/^[0-9a-f-]{36}$/,
 		);
+	});
+
+	/**
+	 * The node adds this header itself — the contract does not declare it — so it
+	 * is the one value the generated validation never sees. Without this, a key
+	 * built from a timestamp reaches the API and comes back as a 400 with the
+	 * invoice request already in flight.
+	 */
+	it('rejects an idempotency key the API would refuse, before sending', async () => {
+		await expect(
+			run('nif', 'validate', {
+				parameters: { nif: 'B86561412', idempotencyKey: '2026-08-20T15:42:39.123Z-B86561412' },
+			}),
+		).rejects.toThrow(/idempotency key has characters BeeL will reject/);
+	});
+
+	it('accepts a UUID and plain alphanumeric text', async () => {
+		for (const key of ['550e8400-e29b-41d4-a716-446655440000', 'ORD42', 'pedido2026']) {
+			const { request } = await run('nif', 'validate', {
+				parameters: { nif: 'B86561412', idempotencyKey: key },
+			});
+			expect((request.headers as Record<string, string>)['Idempotency-Key']).toBe(key);
+		}
 	});
 
 	it('uses the idempotency key supplied by the workflow', async () => {

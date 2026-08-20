@@ -63,6 +63,12 @@ export interface GeneratedField {
 	 * the tax percentage depending on the tax type.
 	 */
 	showWhen?: { field: string; values: Array<string | number> };
+	/**
+	 * A field that exists to steer the form and nothing else: it is rendered, but
+	 * never travels in the request. Used by the mutual-exclusion rules the
+	 * contract states in prose rather than in schema, which only the server enforces.
+	 */
+	uiOnly?: boolean;
 	/** `loadOptionsMethod` to attach, for resource dropdowns such as series or customers. */
 	loadOptionsMethod?: string;
 	numberPrecision?: number;

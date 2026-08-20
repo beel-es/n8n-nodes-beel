@@ -124,6 +124,34 @@ async function resolveScope(
 }
 
 /**
+ * The Idempotency-Key header, validated before it leaves n8n.
+ *
+ * This header is added here rather than declared by the contract, so it is the
+ * one value in the node that the generated validation never sees. The API
+ * requires a UUID or a plain alphanumeric string, and rejects anything else with
+ * a 400 — which is how a perfectly reasonable-looking key built from a
+ * timestamp (`2026-08-20T15:42:39.123Z`, full of `:` and `.`) fails only once
+ * the invoice request is already in flight.
+ *
+ * Everywhere else the node reports a bad value before sending. This does too.
+ */
+function checkedIdempotencyKey(this: BeelRequestContext, supplied: string): string {
+	const key = supplied.trim();
+	if (key === '') return randomUUID();
+
+	if (!/^[A-Za-z0-9-]+$/.test(key) || key.length > 255) {
+		throw new NodeOperationError(this.getNode(), 'The idempotency key has characters BeeL will reject', {
+			description:
+				'It must be a UUID or plain alphanumeric text — no spaces, colons or dots. A timestamp like ' +
+				'"2026-08-20T15:42:39.123Z" fails for that reason; strip the separators, for example with ' +
+				'<code>.replace(/[^a-zA-Z0-9]/g, "")</code>.',
+		});
+	}
+
+	return key;
+}
+
+/**
  * Performs an authenticated request against the BeeL Public API.
  *
  * Adds an `Idempotency-Key` to every POST so a retried request never creates a
@@ -157,7 +185,7 @@ export async function beelApiRequest(
 		// A random key makes a transport-level retry safe. A key the workflow author
 		// supplies goes further: re-running the workflow returns the invoice already
 		// created for that key instead of issuing a second one.
-		headers['Idempotency-Key'] = idempotencyKey.trim() || randomUUID();
+		headers['Idempotency-Key'] = checkedIdempotencyKey.call(this, idempotencyKey);
 	}
 
 	const url = `${baseUrl}${await resolveScope.call(this, endpoint, asScope(scope))}`;
@@ -180,9 +208,9 @@ export async function beelApiRequest(
 		options.qs = qs;
 	}
 
-	// 429: la API responde Retry-After con los segundos exactos a esperar. Sin
-	// esto, un "Return All" largo moría a mitad de paginación perdiendo todo el
-	// progreso. Tope de reintentos acotado para no colgar workflows.
+	// On 429 the API answers Retry-After with exactly how long to wait. Without
+	// this, a long "Return All" died mid-pagination and lost all its progress. The
+	// retry count is bounded so a workflow can never hang on it.
 	const MAX_RATE_LIMIT_RETRIES = 3;
 	for (let attempt = 0; ; attempt++) {
 		try {
@@ -225,16 +253,17 @@ export function unwrap(response: IBeelEnvelope | undefined): IDataObject {
 }
 
 /**
- * Saca la lista de un sobre de respuesta, tolerando que el contrato no acierte.
+ * Pulls the list out of a response envelope, tolerating a contract that got the
+ * shape wrong.
  *
- * `listKey` viene del contrato, pero el contrato puede equivocarse: en
- * `GET /v1/accounts/{account_id}/companies` declara `data` como array y la API
- * devuelve `data.companies[]`, así que el nodo listaba CERO NIFs — con un 200 y
- * sin ningún error. Los tests contra stub no lo veían porque respondían lo que
- * decía el contrato.
+ * `listKey` comes from the contract, and the contract can be mistaken:
+ * `GET /v1/accounts/{account_id}/companies` declares `data` as an array while the
+ * API returns `data.companies[]`, so the node listed ZERO companies — behind a
+ * 200, with no error at all. Stub-based tests could not see it, because they
+ * answer what the contract says.
  *
- * Por eso, cuando lo declarado no aparece, se busca el primer array dentro de
- * `data` en lugar de devolver una lista vacía en silencio.
+ * So when the declared key is absent, the first array inside `data` is used
+ * rather than silently returning an empty list.
  */
 function itemsOf(data: unknown, listKey: string): IDataObject[] {
 	if (Array.isArray(data)) return data as IDataObject[];
@@ -347,9 +376,9 @@ export function contractPath(operationId: string): string {
 // ── Dropdowns ───────────────────────────────────────────────────────────────
 
 /**
- * account_id de cada credencial, memoizado para la vida del proceso: es estable
- * por API key, así que /v1/me/identity se consulta UNA vez por credencial, no
- * en cada carga del dropdown ni en cada ejecución.
+ * Each credential's account_id, memoised for the life of the process. It is
+ * stable per API key, so `/v1/me/identity` is asked ONCE per credential rather
+ * than on every dropdown load and every execution.
  */
 const accountIdByCredential = new Map<string, string>();
 
@@ -372,9 +401,9 @@ async function resolveAccountId(this: BeelRequestContext): Promise<string> {
 
 /** Companies (NIFs) the API key can operate as. */
 export async function getCompanies(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-	// El plano `GET /v1/companies` fue RETIRADO del contrato (multi-NIF: los
-	// recursos de cuenta viven bajo /v1/accounts/{account_id}/...). La lista está
-	// siempre paginada: no hay modo "todo", escala a miles de NIFs.
+	// The flat `GET /v1/companies` was withdrawn from the contract: with multi-NIF,
+	// account resources live under /v1/accounts/{account_id}/... The list is always
+	// paginated — there is no "all" mode, since it scales to thousands of NIFs.
 	const companies = await beelApiRequestAllItems.call(
 		this,
 		'companies',

@@ -24,9 +24,26 @@ const FORMAT_CHECKS: Record<string, { test: RegExp; expected: string }> = {
 };
 
 /** Whether a conditional field applies, given the values of its siblings. */
-export function isVisible(field: GeneratedField, siblings: IDataObject): boolean {
+export function isVisible(
+	field: GeneratedField,
+	siblings: IDataObject,
+	all: GeneratedField[] = [],
+): boolean {
 	if (!field.showWhen) return true;
-	return field.showWhen.values.includes(siblings[field.showWhen.field] as string | number);
+
+	const chosen = siblings[field.showWhen.field];
+
+	// The n8n editor always materialises the controlling field, but a workflow
+	// built through the API may not carry it. When it is missing its default
+	// applies: reading that as "nothing selected" would hide — and silently drop —
+	// a value the author did write.
+	if (chosen === undefined) {
+		const controller = all.find((candidate) => candidate.name === field.showWhen!.field);
+		if (controller === undefined) return true;
+		return field.showWhen.values.includes(controller.default as string | number);
+	}
+
+	return field.showWhen.values.includes(chosen as string | number);
 }
 
 function fail(node: INode, field: GeneratedField, problem: string, itemIndex: number): never {
@@ -100,7 +117,13 @@ export function validateField(
 	value: unknown,
 	itemIndex: number,
 ): void {
-	if (value === undefined || value === null || value === '') {
+	// An untouched multi-value field arrives as `[]`. That means "not provided",
+	// not "provided badly": complaining that it needs more entries blames the
+	// author for an optional field they never opened.
+	const untouched = value === undefined || value === null || value === ''
+		|| (Array.isArray(value) && value.length === 0);
+
+	if (untouched) {
 		if (field.required) fail(node, field, 'is required', itemIndex);
 		return;
 	}
@@ -126,7 +149,7 @@ export function validateField(
 
 		for (const entry of entries) {
 			for (const child of field.fields ?? []) {
-				if (!isVisible(child, entry)) continue;
+				if (!isVisible(child, entry, field.fields ?? [])) continue;
 				validateField(node, child, entry[child.name], itemIndex);
 			}
 		}

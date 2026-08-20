@@ -815,6 +815,32 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"placeholder": "hours"
 					},
 					{
+						"name": "price_mode",
+						"apiName": "price_mode",
+						"displayName": "Price Given As",
+						"description": "Which figure you are stating for this line. BeeL works the other two out.",
+						"type": "options",
+						"uiOnly": true,
+						"options": [
+							{
+								"name": "Unit Price",
+								"value": "unit_price",
+								"description": "Price per unit, before taxes — the usual case"
+							},
+							{
+								"name": "Line Total Without Tax",
+								"value": "total_excluding_tax",
+								"description": "You know the taxable base and want it respected exactly"
+							},
+							{
+								"name": "Line Total With Tax",
+								"value": "total_including_tax",
+								"description": "You know what the customer pays and want the base worked back from it"
+							}
+						],
+						"default": "unit_price"
+					},
+					{
 						"name": "unit_price",
 						"apiName": "unit_price",
 						"displayName": "Unit Price",
@@ -825,7 +851,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							"exclusiveMinimum": true
 						},
 						"type": "number",
-						"default": 0
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"unit_price"
+							]
+						}
 					},
 					{
 						"name": "total_excluding_tax",
@@ -836,7 +868,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							"maximum": 99999999.99
 						},
 						"type": "number",
-						"default": 0
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"total_excluding_tax"
+							]
+						}
 					},
 					{
 						"name": "total_including_tax",
@@ -847,7 +885,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							"maximum": 99999999.99
 						},
 						"type": "number",
-						"default": 0
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"total_including_tax"
+							]
+						}
 					},
 					{
 						"name": "discount_percentage",
@@ -2143,6 +2187,32 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"default": ""
 					},
 					{
+						"name": "price_mode",
+						"apiName": "price_mode",
+						"displayName": "Price Given As",
+						"description": "Which figure you are stating for this line. BeeL works the other two out.",
+						"type": "options",
+						"uiOnly": true,
+						"options": [
+							{
+								"name": "Unit Price",
+								"value": "unit_price",
+								"description": "Price per unit, before taxes — the usual case"
+							},
+							{
+								"name": "Line Total Without Tax",
+								"value": "total_excluding_tax",
+								"description": "You know the taxable base and want it respected exactly"
+							},
+							{
+								"name": "Line Total With Tax",
+								"value": "total_including_tax",
+								"description": "You know what the customer pays and want the base worked back from it"
+							}
+						],
+						"default": "unit_price"
+					},
+					{
 						"name": "unit_price",
 						"apiName": "unit_price",
 						"displayName": "Unit Price",
@@ -2153,7 +2223,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							"exclusiveMinimum": true
 						},
 						"type": "number",
-						"default": 0
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"unit_price"
+							]
+						}
 					},
 					{
 						"name": "total_excluding_tax",
@@ -2164,7 +2240,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							"maximum": 99999999.99
 						},
 						"type": "number",
-						"default": 0
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"total_excluding_tax"
+							]
+						}
 					},
 					{
 						"name": "total_including_tax",
@@ -2175,7 +2257,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							"maximum": 99999999.99
 						},
 						"type": "number",
-						"default": 0
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"total_including_tax"
+							]
+						}
 					},
 					{
 						"name": "discount_percentage",
@@ -3235,6 +3323,32 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"placeholder": "hours"
 					},
 					{
+						"name": "price_mode",
+						"apiName": "price_mode",
+						"displayName": "Price Given As",
+						"description": "Which figure you are stating for this line. BeeL works the other two out.",
+						"type": "options",
+						"uiOnly": true,
+						"options": [
+							{
+								"name": "Unit Price",
+								"value": "unit_price",
+								"description": "Price per unit, before taxes — the usual case"
+							},
+							{
+								"name": "Line Total Without Tax",
+								"value": "total_excluding_tax",
+								"description": "You know the taxable base and want it respected exactly"
+							},
+							{
+								"name": "Line Total With Tax",
+								"value": "total_including_tax",
+								"description": "You know what the customer pays and want the base worked back from it"
+							}
+						],
+						"default": "unit_price"
+					},
+					{
 						"name": "unit_price",
 						"apiName": "unit_price",
 						"displayName": "Unit Price",
@@ -3243,7 +3357,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							"maximum": 999999.9999
 						},
 						"type": "number",
-						"default": 0
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"unit_price"
+							]
+						}
 					},
 					{
 						"name": "total_excluding_tax",
@@ -3254,7 +3374,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							"maximum": 99999999.99
 						},
 						"type": "number",
-						"default": 0
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"total_excluding_tax"
+							]
+						}
 					},
 					{
 						"name": "total_including_tax",
@@ -3265,7 +3391,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							"maximum": 99999999.99
 						},
 						"type": "number",
-						"default": 0
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"total_including_tax"
+							]
+						}
 					},
 					{
 						"name": "discount_percentage",

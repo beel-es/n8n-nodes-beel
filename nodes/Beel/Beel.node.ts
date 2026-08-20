@@ -81,7 +81,7 @@ function buildProperties(): INodeProperties[] {
 		default: '',
 		placeholder: '={{ $json.order_id }}',
 		description:
-			'Optional. Retrying with the same key returns the resource created the first time instead of creating another one. Leave empty and each run sends a fresh key, which makes a network-level retry safe but still creates a new resource if the workflow runs again. Derive it from your own data — an order ID, for instance — to make re-runs safe too.',
+			'Optional. Retrying with the same key returns the resource created the first time instead of creating another one. Leave empty and each run sends a fresh key, which makes a network-level retry safe but still creates a new resource if the workflow runs again. Derive it from your own data — an order ID, for instance — to make re-runs safe too. Must be a UUID or plain alphanumeric text: a timestamp like <code>2026-08-20T15:42:39.123Z</code> is rejected for its colons and dots.',
 		displayOptions: {
 			show: {
 				resource: [...new Set(creating.map((operation) => operation.resource))],

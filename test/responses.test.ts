@@ -129,19 +129,19 @@ describe('pagination', () => {
 });
 
 /**
- * El contrato puede equivocarse sobre la forma de la respuesta, y cuando lo hace
- * el nodo no falla: lista cero elementos con un 200 y nadie se entera.
+ * The contract can be wrong about the shape of a response, and when it is, the
+ * node does not fail: it lists zero items behind a 200 and nobody notices.
  *
- * Pasó de verdad. `GET /v1/accounts/{account_id}/companies` declara `data` como
- * array y la API devuelve `data.companies[]`, así que "Company → Get Many"
- * respondía CERO NIFs contra la API real. Ningún test lo veía porque todos
- * responden lo que dice el contrato, no lo que devuelve el servidor.
+ * This happened. `GET /v1/accounts/{account_id}/companies` declares `data` as an
+ * array while the API returns `data.companies[]`, so "Company → Get Many"
+ * answered ZERO companies against the real API. No test caught it, because every
+ * test answers what the contract says rather than what the server sends.
  */
 describe('when the contract gets the response shape wrong', () => {
 	it('finds the list anyway instead of silently returning none', async () => {
 		const stub = makeContext({
 			parameters: { returnAll: false, limit: 10, filters: {} },
-			// El contrato dice que `data` es el array; la API manda un sobre.
+			// The contract says `data` is the array; the API sends an envelope.
 			responses: {
 				data: {
 					companies: [{ id: 'a', legal_name: 'Uno' }, { id: 'b', legal_name: 'Dos' }],
@@ -165,7 +165,7 @@ describe('when the contract gets the response shape wrong', () => {
 			responses: {
 				data: {
 					customers: [{ id: 'right' }],
-					// Un array vecino que no debe ganarle al declarado.
+					// A neighbouring array that must not win over the declared key.
 					deleted: [{ id: 'wrong' }, { id: 'wrong' }],
 					pagination: { total_pages: 1 },
 				},

@@ -266,6 +266,39 @@ export const TAX_PERCENTAGES: Record<string, number[] | null> = {
 };
 
 /**
+ * Groups of fields the API accepts EXACTLY ONE of, even though the contract says
+ * so only in prose: the rule lives in the server, not in the schema.
+ *
+ * Without this there is no way to get it right. n8n materialises every field of a
+ * collection with its default, and a number's default is `0` — a legitimate
+ * value, so it cannot simply be dropped. An invoice line went out carrying
+ * `unit_price`, `total_excluding_tax` and `total_including_tax` at once, and the
+ * API rejected it with "must carry exactly one of...".
+ *
+ * Declared here, the generator adds a selector that decides which one is shown,
+ * so sending two stops being possible from the form.
+ */
+export const EXCLUSIVE_FIELD_GROUPS: Array<{
+	/** Name of the generated selector. Never sent: it is `uiOnly`. */
+	name: string;
+	displayName: string;
+	description: string;
+	/** The `apiName` of each alternative, and how it reads in the dropdown. */
+	choices: Array<{ apiName: string; label: string; description: string }>;
+}> = [
+	{
+		name: 'price_mode',
+		displayName: 'Price Given As',
+		description: 'Which figure you are stating for this line. BeeL works the other two out.',
+		choices: [
+			{ apiName: 'unit_price', label: 'Unit Price', description: 'Price per unit, before taxes — the usual case' },
+			{ apiName: 'total_excluding_tax', label: 'Line Total Without Tax', description: 'You know the taxable base and want it respected exactly' },
+			{ apiName: 'total_including_tax', label: 'Line Total With Tax', description: 'You know what the customer pays and want the base worked back from it' },
+		],
+	},
+];
+
+/**
  * UI copy lives in `ui-text.ts`, not here: `FIELD_UI_OVERRIDES` for a field's
  * placeholder, default or description, and `OPTION_NAME_OVERRIDES` for enum
  * labels. That module also holds the guard that fails generation when a
