@@ -6,3 +6,6 @@ tmp
 *.tsbuildinfo
 npm-debug.log*
 .env
+
+# Volcados de Playwright MCP (depuración local)
+.playwright-mcp/
