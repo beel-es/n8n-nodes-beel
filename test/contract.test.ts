@@ -130,7 +130,10 @@ describe('the generated operations match the contract', () => {
 		)!;
 
 		expect(invoices).toMatchObject({ paginated: true, isList: true, listKey: 'invoices' });
-		expect(companies).toMatchObject({ isList: true, listKey: '' });
+		// The contract used to declare this `data` as a bare array while the API
+		// sent `data.companies[]`; it has since been corrected. Pinned here so a
+		// regression to the old shape fails the build rather than the workflow.
+		expect(companies).toMatchObject({ isList: true, listKey: 'companies' });
 		// A single invoice has a `lines` array, which is a field, not a collection.
 		expect(single.isList).toBe(false);
 	});

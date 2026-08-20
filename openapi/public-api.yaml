@@ -49,12 +49,20 @@ security:
   - ApiKeyAuth: []
   - OAuth2: []
 tags:
+  - name: CompanyInvoices
+    description: 'The invoices of a NIF (company) as a sub-resource of the company itself, addressed by `/v1/companies/{company_id}/invoices`. The NIF in the path is the only source of context: the account that owns it is derived from it. It is the canonical form of the operations that `Invoices` still exposes under the flat `/v1/invoices`.'
+  - name: CompanyInvoiceLifecycle
+    description: State transitions and scheduling of a NIF's invoices (issue, void, corrective, status, schedule), under `/v1/companies/{company_id}/invoices/{invoice_id}/...`. Canonical form of `InvoiceLifecycle`.
+  - name: CompanyInvoiceDelivery
+    description: Delivery, bulk operations and exports of a NIF's invoices (send, deliveries, batches, exports, PDF archive), under `/v1/companies/{company_id}/invoices/...`. Canonical form of `InvoiceDelivery`.
   - name: Invoices
     description: Invoice CRUD operations
   - name: InvoiceLifecycle
     description: Invoice state transitions and scheduling
   - name: InvoiceDelivery
     description: Invoice delivery, bulk operations and exports
+  - name: CompanyProforma
+    description: Converting a NIF's proforma into a fiscal invoice (`POST /v1/companies/{company_id}/invoices/{invoice_id}/convert-to-invoice`). The rest of the proforma workflow happens through the regular `CompanyInvoices` operations with `type=PROFORMA` — see the `Proforma` tag for the full model.
   - name: Proforma
     description: |
       A proforma is a non-fiscal commercial document, a formal quote you send a customer
@@ -91,6 +99,8 @@ tags:
     description: 'The customers of a NIF (company) as a sub-resource of the company itself, addressed by `/v1/companies/{company_id}/customers`. The NIF in the path is the only source of context: the account that owns it is derived from it. It is the canonical form of the operations that `Customers` and `Customer Import` still expose under the flat `/v1/customers`.'
   - name: CompanyCustomerImports
     description: Importing customers into a NIF (company), addressed by `/v1/companies/{company_id}/customers/imports`. The origin of the file travels in the body as `source`, so adding an origin never adds a route, and previewing is a separate operation with no effects instead of a boolean flag.
+  - name: AccountImports
+    description: 'Onboarding managed accounts in bulk from a file, addressed by `/v1/accounts/imports`. The file is declarative and the import is re-runnable: each pass applies only what is missing, and previewing is a separate operation with no effects instead of a boolean flag.'
   - name: Customer Templates
     description: Templates and sample files for customer imports
   - name: Templates
@@ -139,7 +149,7 @@ tags:
     description: 'The payment provider connections of a NIF (company) as a sub-resource of the company itself, addressed by `/v1/companies/{company_id}/payment-connections`. The NIF in the path is the only source of context: the account that owns it is derived from it. Opening a connection is the sibling sub-resource `…/payment-connections/authorizations`, because it returns an authorization URL and not the connection the collection lists.'
   - name: CompanyPaymentEvents
     description: 'The payment events of a NIF (company) connection, addressed by `/v1/companies/{company_id}/payment-connections/{provider}/events`. The NIF in the path is the only source of context: the account that owns it is derived from it. Events hang from the connection the `{provider}` segment picks, so only the events of that NIF''s connection are reachable.'
-  - name: PublicCompanies
+  - name: AccountCompanies
     description: Listing and creating the NIFs of an account, under `/v1/accounts/{account_id}/companies`. Operating on one NIF is the `Company` resource.
   - name: PublicCompanyRepresentations
     description: |
@@ -187,6 +197,10 @@ tags:
       verification, onboarding, etc.). Read-only.
   - name: AccountEmails
     description: The sent-email history of an account, addressed by `/v1/accounts/{account_id}/emails` and `/v1/accounts/{account_id}/email-indicators`. The account in the path is the only source of context, instead of being derived from the credential. It is the canonical form of the operations that `Emails` still exposes under `/v1/emails`.
+  - name: Identity
+    description: 'Who am I (`GET /v1/me`): the authenticated principal — credential type, environment it operates on and the permissions it holds — so a client can adapt what it offers instead of discovering the limits through a `403`.'
+  - name: Me
+    description: Preferences of the authenticated principal (`PATCH /v1/me`), such as the language BeeL uses to talk to the account.
   - name: CompanyFiscalSummary
     description: 'The fiscal summary of a NIF (company) as a sub-resource of the company itself, addressed by `/v1/companies/{company_id}/fiscal-summary`. The NIF in the path is the only source of context: the account that owns it is derived from it.'
 paths:
@@ -459,9 +473,11 @@ paths:
           description: |
             Filter by the VeriFactu submission status of the invoice, using the very same
             vocabulary that `verifactu.submission_status` publishes on each invoice.
+            `NOT_SUBMITTED` selects issued invoices with VeriFactu enabled whose
+            registration never happened (no live record).
 
             Only invoices with VeriFactu enabled can match. To select the ones outside the
-            axis (no VeriFactu record at all), use `verifactu_enabled=false` instead.
+            axis (VeriFactu disabled), use `verifactu_enabled=false` instead.
           schema:
             $ref: '#/components/schemas/VeriFactuSubmissionStatus'
         - name: verifactu_enabled
@@ -1858,6 +1874,22 @@ paths:
           schema:
             type: boolean
             default: false
+        - name: attach_source_invoices
+          in: query
+          required: false
+          description: |
+            Only applies when the invoice has automatic email sending enabled. If `true`, the
+            email sent after issuing also attaches a ZIP (`suplidos_<invoice-number>.zip`) with
+            the PDFs of the source invoices referenced by the invoice's SUPLIDO consolidation
+            lines. Access to sources owned by managed accounts is re-checked with the same rules
+            as issuing, and the request fails synchronously with an actionable error — never a
+            partial ZIP — if the invoice has no consolidation sources
+            (`ATTACH_SOURCE_INVOICES_NO_SOURCES`), a source is not reachable
+            (`ATTACH_SOURCE_INVOICE_UNAVAILABLE`) or a source has no generated PDF
+            (`ATTACH_SOURCE_PDF_MISSING`).
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: Invoice issued successfully
@@ -2765,6 +2797,8 @@ paths:
           description: |
             Filter by the VeriFactu submission status of the invoice, using the very same
             vocabulary that `verifactu.submission_status` publishes on each invoice.
+            `NOT_SUBMITTED` selects issued invoices with VeriFactu enabled whose
+            registration never happened (no live record).
           schema:
             $ref: '#/components/schemas/VeriFactuSubmissionStatus'
         - name: verifactu_enabled
@@ -2835,6 +2869,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       operationId: createCompanyInvoice
       tags:
@@ -2878,6 +2914,9 @@ paths:
               $ref: '#/components/schemas/CreateInvoiceRequest'
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: Invoice created successfully
           content:
             application/json:
@@ -2918,6 +2957,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/derivations:
     parameters:
       - name: company_id
@@ -2953,6 +2994,9 @@ paths:
               $ref: '#/components/schemas/CreateInvoiceDerivationRequest'
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: Draft invoice derived successfully
           content:
             application/json:
@@ -2987,6 +3031,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/batches:
     parameters:
       - name: company_id
@@ -3046,6 +3092,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/pdf-archive:
     parameters:
       - name: company_id
@@ -3120,6 +3168,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/deliveries:
     parameters:
       - name: company_id
@@ -3220,6 +3270,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/exports:
     parameters:
       - name: company_id
@@ -3286,6 +3338,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/{invoice_id}:
     parameters:
       - name: company_id
@@ -3337,6 +3391,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     patch:
       operationId: patchCompanyInvoice
       tags:
@@ -3391,6 +3447,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     delete:
       operationId: deleteCompanyInvoice
       tags:
@@ -3426,6 +3484,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/{invoice_id}/pdf:
     parameters:
       - name: company_id
@@ -3478,6 +3538,59 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v1/companies/{company_id}/invoices/{invoice_id}/preview:
+    parameters:
+      - name: company_id
+        in: path
+        required: true
+        description: 'NIF (company) the operation acts on. It is the only source of context: the account that owns it is derived from it, and the `BeeL-Active-Company` header plays no part. A NIF you do not reach answers `403`, and so does a NIF that does not exist, so the existence of a NIF in another account is never disclosed.'
+        schema:
+          type: string
+          format: uuid
+      - name: invoice_id
+        in: path
+        required: true
+        description: Invoice ID
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      operationId: getCompanyInvoicePreview
+      tags:
+        - CompanyInvoiceDelivery
+      summary: Get the preview image URL of an invoice
+      description: |
+        Returns a temporary pre-signed URL to a preview image (WebP) of the invoice, suitable for
+        inline rendering. The image is generated and cached on first request, so a later call
+        returns the cached image. The URL expires in five minutes and only allows `GET`.
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+            - invoices:read
+      responses:
+        '200':
+          description: Preview image URL generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoicePreviewResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: |
+            Your account does not own or manage this NIF (company), or does not hold the required
+            access over it. A NIF that does not exist answers the same way.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/{invoice_id}/pdf/preview:
     parameters:
       - name: company_id
@@ -3535,6 +3648,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/{invoice_id}/send:
     parameters:
       - name: company_id
@@ -3612,6 +3727,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/{invoice_id}/issue:
     parameters:
       - name: company_id
@@ -3651,6 +3768,22 @@ paths:
           description: |
             If `true`, waits for PDF generation and returns the URL in the response. Adds ~1-2s of
             latency but guarantees the PDF is immediately available.
+          schema:
+            type: boolean
+            default: false
+        - name: attach_source_invoices
+          in: query
+          required: false
+          description: |
+            Only applies when the invoice has automatic email sending enabled. If `true`, the
+            email sent after issuing also attaches a ZIP (`suplidos_<invoice-number>.zip`) with
+            the PDFs of the source invoices referenced by the invoice's SUPLIDO consolidation
+            lines. Access to sources owned by managed accounts is re-checked with the same rules
+            as issuing, and the request fails synchronously with an actionable error — never a
+            partial ZIP — if the invoice has no consolidation sources
+            (`ATTACH_SOURCE_INVOICES_NO_SOURCES`), a source is not reachable
+            (`ATTACH_SOURCE_INVOICE_UNAVAILABLE`) or a source has no generated PDF
+            (`ATTACH_SOURCE_PDF_MISSING`).
           schema:
             type: boolean
             default: false
@@ -3700,6 +3833,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/{invoice_id}/void:
     parameters:
       - name: company_id
@@ -3767,6 +3902,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/{invoice_id}/corrective:
     parameters:
       - name: company_id
@@ -3804,6 +3941,9 @@ paths:
               $ref: '#/components/schemas/CreateCorrectiveInvoiceRequest'
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: Corrective invoice created successfully
           content:
             application/json:
@@ -3836,6 +3976,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/{invoice_id}/convert-to-invoice:
     parameters:
       - name: company_id
@@ -3876,6 +4018,9 @@ paths:
               $ref: '#/components/schemas/ConvertProformaToInvoiceRequest'
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: Invoice created successfully from the proforma (draft, or emitted when `issue` is true)
           content:
             application/json:
@@ -3912,6 +4057,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/{invoice_id}/status:
     parameters:
       - name: company_id
@@ -3985,6 +4132,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoices/{invoice_id}/schedule:
     parameters:
       - name: company_id
@@ -4040,6 +4189,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     put:
       operationId: setCompanyInvoiceSchedule
       tags:
@@ -4109,6 +4260,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     delete:
       operationId: deleteCompanyInvoiceSchedule
       tags:
@@ -4152,6 +4305,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/recurring-invoices:
     post:
       tags:
@@ -4284,11 +4439,16 @@ paths:
                   - type: object
                     properties:
                       data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/RecurringInvoiceResponse'
-                      pagination:
-                        $ref: '#/components/schemas/Pagination'
+                        type: object
+                        required:
+                          - recurring_invoices
+                        properties:
+                          recurring_invoices:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/RecurringInvoiceResponse'
+                          pagination:
+                            $ref: '#/components/schemas/Pagination'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -4753,9 +4913,14 @@ paths:
                   - type: object
                     properties:
                       data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/GenerationHistoryResponse'
+                        type: object
+                        required:
+                          - history
+                        properties:
+                          history:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/GenerationHistoryResponse'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
@@ -4874,11 +5039,16 @@ paths:
                   - type: object
                     properties:
                       data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/RecurringInvoiceResponse'
-                      pagination:
-                        $ref: '#/components/schemas/Pagination'
+                        type: object
+                        required:
+                          - recurring_invoices
+                        properties:
+                          recurring_invoices:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/RecurringInvoiceResponse'
+                          pagination:
+                            $ref: '#/components/schemas/Pagination'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -4889,6 +5059,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       operationId: createCompanyRecurringInvoice
       tags:
@@ -4911,6 +5085,9 @@ paths:
               $ref: '#/components/schemas/CreateRecurringInvoiceRequest'
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: Recurring invoice created successfully
           content:
             application/json:
@@ -4945,6 +5122,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/recurring-invoices/{recurring_invoice_id}:
     parameters:
       - name: company_id
@@ -4994,6 +5175,10 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     patch:
       operationId: patchCompanyRecurringInvoice
       tags:
@@ -5044,6 +5229,10 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     delete:
       operationId: deleteCompanyRecurringInvoice
       tags:
@@ -5069,6 +5258,10 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/recurring-invoices/{recurring_invoice_id}/status:
     parameters:
       - name: company_id
@@ -5139,6 +5332,10 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/recurring-invoices/{recurring_invoice_id}/skip:
     parameters:
       - name: company_id
@@ -5192,6 +5389,10 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/recurring-invoices/{recurring_invoice_id}/next-occurrence:
     parameters:
       - name: company_id
@@ -5244,6 +5445,10 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/recurring-invoices/{recurring_invoice_id}/history:
     parameters:
       - name: company_id
@@ -5280,9 +5485,14 @@ paths:
                   - type: object
                     properties:
                       data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/GenerationHistoryResponse'
+                        type: object
+                        required:
+                          - history
+                        properties:
+                          history:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/GenerationHistoryResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -5295,6 +5505,10 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/recurring-invoices/derivations:
     parameters:
       - name: company_id
@@ -5330,6 +5544,9 @@ paths:
               $ref: '#/components/schemas/CreateRecurringInvoiceDerivationRequest'
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: Recurring invoice created successfully from the source invoice
           content:
             application/json:
@@ -5362,6 +5579,10 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/recurring-invoices/{recurring_invoice_id}/generate:
     parameters:
       - name: company_id
@@ -5396,6 +5617,9 @@ paths:
         - $ref: '#/components/parameters/IdempotencyKeyHeader'
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: Invoice generated successfully
           content:
             application/json:
@@ -5430,6 +5654,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/customers:
     get:
       tags:
@@ -6507,6 +6735,9 @@ paths:
               $ref: '#/components/schemas/CreateCustomerRequest'
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: Customer created successfully
           content:
             application/json:
@@ -6556,6 +6787,7 @@ paths:
           format: uuid
     post:
       operationId: createCompanyCustomersBulk
+      x-no-location: 'A bulk answer is a partial split (created and rejected), not one resource: there is no single URI to point at.'
       tags:
         - CompanyCustomers
       summary: Create or validate multiple customers of a company
@@ -6661,7 +6893,8 @@ paths:
         the recipient's details.
 
         **Partial behavior:** customers that can be deleted are deleted; the rest are reported in
-        the errors array.
+        the errors array. That partial split is also why this `DELETE` answers `200` with a body
+        instead of `204`: the client cannot know it any other way.
       security:
         - ApiKeyAuth: []
         - OAuth2:
@@ -6759,6 +6992,7 @@ paths:
           format: uuid
     post:
       operationId: createCompanyCustomerImport
+      x-no-location: 'An import creates many customers (or none, on dry_run): there is no single URI to point at.'
       tags:
         - CompanyCustomerImports
       summary: Import customers into a company
@@ -7064,23 +7298,8 @@ paths:
         - OAuth2:
             - customers:write
       responses:
-        '200':
-          description: Customer deleted successfully
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        required:
-                          - message
-                        properties:
-                          message:
-                            type: string
-                            example: Customer deleted successfully
+        '204':
+          description: Customer deleted. No body — there is nothing to report that the request itself does not already imply.
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -7199,6 +7418,69 @@ paths:
               schema:
                 type: string
                 example: attachment; filename="template_clientes_beel.csv"
+            Content-Type:
+              description: File MIME type
+              schema:
+                type: string
+                example: text/csv; charset=utf-8
+            Cache-Control:
+              description: |
+                The file only changes when the import format does, so it may be kept for an hour. It
+                is `private` and not `public` because the response is served under a credential: a
+                shared cache must not hold it.
+              schema:
+                type: string
+                example: private, max-age=3600
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v1/templates/account-import:
+    get:
+      tags:
+        - Templates
+      summary: Download the managed-account import template
+      description: |
+        Downloads the sample CSV that `POST /v1/accounts/imports` expects: the required headers plus
+        one example row, separated by semicolons and written with a UTF-8 byte order mark so that
+        Excel opens it with the accents intact — the same conventions as
+        `GET /v1/templates/customer-import`.
+
+        The example row is **deliberately not importable**: its tax id has a valid shape and an
+        impossible check digit. A template whose sample row previews green is a template that
+        provisions an account in someone else's name the day an agency forgets to delete it.
+
+        The optional second file of that import (`customers_file`) is **not** a new format: it is
+        the customer import template, unchanged. Download it from
+        `GET /v1/templates/customer-import`.
+
+        The file is the same for every credential and does not depend on any account or on any NIF.
+      operationId: downloadAccountImportTemplate
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+            - accounts:read
+      responses:
+        '200':
+          description: CSV template downloaded successfully
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+              example: |
+                external_ref;email;display_name;nif;legal_name;entity_type;direccion_calle;direccion_numero;direccion_codigo_postal;direccion_poblacion;direccion_provincia;irpf;iban;legal_form;trade_name;idioma
+                10042;socio@ejemplo.es;"EJEMPLO - BORRA ESTA FILA";00000000A;"EJEMPLO - BORRA ESTA FILA";LEGAL_ENTITY;"Calle Mayor";12;43330;Riudoms;Tarragona;15;ES9121000418450200051332;SL;"Transportes Ejemplo";es
+          headers:
+            Content-Disposition:
+              description: File name for download
+              schema:
+                type: string
+                example: attachment; filename="plantilla_cuentas_beel.csv"
             Content-Type:
               description: File MIME type
               schema:
@@ -7940,6 +8222,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     post:
@@ -7962,6 +8246,9 @@ paths:
               $ref: '#/components/schemas/CreateProductRequest'
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: Product created successfully
           content:
             application/json:
@@ -7992,6 +8279,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/products/bulk:
@@ -8005,6 +8294,7 @@ paths:
           format: uuid
     post:
       operationId: createCompanyProductsBulk
+      x-no-location: 'A bulk answer is a partial split (created and rejected), not one resource: there is no single URI to point at.'
       tags:
         - CompanyProducts
       summary: Create multiple products for a company
@@ -8087,6 +8377,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -8094,27 +8386,27 @@ paths:
       tags:
         - CompanyProducts
       summary: Delete multiple products of a company
-      description: Deletes multiple products (max 100) from the catalog of this company (NIF).
+      description: |
+        Deletes multiple products from the catalog of this company (NIF). The IDs travel in the
+        `ids` query parameter — a `DELETE` body has no defined semantics and intermediaries may
+        drop it — capped at **100 IDs per request** (also what a URL of comma-separated UUIDs
+        safely holds); send several requests for more.
+
+        Answers `200` with a body — not `204` — because the operation is partial by design: the
+        response reports which products were deleted and which failed, and the client cannot know
+        the split any other way.
       security:
         - ApiKeyAuth: []
         - OAuth2:
             - products:write
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - product_ids
-              properties:
-                product_ids:
-                  type: array
-                  items:
-                    type: string
-                    format: uuid
-                  minItems: 1
-                  maxItems: 100
+      parameters:
+        - name: ids
+          in: query
+          required: true
+          description: Comma-separated product IDs (max 100 per request)
+          schema:
+            type: string
+            example: 550e8400-e29b-41d4-a716-446655440000,550e8400-e29b-41d4-a716-446655440001
       responses:
         '200':
           description: Bulk delete operation completed
@@ -8170,6 +8462,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/products/{product_id}:
@@ -8228,6 +8522,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     patch:
@@ -8295,6 +8591,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -8328,6 +8626,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/members:
@@ -8366,6 +8666,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/members/{member_id}:
@@ -8400,6 +8702,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     patch:
@@ -8444,6 +8748,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -8467,6 +8773,8 @@ paths:
           $ref: '#/components/responses/ForbiddenLiveCredentialRequired'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/members/{member_id}/grants:
@@ -8508,6 +8816,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/members/{member_id}/grants/{company_id}:
@@ -8563,6 +8873,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -8584,6 +8896,8 @@ paths:
           $ref: '#/components/responses/ForbiddenLiveCredentialRequired'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/owner:
@@ -8618,6 +8932,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/invitations:
@@ -8670,6 +8986,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     post:
@@ -8692,6 +9010,9 @@ paths:
               $ref: '#/components/schemas/CreateInvitationRequest'
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: Invitation created successfully
           content:
             application/json:
@@ -8770,6 +9091,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -8795,6 +9118,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts:
@@ -8866,6 +9191,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     post:
@@ -8891,6 +9218,9 @@ paths:
               $ref: '#/components/schemas/ProvisionAccountRequest'
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: 'Account provisioned successfully. **Business idempotency** by `external_ref`: resending the same `external_ref` returns **201 with the same account id** (not 409); a fresh `claim_token` is re-issued while the account is still unclaimed (and the previous one is invalidated). For **exact response idempotency** (same body, same token on retries) send an `Idempotency-Key` header — the response is cached for 24h.'
           content:
             application/json:
@@ -8917,6 +9247,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}:
@@ -8955,6 +9287,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/access-level:
@@ -8992,6 +9326,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/ForbiddenLiveCredentialRequired'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/management:
@@ -9023,6 +9359,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/ForbiddenLiveCredentialRequired'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/claim-tokens:
@@ -9059,6 +9397,12 @@ paths:
               $ref: '#/components/schemas/CreateClaimTokenRequest'
       responses:
         '201':
+          headers:
+            Location:
+              description: 'The claim link itself (`claim_url`): the created resource is the single-use claim link, which has no canonical GET — it is shown once.'
+              schema:
+                type: string
+                format: uri
           description: Token issued. Any previously issued token for this account is now invalid. Send an `Idempotency-Key` header to get the same token back on a retry instead of a fresh one.
           content:
             application/json:
@@ -9085,6 +9429,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/usage:
@@ -9127,6 +9473,216 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v1/accounts/imports:
+    post:
+      operationId: createAccountImport
+      x-no-location: An import provisions many accounts — or none, when every row is blocked — so there is no single created resource to point at. Each row carries its own id in `account.account_id`.
+      tags:
+        - AccountImports
+      summary: Import managed accounts from a file
+      description: |
+        Provisions the managed accounts described in an uploaded file, switches each one on in Live,
+        and leaves them ready to invoice. It is the same act as calling `POST /v1/accounts` once per
+        row and then `POST /v1/companies/{company_id}/activations`, with the bookkeeping done for
+        you.
+
+        **The file is declarative and the import is re-runnable.** Each pass applies only what is
+        missing: an `external_ref` you already provisioned is reconciled, not duplicated, and so are
+        its series and its customers. That is the recovery path for anything that went wrong — fix
+        the cause and upload the same file again. There is no resume and no partial state to clean
+        up.
+
+        **Two files, one act.** `accounts_file` describes the accounts, one per row.
+        `customers_file` is optional and holds a list of customers applied to **every** account of
+        the import, new and pre-existing alike. It is what makes both directions cheap: a new
+        managed account is born knowing all the customers, and a new customer reaches all the
+        accounts on the next pass. It is the same CSV that `GET /v1/templates/customer-import`
+        describes, and it is idempotent by tax id.
+
+        **Live activation is part of the act, and it never charges you by surprise.** Every row is
+        weighed against the same verdict the account state publishes, and **only rows entitled to
+        Live are executed**; the rest come back `BLOCKED` with the reason. The import never opens a
+        checkout: chaining N payments inside a file upload would turn a declarative import into a
+        payment flow with intermediate states nobody can recover from. Settle your billing once and
+        re-upload.
+
+        **Not atomic.** Each row is processed and reported independently: a row that fails leaves
+        the rows already provisioned in place. Read `statistics.accounts_created` to know how many
+        accounts this call actually created.
+
+        **Claim tokens are shown once.** Each newly provisioned row carries `account.claim_token`
+        and `account.claim_url` in this response and nowhere else. Persist them before discarding
+        the response; a lost token is re-issued with `POST /v1/accounts/{account_id}/claim-tokens`.
+
+        **Limits:** 5 MB per file; 100 rows in the accounts file and 1,000 in the customers file.
+        The accounts cap is far below the customers one because an account row is an order of
+        magnitude heavier — a provision, a census lookup, a Live activation, its series and its
+        customers — and the answer is synchronous. A larger population is imported in passes, which
+        costs nothing: the file is declarative.
+
+        **Idempotency:** `Idempotency-Key` is required. The real guarantee, though, is in the data:
+        rows are idempotent by `external_ref`, so the same file uploaded twice creates nothing twice
+        even under a different key.
+
+        To see what this would do without writing anything, use `POST /v1/accounts/imports/preview`,
+        a separate operation with no effects at all — the import is never governed by a boolean
+        flag.
+
+        Requires the `accounts:write` scope and the managed-accounts capability on your account.
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+            - accounts:write
+      parameters:
+        - $ref: '#/components/parameters/RequiredIdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AccountImportUpload'
+            encoding:
+              options:
+                contentType: application/json
+      responses:
+        '201':
+          description: 'The import ran, in the same format as the preview. The status is fixed: it reports that the import ran, not that any particular row succeeded. `metadata.is_dry_run` is `false`, and the write counters in `statistics` are what actually reached the database — they can all be `0` when every row was already there or blocked.'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    required:
+                      - data
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AccountImportResult'
+        '400':
+          description: 'The file could not be read: `EMPTY_FILE`, `INVALID_FORMAT`, `ENCODING_ERROR`, or `PARSING_ERROR` — which also covers a file with no header row in its first 20 lines, naming the columns it looked for. Nothing was written.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          description: '`PAYMENT_REQUIRED` — your own billing is past due, so nothing can be provisioned on your behalf until the outstanding invoice is settled. Decided before the file is read: no row is reported.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: '`FEATURE_NOT_AVAILABLE` — your account does not hold the managed-accounts capability. A credential without the `accounts:write` scope answers the same way.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: '`IDEMPOTENCY_KEY_MISMATCH` — this key was already used for a different request. Use a new key, or resend the original request to replay its cached response.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          description: '`TOO_MANY_RECORDS` — a file carries more rows than its limit. The whole file is rejected and no row is reported: an import of this weight is answered synchronously, so the cap is what keeps the request from timing out half-done.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v1/accounts/imports/preview:
+    post:
+      operationId: previewAccountImport
+      tags:
+        - AccountImports
+      summary: Preview an import of managed accounts
+      description: |
+        Reads the same files as `POST /v1/accounts/imports` and answers the same shape **without
+        writing anything**: no account is provisioned, no NIF is switched on, no series and no
+        customer are created, and nothing is billed.
+
+        What it resolves per row: the row's own data — including the repairs a spreadsheet export
+        needs, such as a title row ahead of the headers, a postal code that lost its leading zero, an
+        IBAN copied with the spaces of a bank statement, or a number Excel saved as `28031.0` — whether the tax id is in the AEAT
+        register, whether the `external_ref` is already an account of yours, and the **Live
+        activation verdict** that decides whether the import would execute the row at all.
+
+        `metadata.is_dry_run` is `true` and every write counter in `statistics` is `0`;
+        `statistics.importable` is what a real import would create.
+
+        **Read `statistics.live_activations_pending` before importing.** Every NIF switched on in
+        Live adds an item to your subscription, and this is the only place to see the total before
+        it is charged.
+
+        The customers file is checked once for the whole import: whether a customer is new to a
+        given account depends on the account, and that only shows up when the import runs.
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+            - accounts:write
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AccountImportUpload'
+            encoding:
+              options:
+                contentType: application/json
+      responses:
+        '200':
+          description: Preview completed. Nothing was written and nothing was billed.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    required:
+                      - data
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AccountImportResult'
+        '400':
+          description: 'The file could not be read: `EMPTY_FILE`, `INVALID_FORMAT`, `ENCODING_ERROR`, or `PARSING_ERROR` — which also covers a file with no header row in its first 20 lines, naming the columns it looked for. Nothing was written.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          description: '`PAYMENT_REQUIRED` — your own billing is past due, so nothing can be provisioned on your behalf until the outstanding invoice is settled. Decided before the file is read: no row is reported.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: '`FEATURE_NOT_AVAILABLE` — your account does not hold the managed-accounts capability. A credential without the `accounts:write` scope answers the same way.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          description: '`TOO_MANY_RECORDS` — a file carries more rows than its limit. The whole file is rejected and no row is reported: an import of this weight is answered synchronously, so the cap is what keeps the request from timing out half-done.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/fiscal-summary:
@@ -9185,6 +9741,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/configuration/verifactu:
@@ -9469,8 +10027,8 @@ paths:
         scoped to one company; it never spans several.
 
         **Pagination (opt-in).** Send `page` and/or `limit` to receive a single page
-        plus a `pagination` block with the totals. Omit both and the response keeps
-        its historical shape: the full list in `data` and no `pagination` block.
+        plus a `data.pagination` block with the totals. Omit both and the response
+        carries the full list in `data.series` and no `pagination` block.
       operationId: listSeries
       x-successor:
         method: GET
@@ -9519,15 +10077,20 @@ paths:
                   - type: object
                     properties:
                       data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/InvoiceSeries'
-                      pagination:
-                        allOf:
-                          - $ref: '#/components/schemas/Pagination'
-                        description: |
-                          Totals of the requested page. Present ONLY when the request sent
-                          `page` and/or `limit`; omitted for the historical full list.
+                        type: object
+                        required:
+                          - series
+                        properties:
+                          series:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/InvoiceSeries'
+                          pagination:
+                            allOf:
+                              - $ref: '#/components/schemas/Pagination'
+                            description: |
+                              Totals of the requested page. Present ONLY when the request sent
+                              `page` and/or `limit`; omitted for the historical full list.
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -9635,9 +10198,14 @@ paths:
                   - type: object
                     properties:
                       data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/InvoiceSeries'
+                        type: object
+                        required:
+                          - series
+                        properties:
+                          series:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/InvoiceSeries'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -9681,9 +10249,14 @@ paths:
                   - type: object
                     properties:
                       data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/DocumentTypeDefaultStatus'
+                        type: object
+                        required:
+                          - defaults
+                        properties:
+                          defaults:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/DocumentTypeDefaultStatus'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -9696,6 +10269,13 @@ paths:
         - InvoiceSeries
       summary: Replace invoice series
       description: |
+        **Deprecated.** This route will be retired on the date announced in its `Sunset` response
+        header. The canonical form has a single update verb,
+        `PATCH /v1/companies/{company_id}/series/{series_id}`. The same body produces the same
+        result there — this route already merges field by field, leaving absent fields untouched —
+        with one difference: an explicit `description: null`, which this route ignores, clears the
+        description under `PATCH`.
+
         Replaces an existing invoice series with the body you send.
 
         Numbering fields (`code`, `format`, `counter_reset`, `initial_number`) are rejected
@@ -9705,10 +10285,9 @@ paths:
         Business rules:
         - Cannot deactivate a default series (must set another as default first)
         - Cannot mark an inactive series as default
-
-        To change only some fields — or to clear the description — use
-        `PATCH /v1/configuration/series/{series_id}`.
       operationId: updateSeries
+      deprecated: true
+      x-no-successor: 'The canonical form only has PATCH. This route never replaced wholesale — it merges field by field — so the same body behaves the same there, but an explicit description null diverges (ignored here, clears the field under PATCH): not a blind drop-in. Migration guidance is in the description.'
       security:
         - ApiKeyAuth: []
         - OAuth2:
@@ -10041,6 +10620,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/invoice-customization-options:
@@ -10082,6 +10663,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/nif/validate:
@@ -10254,6 +10837,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/companies:
@@ -10308,7 +10893,7 @@ paths:
         provisioned for someone who has not signed in yet already has a holder, so companies can be
         created for it right away.
       tags:
-        - PublicCompanies
+        - AccountCompanies
       parameters:
         - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
@@ -10319,6 +10904,9 @@ paths:
               $ref: '#/components/schemas/CreateCompanyRequest'
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: Company created
           content:
             application/json:
@@ -10376,12 +10964,14 @@ paths:
                   request_id: 4bf92f3577b34da6a3ce929d0e0e4736
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     get:
       operationId: listCompanies
       tags:
-        - PublicCompanies
+        - AccountCompanies
       security:
         - ApiKeyAuth: []
         - SessionCookie: []
@@ -10440,6 +11030,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/companies/stats:
@@ -10464,7 +11056,7 @@ paths:
         so the CompanySwitcher stays cheap; only callers that need the
         densities (e.g. the EmpresasPage table) pay the aggregate cost.
       tags:
-        - PublicCompanies
+        - AccountCompanies
       responses:
         '200':
           description: Per-company invoice stats
@@ -10482,6 +11074,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}:
@@ -10524,6 +11118,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     patch:
@@ -10574,6 +11170,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -10636,6 +11234,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/issuing-readiness:
@@ -10702,6 +11302,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/companies/{company_id}/representation/generate:
@@ -11041,6 +11643,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     post:
@@ -11087,6 +11691,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -11106,12 +11712,8 @@ paths:
       tags:
         - CompanyRepresentation
       responses:
-        '200':
-          description: Representation cancelled
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RepresentationActionResponse'
+        '204':
+          description: Representation cancelled. No body — the resulting state is a constant (`CANCELLED`) and `GET /v1/companies/{company_id}/representation` is its source of truth.
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -11124,6 +11726,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/representation/document:
@@ -11168,6 +11772,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/representation/submit:
@@ -11234,6 +11840,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '413':
           $ref: '#/components/responses/PayloadTooLarge'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/logo:
@@ -11297,6 +11905,8 @@ paths:
           $ref: '#/components/responses/PayloadTooLarge'
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -11324,6 +11934,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/invoice-customization:
@@ -11367,6 +11979,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     put:
@@ -11417,6 +12031,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/verifactu-configuration:
@@ -11462,6 +12078,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     put:
@@ -11515,6 +12133,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/tax-configuration:
@@ -11565,6 +12185,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     put:
@@ -11609,6 +12231,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/series:
@@ -11630,8 +12254,8 @@ paths:
         path are returned.
 
         **Pagination (opt-in).** Send `page` and/or `limit` to receive a single page
-        plus a `pagination` block with the totals. Omit both and the response keeps
-        its historical shape: the full list in `data` and no `pagination` block.
+        plus a `data.pagination` block with the totals. Omit both and the response
+        carries the full list in `data.series` and no `pagination` block.
       security:
         - ApiKeyAuth: []
         - OAuth2:
@@ -11675,15 +12299,20 @@ paths:
                   - type: object
                     properties:
                       data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/InvoiceSeries'
-                      pagination:
-                        allOf:
-                          - $ref: '#/components/schemas/Pagination'
-                        description: |
-                          Totals of the requested page. Present ONLY when the request sent
-                          `page` and/or `limit`; omitted for the historical full list.
+                        type: object
+                        required:
+                          - series
+                        properties:
+                          series:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/InvoiceSeries'
+                          pagination:
+                            allOf:
+                              - $ref: '#/components/schemas/Pagination'
+                            description: |
+                              Totals of the requested page. Present ONLY when the request sent
+                              `page` and/or `limit`; omitted for the historical full list.
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -11694,6 +12323,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     post:
@@ -11719,6 +12350,9 @@ paths:
               $ref: '#/components/schemas/CreateSeriesRequest'
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: Series created successfully
           content:
             application/json:
@@ -11749,6 +12383,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/series/defaults:
@@ -11790,9 +12426,14 @@ paths:
                   - type: object
                     properties:
                       data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/DocumentTypeDefaultStatus'
+                        type: object
+                        required:
+                          - defaults
+                        properties:
+                          defaults:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/DocumentTypeDefaultStatus'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -11803,6 +12444,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     put:
@@ -11842,9 +12485,14 @@ paths:
                   - type: object
                     properties:
                       data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/InvoiceSeries'
+                        type: object
+                        required:
+                          - series
+                        properties:
+                          series:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/InvoiceSeries'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -11855,6 +12503,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/series/{series_id}:
@@ -11913,6 +12563,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     patch:
@@ -11975,6 +12627,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -12018,6 +12672,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/series/{series_id}/default:
@@ -12091,6 +12747,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/activations:
@@ -12104,6 +12762,7 @@ paths:
           format: uuid
     post:
       operationId: activateCompanyById
+      x-no-location: 'The activation is company state, not an addressable resource: it has no GET of its own — read it on GET /v1/companies/{company_id}.'
       security:
         - ApiKeyAuth: []
         - OAuth2:
@@ -12157,6 +12816,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -12170,6 +12831,7 @@ paths:
         `TEST` and `PROD` under an enterprise contract are immediate and answer with no `effective_at`.
         The activation is sealed rather than deleted, and only once `effective_at` arrives: the history survives, and in Live that sealing is what releases the NIF for another account. After it takes effect the NIF can neither issue nor correct invoices until switched on again.
         Idempotent: switching off a mode whose switch-off is already pending returns the same date with `already_scheduled: true`. Switching off a mode that was never on is a silent no-op.
+        This `DELETE` answers `200` with a body — not `204` — because the effect is deferred: the `effective_at` the server computed (and `already_scheduled`) cannot be known any other way.
         Requires the `companies:write` scope and access to the NIF. In Live it also requires being the billing subject of the account. A NIF you do not reach answers `403`, and so does a NIF that does not exist.
       security:
         - ApiKeyAuth: []
@@ -12198,6 +12860,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/companies/{company_id}/payment-connections:
@@ -12553,6 +13217,9 @@ paths:
         - $ref: '#/components/parameters/IdempotencyKeyHeader'
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: Draft invoice created
           content:
             application/json:
@@ -13302,6 +13969,9 @@ paths:
                     format: uuid
       responses:
         '201':
+          headers:
+            Location:
+              $ref: '#/components/headers/CreatedResourceLocation'
           description: Webhook subscription created
           content:
             application/json:
@@ -13320,6 +13990,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     get:
       tags:
         - AccountWebhooks
@@ -13356,6 +14030,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/webhooks/{webhook_id}:
     parameters:
       - name: account_id
@@ -13400,6 +14078,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     patch:
       tags:
         - AccountWebhooks
@@ -13444,6 +14126,10 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     delete:
       tags:
         - AccountWebhooks
@@ -13463,6 +14149,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/webhooks/{webhook_id}/deliveries:
     parameters:
       - name: account_id
@@ -13531,6 +14221,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/webhooks/{webhook_id}/deliveries/{delivery_id}/retry:
     parameters:
       - name: account_id
@@ -13586,6 +14280,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/webhooks/{webhook_id}/test:
     parameters:
       - name: account_id
@@ -13659,6 +14357,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/webhooks/{webhook_id}/secret:
     parameters:
       - name: account_id
@@ -13709,6 +14411,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/request-logs:
     get:
       tags:
@@ -13820,6 +14526,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/request-logs/{request_id}:
@@ -13875,6 +14583,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/developers/request-logs:
@@ -14137,6 +14847,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/email-indicators:
@@ -14198,6 +14910,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/accounts/{account_id}/emails/{email_id}:
@@ -14255,6 +14969,8 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /v1/emails:
@@ -14343,23 +15059,24 @@ paths:
               example:
                 success: true
                 data:
-                  - id: 550e8400-e29b-41d4-a716-446655440000
-                    email_type: INVOICE_EMITTED
-                    recipients:
-                      - cliente@ejemplo.com
-                    cc: []
-                    subject: Factura 2025/0001
-                    related_entity_type: INVOICE
-                    related_entity_id: 660e8400-e29b-41d4-a716-446655440111
-                    status: SENT
-                    sent_at: '2025-01-20T14:30:00Z'
-                pagination:
-                  current_page: 1
-                  items_per_page: 20
-                  total_items: 1
-                  total_pages: 1
-                  has_next: false
-                  has_previous: false
+                  emails:
+                    - id: 550e8400-e29b-41d4-a716-446655440000
+                      email_type: INVOICE_EMITTED
+                      recipients:
+                        - cliente@ejemplo.com
+                      cc: []
+                      subject: Factura 2025/0001
+                      related_entity_type: INVOICE
+                      related_entity_id: 660e8400-e29b-41d4-a716-446655440111
+                      status: SENT
+                      sent_at: '2025-01-20T14:30:00Z'
+                  pagination:
+                    current_page: 1
+                    items_per_page: 20
+                    total_items: 1
+                    total_pages: 1
+                    has_next: false
+                    has_previous: false
                 meta:
                   timestamp: '2025-01-20T15:00:00Z'
                   request_id: req_123
@@ -15764,7 +16481,7 @@ components:
       description: |
         Submission status of an invoice's VeriFactu record to AEAT.
 
-        Single vocabulary for the whole axis: the same four values are published in
+        Single vocabulary for the whole axis: the same values are published in
         `verifactu.submission_status` of an invoice and accepted by the `verifactu_status`
         filter of `GET /v1/invoices`, so a value read from an invoice can be fed straight
         back into the filter.
@@ -15772,15 +16489,23 @@ components:
         * `PENDING` — queued, AEAT has not answered yet.
         * `ACCEPTED` — accepted by AEAT (with or without non-blocking warnings).
         * `VOIDED` — a cancellation record was accepted by AEAT.
-        * `REJECTED` — rejected by AEAT, or the record never made it there.
+        * `REJECTED` — rejected by AEAT, or the submission was rejected by the provider
+          before reaching AEAT (see `error_code` / `error_message`).
+        * `NOT_SUBMITTED` — the invoice is issued with VeriFactu enabled but has no live
+          record: the submission fell through (lost event, exhausted retries) and AEAT
+          does not know the invoice exists. Transient right after issuing (the async
+          submission may still be in flight); if it persists, the registration needs to
+          be re-driven.
 
-        Invoices with no VeriFactu record at all are not part of this axis: they report
-        `verifactu.enabled = false` and are selected with the `verifactu_enabled` filter.
+        Drafts and scheduled invoices have no submission to describe yet and omit the
+        field. Invoices with `verifactu.enabled = false` are outside this axis and are
+        selected with the `verifactu_enabled` filter.
       enum:
         - PENDING
         - ACCEPTED
         - VOIDED
         - REJECTED
+        - NOT_SUBMITTED
       example: ACCEPTED
     Recipient:
       type: object
@@ -16110,6 +16835,21 @@ components:
             Only applies when `issue_directly` is `true`.
             If `true`, sends the invoice by email with PDF attachment after issuing.
             The email is sent asynchronously after the invoice is issued.
+        attach_source_invoices:
+          type: boolean
+          default: false
+          description: |
+            Only applies when `send_automatically` is `true`. If `true`, the email sent after
+            issuing also attaches a ZIP (`suplidos_<invoice-number>.zip`) with the PDFs of the
+            source invoices referenced by the invoice's SUPLIDO consolidation lines
+            (`source_invoice_ids`). Each PDF inside the ZIP is named
+            `<invoice-number>_<issuer-tax-id>.pdf`. Access to sources owned by managed accounts is
+            re-checked with the same rules as issuing, and the request fails synchronously with an
+            actionable error — never a partial ZIP — if the invoice has no consolidation sources
+            (`ATTACH_SOURCE_INVOICES_NO_SOURCES`), a source is not reachable
+            (`ATTACH_SOURCE_INVOICE_UNAVAILABLE`) or a source has no generated PDF
+            (`ATTACH_SOURCE_PDF_MISSING`). The flag belongs to this issuing act only: it is never
+            stored on the invoice.
         email_config:
           allOf:
             - $ref: '#/components/schemas/EmailConfiguration'
@@ -16371,6 +17111,10 @@ components:
         attach_pdf:
           type: boolean
           default: true
+        attach_source_invoices:
+          type: boolean
+          default: false
+          description: 'Attach a ZIP archive (`suplidos_<invoice-number>.zip`) containing the PDFs of the source invoices referenced by the invoice''s SUPLIDO consolidation lines (`source_invoice_ids`). Each PDF inside the ZIP is named `<invoice-number>_<issuer-tax-id>.pdf`. Requires `attach_pdf: true` (the ZIP accompanies the invoice PDF). Access to sources owned by managed accounts is re-checked at send time with the same rules as issuing; the request fails with an actionable error — never a partial ZIP — if the invoice has no consolidation sources (`ATTACH_SOURCE_INVOICES_NO_SOURCES`), a source is not reachable (`ATTACH_SOURCE_INVOICE_UNAVAILABLE`), a source has no generated PDF (`ATTACH_SOURCE_PDF_MISSING`), or the ZIP exceeds the size limit (`ATTACH_SOURCE_ZIP_TOO_LARGE`).'
         language:
           allOf:
             - $ref: '#/components/schemas/Language'
@@ -18701,6 +19445,13 @@ components:
         name:
           type: string
           maxLength: 255
+        frequency:
+          type: string
+          enum:
+            - MONTHLY
+          description: |
+            Generation cadence. Only `MONTHLY` is supported today; the field exists in the
+            request so an unsupported cadence is rejected instead of being silently ignored.
         day_of_month:
           type: integer
           minimum: 1
@@ -18796,6 +19547,14 @@ components:
         name:
           type: string
           maxLength: 255
+        frequency:
+          type: string
+          enum:
+            - MONTHLY
+          description: |
+            Generation cadence. Only `MONTHLY` is supported today; the field exists in the
+            request so an unsupported cadence is rejected instead of silently creating a
+            monthly template. Omitted, `MONTHLY` applies.
         day_of_month:
           type: integer
           minimum: 1
@@ -18879,6 +19638,14 @@ components:
         name:
           type: string
           maxLength: 255
+        frequency:
+          type: string
+          enum:
+            - MONTHLY
+          description: |
+            Generation cadence. Only `MONTHLY` is supported today; the field exists in the
+            request so an unsupported cadence is rejected instead of silently creating a
+            monthly template. Omitted, `MONTHLY` applies.
         day_of_month:
           type: integer
           minimum: 1
@@ -19411,11 +20178,16 @@ components:
         success:
           type: boolean
         data:
-          type: array
-          items:
-            $ref: '#/components/schemas/CompanyData'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
+          type: object
+          required:
+            - companies
+          properties:
+            companies:
+              type: array
+              items:
+                $ref: '#/components/schemas/CompanyData'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
         meta:
           $ref: '#/components/schemas/ResponseMeta'
     RepresentationActionResponse:
@@ -19694,11 +20466,16 @@ components:
         success:
           type: boolean
         data:
-          type: array
-          items:
-            $ref: '#/components/schemas/ManagedPaymentEvent'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
+          type: object
+          required:
+            - events
+          properties:
+            events:
+              type: array
+              items:
+                $ref: '#/components/schemas/ManagedPaymentEvent'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
         meta:
           $ref: '#/components/schemas/ResponseMeta'
     ManagedPaymentEventResponse:
@@ -19806,11 +20583,16 @@ components:
           type: boolean
           example: true
         data:
-          type: array
-          items:
-            $ref: '#/components/schemas/EmailDeliveryResponse'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
+          type: object
+          required:
+            - emails
+          properties:
+            emails:
+              type: array
+              items:
+                $ref: '#/components/schemas/EmailDeliveryResponse'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
         meta:
           $ref: '#/components/schemas/ResponseMeta'
     EmailDeliveryDetail:
@@ -19978,9 +20760,14 @@ components:
           type: boolean
           example: true
         data:
-          type: array
-          items:
-            $ref: '#/components/schemas/EmailDeliveryIndicator'
+          type: object
+          required:
+            - indicators
+          properties:
+            indicators:
+              type: array
+              items:
+                $ref: '#/components/schemas/EmailDeliveryIndicator'
         meta:
           $ref: '#/components/schemas/ResponseMeta'
     QueriedPeriod:
@@ -20729,6 +21516,34 @@ components:
             $ref: '#/components/schemas/UUID'
         filters:
           $ref: '#/components/schemas/InvoiceExportFilters'
+    InvoicePreviewResponse:
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          required:
+            - image_url
+            - expires_in_seconds
+          properties:
+            image_url:
+              type: string
+              format: uri
+              description: Pre-signed URL to the invoice preview image (WebP), for inline rendering (valid for 5 minutes)
+              example: https://minio.beel.es/beel-invoices/invoices/user-uuid/factura-uuid_preview.webp?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=...
+            expires_in_seconds:
+              type: integer
+              description: Seconds until the URL expires
+              example: 300
+              minimum: 1
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
     SetInvoiceStatusRequest:
       type: object
       description: |
@@ -20878,6 +21693,13 @@ components:
           type: string
           maxLength: 255
           description: Template name. Cannot be cleared.
+        frequency:
+          type: string
+          enum:
+            - MONTHLY
+          description: |
+            Generation cadence. Only `MONTHLY` is supported today; the field exists in the
+            request so an unsupported cadence is rejected instead of being silently ignored.
         day_of_month:
           type: integer
           minimum: 1
@@ -20978,6 +21800,14 @@ components:
         name:
           type: string
           maxLength: 255
+        frequency:
+          type: string
+          enum:
+            - MONTHLY
+          description: |
+            Generation cadence. Only `MONTHLY` is supported today; the field exists in the
+            request so an unsupported cadence is rejected instead of silently creating a
+            monthly template. Omitted, `MONTHLY` applies.
         day_of_month:
           type: integer
           minimum: 1
@@ -21437,6 +22267,30 @@ components:
         - NONE
         - VIEW
         - OPERATE
+    ClaimStatus:
+      type: string
+      enum:
+        - NOT_ISSUED
+        - PENDING
+        - EXPIRED
+        - CLAIMED
+      description: |-
+        State of the account's claim link — the handover of the account to its holder. It answers the only question the manager has in front of a list: *can this person still take their account, or do I have to send them a new link?*
+
+        `NOT_ISSUED` (no claim token was ever issued: the account was provisioned without `email` and has no holder yet); `PENDING` (a token is live — the holder can still claim); `EXPIRED` (the last token issued has lapsed, so the link in the holder's inbox no longer works); `CLAIMED` (the holder set their password and took ownership — nothing left to claim). `EXPIRED` and `NOT_ISSUED` are deliberately distinct: "it ran out" and "it was never sent" call for the same action but are not the same fact, and reporting one as the other would make the list lie.
+    AccountClaim:
+      type: object
+      description: 'Claim state of the account and, when there is a token to speak of, when it stops (or stopped) working. The token itself is **never** returned here: it is shown once, at the moment it is created (`POST /v1/accounts` or `POST /v1/accounts/{account_id}/claim-tokens`). A read that handed out live redemption links for a whole portfolio would be a needless prize; if the link was lost, issue a new one — doing so invalidates the previous.'
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/ClaimStatus'
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the last issued token stops (`PENDING`) or stopped (`EXPIRED`) working. Tokens last 30 days from issue. `null` for `NOT_ISSUED` and `CLAIMED`, where there is no expiry to report.
     ManagedAccountSummary:
       type: object
       description: An account you provisioned, with its lifecycle status and the access you hold.
@@ -21445,6 +22299,7 @@ components:
         - external_ref
         - access_level
         - status
+        - claim
         - representation_signed
         - created_at
       properties:
@@ -21460,6 +22315,10 @@ components:
           $ref: '#/components/schemas/AccessLevel'
         status:
           $ref: '#/components/schemas/ProvisioningStatus'
+        claim:
+          allOf:
+            - $ref: '#/components/schemas/AccountClaim'
+          description: State of the account's claim link. `status` here refines the `PROVISIONED` stage of `status` above, which cannot tell "the holder still has a working link" from "their link expired a month ago" — the difference between waiting and having to act.
         company_id:
           type: string
           format: uuid
@@ -21636,6 +22495,463 @@ components:
           format: int64
           description: 'Billable count: one per provisioned account (each has a company row, placeholder or real), including empty/unclaimed accounts. Equals `provisioned_accounts` unless an account holds more than one NIF.'
           example: 1000
+    DocumentType:
+      type: string
+      enum:
+        - UNASSIGNED
+        - STANDARD
+        - SIMPLIFIED
+        - CORRECTIVE
+        - PROFORMA
+      description: |
+        Document type associated with a series. Values mirror `InvoiceType`,
+        so the series a document needs is named exactly like the document:
+        - UNASSIGNED: Legacy series, compatible with any invoice type
+        - STANDARD: Standard invoice
+        - SIMPLIFIED: Simplified invoice
+        - CORRECTIVE: Corrects or cancels a previous invoice
+        - PROFORMA: Proforma (commercial document, non-fiscal numbering)
+    AccountImportOptions:
+      type: object
+      description: |-
+        Settings that apply to **every row** of the file. They live here and not as columns because an agency onboards all of its managed accounts the same way: a column nobody varies is a column everybody mistypes.
+
+        Travels as an `application/json` part named `options` inside the multipart body — send it with its own `Content-Type: application/json` (`-F 'options=…;type=application/json'` in curl). Omit the part entirely to take the defaults.
+      properties:
+        access_level:
+          allOf:
+            - $ref: '#/components/schemas/AccessLevel'
+          description: 'The access you keep over every account of this file. Defaults to `OPERATE` — not to `NONE` as in `POST /v1/accounts`, and the difference is deliberate: a file-driven import is re-run to reconcile what is missing, and reconciling an account''s series and customers is a write that `VIEW` cannot do. An account you already manage with less than this is reported `BLOCKED` and skipped: once its holder has claimed it, only they can raise your access again.'
+        series:
+          type: array
+          maxItems: 8
+          description: |-
+            Invoice series every account must end up with, declared once. Each entry is a `CreateSeriesRequest` exactly as `POST /v1/companies/{company_id}/series` takes it, with one addition: the token `{REF}` in `name` and `format` is replaced with the row's `external_ref` **before** the series is created, which is how a single declaration numbers every account distinguishably. `{REF}` is vocabulary of this endpoint only — what reaches the series is a literal format, so nothing downstream has to learn a new variable. A row whose `external_ref` would produce a format outside the series grammar (uppercase letters, digits, `-`, `_`, `/`, `:`) is reported and its series left alone.
+
+            Leave it out and each account keeps the default series its activation seeds.
+          items:
+            $ref: '#/components/schemas/CreateSeriesRequest'
+    AccountImportUpload:
+      type: object
+      required:
+        - accounts_file
+      properties:
+        accounts_file:
+          type: string
+          format: binary
+          description: |-
+            CSV with one managed account per row, in the format of `GET /v1/templates/account-import`: UTF-8, header names matched case-insensitively, and `,`, `;` or tab accepted as separator.
+
+            The header row does not have to be the first line. A spreadsheet almost never starts on it — there is a title, sometimes a blank line — and that preamble travels ahead of the data when the sheet is exported. Everything before the first line carrying the required columns is ignored, within the first 20 lines. Reported `row_number`s still count from the top of the file, so they match what you see when you open it.
+        customers_file:
+          type: string
+          format: binary
+          description: Optional CSV of customers to apply to **every** account of this import, in the format of `GET /v1/templates/customer-import`. Idempotent by tax id. Its preamble is skipped the same way — it comes out of the same spreadsheet.
+        options:
+          $ref: '#/components/schemas/AccountImportOptions'
+    AccountImportMetadata:
+      type: object
+      required:
+        - is_dry_run
+        - total_rows
+        - processing_time_ms
+        - environment
+      properties:
+        is_dry_run:
+          type: boolean
+          description: '`true` for the preview (nothing was written), `false` for the import. It is what tells the two answers apart when they are stored side by side.'
+        total_rows:
+          type: integer
+          description: Data rows found in the accounts file, header excluded.
+          example: 19
+        processing_time_ms:
+          type: integer
+          format: int64
+          example: 18400
+        accounts_filename:
+          type: string
+          nullable: true
+          description: Name of the uploaded accounts file, as your client sent it.
+        customers_filename:
+          type: string
+          nullable: true
+          description: Name of the uploaded customers file; `null` when none was sent.
+        environment:
+          allOf:
+            - $ref: '#/components/schemas/Environment'
+          description: The mode this import ran in, taken from the credential. Restated because it decides whether the NIFs were switched on against the real AEAT and whether anything was billed.
+    AccountImportItemStatus:
+      type: string
+      description: |
+        Outcome of one row. The same five values are used by the preview and by the import — the
+        preview reports what the import would reach — so no value tells you which operation
+        produced the payload; `metadata.is_dry_run` does.
+
+        * `VALID` — complete and reachable. Provisioned by the import; would be by a preview.
+        * `WARNING` — the same, with non-blocking warnings.
+        * `ALREADY_EXISTS` — an account with this `external_ref` is already yours. A documented
+          success, not a collision: provisioning is idempotent by `external_ref`, so nothing is
+          created and nothing is billed again. On an import the row is still reconciled (Live,
+          series, customers), which is what makes re-uploading the same file useful.
+        * `BLOCKED` — well formed but not executable. `errors` says why, and it is always something
+          to resolve outside the file.
+        * `ERROR` — the row's own data is wrong. `errors` says which column.
+      enum:
+        - VALID
+        - WARNING
+        - ALREADY_EXISTS
+        - BLOCKED
+        - ERROR
+      example: VALID
+    LiveActivationVerdict:
+      type: string
+      description: |
+        The server's complete answer to "may THIS actor activate a NIF in Live on this account,
+        and if not, why?". Published so the UI never has to re-derive what the server will decide
+        when the button is pressed — a screen that computes it on its own ends up disagreeing, and
+        the disagreement shows up as a green button that answers 403.
+
+        The first four values are predicated on the PAYING account (a managed account inherits its
+        manager's entitlement); the last two on the ACTOR and the account in focus.
+
+        * `ENTITLED` — live plan/contract or card on file. Activation is immediate.
+        * `CHECKOUT_REQUIRED` — no card yet: go through the checkout.
+        * `PLAN_ACTIVATION_REQUIRED` — fixed-quota plan on trial: the act is ACTIVATING THE PLAN,
+          not the per-NIF checkout (that one charges for a NIF the quota already includes).
+        * `PAYMENT_REQUIRED` — past due: no new checkout, regularise the existing one.
+        * `NOT_BILLING_SUBJECT` — the actor is not the billing subject. Informative, no action.
+        * `BILLING_MANAGED_EXTERNALLY` — an agency handles the billing. Informative, no action.
+      enum:
+        - ENTITLED
+        - CHECKOUT_REQUIRED
+        - PLAN_ACTIVATION_REQUIRED
+        - PAYMENT_REQUIRED
+        - NOT_BILLING_SUBJECT
+        - BILLING_MANAGED_EXTERNALLY
+      example: CHECKOUT_REQUIRED
+    AccountImportSeriesAction:
+      type: string
+      description: |
+        * `ALREADY_EXISTS` — the account already numbers like this. Nothing was touched. A series
+          counts as present when it numbers identically, whether it is written with `{CODIGO}` or
+          with the code spelled out.
+        * `CREATED` — the series was created (in a preview: would be).
+        * `MANUAL_REVIEW_REQUIRED` — neither the declared code nor its `<code>2` fallback is free,
+          or the resolved format falls outside the series grammar. Inventing a third code would be
+          guessing, and changing the format of a series that has already numbered a document is not
+          something an import may do. Resolve it on the account and re-upload.
+      enum:
+        - ALREADY_EXISTS
+        - CREATED
+        - MANUAL_REVIEW_REQUIRED
+    AccountImportSeriesOutcome:
+      type: object
+      description: What one declared series did on one account.
+      required:
+        - document_type
+        - action
+      properties:
+        document_type:
+          $ref: '#/components/schemas/DocumentType'
+        action:
+          $ref: '#/components/schemas/AccountImportSeriesAction'
+        code:
+          type: string
+          nullable: true
+          description: Code the series was created under — not necessarily the declared one, when that was already taken by a different numbering.
+        format:
+          type: string
+          nullable: true
+          description: Format with `{REF}` already resolved to this row's `external_ref`.
+    AccountImportCustomersOutcome:
+      type: object
+      description: 'What the shared customers file did on one account. `already_existed` is the number that makes re-uploading cheap: a customer whose tax id the account already knows is counted, not duplicated.'
+      required:
+        - created
+        - already_existed
+        - failed
+      properties:
+        created:
+          type: integer
+          example: 3
+        already_existed:
+          type: integer
+          example: 37
+        failed:
+          type: integer
+          example: 0
+    AccountImportIssueCode:
+      type: string
+      description: |
+        Machine-readable reason for an issue. New values are added as the import learns to explain
+        more; treat an unknown one as a generic problem rather than failing.
+
+        Read straight off the row: `REQUIRED_FIELD_MISSING` (the column is there and its **cell** is
+        empty — a missing column is a whole-file error, not a row one), `EXTERNAL_REF_DUPLICATED`,
+        `ENTITY_TYPE_UNKNOWN`, `NIF_INVALID_FORMAT`, `EMAIL_INVALID`, `POSTAL_CODE_INVALID`,
+        `IBAN_INVALID`, `IRPF_NOT_NUMERIC`, `LANGUAGE_UNSUPPORTED`.
+
+        `IRPF_NOT_ALLOWED` — the rate is a number but not one the law admits (0, 1, 2, 7, 15, 19,
+        24). It is an **error**, not a warning: letting it through buys a green preview and an
+        account that fails on its first invoice months later, when nobody connects the two.
+
+        `POSTAL_CODE_PADDED` — a warning: the postal code was padded with leading zeros, which is
+        almost always the right repair but does change the value, and the first digit picks the
+        province.
+
+        Census: `NIF_NOT_IN_CENSUS` — the tax id is not in the AEAT register or is no longer active.
+        For an **individual** it also covers a legal name that does not match the one on file; for a
+        **legal entity** the name is not checked at all, because the AEAT identifies a company by its
+        CIF alone and has no answer that means "this name is not the one".
+
+        State of the account rather than of the file, and the ones that produce `BLOCKED`:
+        `ACCOUNT_ALREADY_EXISTS` (a warning, not a blocker), `ACCESS_LEVEL_INSUFFICIENT`,
+        `LIVE_ACTIVATION_NOT_ENTITLED`, `NIF_ALREADY_LIVE_ELSEWHERE`,
+        `PROVISIONING_EMAIL_ALREADY_REGISTERED`, `PROVISIONING_ACCOUNT_CLAIMED` — each the wire code
+        the equivalent single-account call answers with, so the remedy is the one already documented
+        there.
+
+        Series: `SERIES_CODE_TAKEN`, `SERIES_MANUAL_RESOLUTION_REQUIRED` (the declared code and its
+        `<code>2` fallback are both taken), `SERIES_CODE_DUPLICATED` (this same import declares the
+        code twice), `SERIES_FORMAT_INVALID` (the format, once `{REF}` is resolved, cannot number —
+        no `{NUM}`, or the `external_ref` added characters the grammar rejects) and
+        `SERIES_DEFAULT_REPLACED`. The first four leave the account **without** that series, and say
+        so.
+
+        Customers file: `CUSTOMER_ROW_REJECTED` — a row of the shared customers file that will not
+        load anywhere. One issue per offending column, each with the message the customer import
+        wrote for it; a row rejected with no column-level detail carries a single one. The census
+        code above is used here too, but only ever on the `nif` column.
+
+        Anything else: `UNEXPECTED_ROW_FAILURE`, with the detail in `value`.
+      enum:
+        - REQUIRED_FIELD_MISSING
+        - EXTERNAL_REF_DUPLICATED
+        - ENTITY_TYPE_UNKNOWN
+        - NIF_INVALID_FORMAT
+        - NIF_NOT_IN_CENSUS
+        - EMAIL_INVALID
+        - POSTAL_CODE_INVALID
+        - POSTAL_CODE_PADDED
+        - IBAN_INVALID
+        - IRPF_NOT_NUMERIC
+        - IRPF_NOT_ALLOWED
+        - LANGUAGE_UNSUPPORTED
+        - ACCOUNT_ALREADY_EXISTS
+        - ACCESS_LEVEL_INSUFFICIENT
+        - LIVE_ACTIVATION_NOT_ENTITLED
+        - NIF_ALREADY_LIVE_ELSEWHERE
+        - PROVISIONING_EMAIL_ALREADY_REGISTERED
+        - PROVISIONING_ACCOUNT_CLAIMED
+        - SERIES_CODE_TAKEN
+        - SERIES_CODE_DUPLICATED
+        - SERIES_FORMAT_INVALID
+        - SERIES_MANUAL_RESOLUTION_REQUIRED
+        - SERIES_DEFAULT_REPLACED
+        - CUSTOMER_ROW_REJECTED
+        - UNEXPECTED_ROW_FAILURE
+      example: LIVE_ACTIVATION_NOT_ENTITLED
+    AccountImportIssue:
+      type: object
+      description: One thing that happened to a row, with a stable `code` to branch on and a `message` already written in the language of the request. Branch on the code; the message is for people.
+      required:
+        - code
+        - message
+      properties:
+        code:
+          $ref: '#/components/schemas/AccountImportIssueCode'
+        column:
+          type: string
+          nullable: true
+          description: Column of the file involved; `null` when the issue is about the row as a whole.
+          example: direccion_codigo_postal
+        value:
+          type: string
+          nullable: true
+          description: The offending value, already normalised.
+        message:
+          type: string
+          description: 'Human-readable explanation, in the language of the request. Issues coming from the customers file are the exception: they carry the wording the customer import itself produced, which is Spanish — the same text `POST /v1/companies/{company_id}/customers/imports/preview` returns. Re-labelling them to translate would collapse every error of a row into one repeated sentence, which is worse than one untranslated one.'
+    AccountImportItem:
+      type: object
+      description: One row of the accounts file and everything that happened to it.
+      required:
+        - row_number
+        - status
+        - errors
+        - warnings
+        - series
+      properties:
+        row_number:
+          type: integer
+          description: 'Row number **as the spreadsheet counts it**: the header is row 1, so the first account is row 2. Not an index — the point is that you can open the file and go to that line.'
+          example: 2
+        external_ref:
+          type: string
+          nullable: true
+          description: Your own id for the account; `null` when the row was too malformed to read it.
+        nif:
+          type: string
+          nullable: true
+          description: The row's tax id, normalised; `null` when it could not be read.
+        status:
+          $ref: '#/components/schemas/AccountImportItemStatus'
+        live_activation_verdict:
+          allOf:
+            - $ref: '#/components/schemas/LiveActivationVerdict'
+          description: 'Whether this row''s NIF may be switched on in Live, decided exactly as `POST /v1/companies/{company_id}/activations` decides it. Anything other than `ENTITLED` blocks the row: the import never opens a checkout on your behalf. Absent when the row was rejected before reaching that question.'
+        account:
+          allOf:
+            - $ref: '#/components/schemas/ProvisionAccountResult'
+          description: 'The account this row produced — the same shape `POST /v1/accounts` returns, carrying `account_id`, `company_id` and the single-use `claim_token` / `claim_url` to hand to the holder. Absent in a preview (nothing was provisioned) and on a `BLOCKED` or `ERROR` row. On `ALREADY_EXISTS` it is the account that was already there. **The token is shown once**: store it, or re-issue it with `POST /v1/accounts/{account_id}/claim-tokens`.'
+        series:
+          type: array
+          description: What each declared series did on this account. Empty when the import declares none.
+          items:
+            $ref: '#/components/schemas/AccountImportSeriesOutcome'
+        customers:
+          allOf:
+            - $ref: '#/components/schemas/AccountImportCustomersOutcome'
+          description: 'How the shared customers file landed on **this** account. Absent in a preview, and when no customers file was sent: whether a customer is new depends on the account, and that only shows up when the import runs.'
+        errors:
+          type: array
+          description: What stops this row. A row with errors is never executed.
+          items:
+            $ref: '#/components/schemas/AccountImportIssue'
+        warnings:
+          type: array
+          description: What you should know even though the row goes through.
+          items:
+            $ref: '#/components/schemas/AccountImportIssue'
+    AccountImportCustomerRow:
+      type: object
+      required:
+        - row_number
+        - errors
+      properties:
+        row_number:
+          type: integer
+          description: Row as the spreadsheet counts it (header is row 1).
+        nif:
+          type: string
+          nullable: true
+        legal_name:
+          type: string
+          nullable: true
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountImportIssue'
+    AccountImportCustomersSource:
+      type: object
+      description: |-
+        The shared customers file, checked once for the whole import — it is the same list for every account, so validating it per account would repeat the same census lookups N times over.
+
+        Deliberately **not** the shape of `POST /v1/companies/{company_id}/customers/imports/preview`: that one reports duplicates against one company's customers, and here there is no single company to be duplicate of. What is reported here is only what makes a customer unusable everywhere — bad data, or a tax id the AEAT does not know.
+      required:
+        - total_rows
+        - valid
+        - invalid
+        - rejected
+      properties:
+        total_rows:
+          type: integer
+          example: 42
+        valid:
+          type: integer
+          description: Customers that will be applied to every account.
+          example: 40
+        invalid:
+          type: integer
+          description: Customers that will be applied to none.
+          example: 2
+        rejected:
+          type: array
+          description: The rejected rows, so you can fix the file. Valid rows are counted, not listed.
+          items:
+            $ref: '#/components/schemas/AccountImportCustomerRow'
+    AccountImportStatistics:
+      type: object
+      description: |-
+        Aggregated outcome. Every field except the write counters classifies rows of the accounts file: each row falls into exactly one of `valid`, `with_warnings`, `already_existed`, `blocked` and `with_errors`, so those five add up to `total_rows`.
+
+        The write counters — `accounts_created`, `live_activations_created`, `series_created`, `customers_created` — are the only fields that count writes, so they are what to read to know whether an import worked. They are all `0` in a preview.
+      required:
+        - total_rows
+        - valid
+        - with_warnings
+        - already_existed
+        - blocked
+        - with_errors
+        - importable
+        - accounts_created
+        - live_activations_created
+        - live_activations_pending
+        - series_created
+      properties:
+        total_rows:
+          type: integer
+          example: 19
+        valid:
+          type: integer
+          example: 11
+        with_warnings:
+          type: integer
+          example: 1
+        already_existed:
+          type: integer
+          example: 6
+        blocked:
+          type: integer
+          example: 1
+        with_errors:
+          type: integer
+          example: 0
+        importable:
+          type: integer
+          description: '`valid + with_warnings` — rows a real import would provision.'
+          example: 12
+        accounts_created:
+          type: integer
+          description: Accounts actually provisioned by this request. Always `0` in a preview.
+          example: 12
+        live_activations_created:
+          type: integer
+          description: NIFs actually switched on by this request. In Live each one adds an item to your subscription, so this is what was billed. Always `0` in a preview.
+          example: 12
+        live_activations_pending:
+          type: integer
+          description: NIFs a real import **would** switch on. In a preview this is the billing forecast — read it before importing; in an import it is what is left, normally `0`.
+          example: 0
+        series_created:
+          type: integer
+          example: 24
+        customers_created:
+          type: integer
+          nullable: true
+          description: Customer rows created across all accounts. `null` when no customers file was sent, and `0` in a preview.
+          example: 24
+    AccountImportResult:
+      type: object
+      description: The outcome of the file, row by row, in one shape for the preview and for the import. Which one produced it is `metadata.is_dry_run`; what it actually wrote is the write counters in `statistics`.
+      required:
+        - metadata
+        - accounts_validation
+        - statistics
+      properties:
+        metadata:
+          $ref: '#/components/schemas/AccountImportMetadata'
+        accounts_validation:
+          type: array
+          description: 'One entry per data row of the accounts file, in file order and **never filtered**: a row that failed keeps its place and its `row_number`, so the answer lines up with the spreadsheet.'
+          items:
+            $ref: '#/components/schemas/AccountImportItem'
+        customers_source:
+          allOf:
+            - $ref: '#/components/schemas/AccountImportCustomersSource'
+          description: The optional customers file, checked **once** for the whole import. Absent when none was sent. What each account did with it is on its own row.
+        statistics:
+          $ref: '#/components/schemas/AccountImportStatistics'
     ExemptionReasonCatalogEntry:
       type: object
       required:
@@ -21723,22 +23039,6 @@ components:
         - MODERN_TABLE
         - PROFESSIONAL_SERVICE
       example: MODERN_TABLE
-    DocumentType:
-      type: string
-      enum:
-        - UNASSIGNED
-        - STANDARD
-        - SIMPLIFIED
-        - CORRECTIVE
-        - PROFORMA
-      description: |
-        Document type associated with a series. Values mirror `InvoiceType`,
-        so the series a document needs is named exactly like the document:
-        - UNASSIGNED: Legacy series, compatible with any invoice type
-        - STANDARD: Standard invoice
-        - SIMPLIFIED: Simplified invoice
-        - CORRECTIVE: Corrects or cancels a previous invoice
-        - PROFORMA: Proforma (commercial document, non-fiscal numbering)
     DocumentTypeDefaultStatus:
       type: object
       required:
@@ -22069,13 +23369,13 @@ components:
         invoice_count:
           type: integer
           format: int64
-          description: Total non-deleted invoices issued by this company.
+          description: 'Total fiscal documents issued by this company (real-net criterion): drafts, scheduled invoices and proformas are excluded, and a voided invoice counts only when a live total rectification compensates it.'
           example: 42
         last_invoice_at:
           type: string
           format: date-time
           nullable: true
-          description: Date of the most recent non-deleted invoice (ISO 8601), or null if none.
+          description: Issue date of the most recent invoice in the same set as invoice_count (ISO 8601), or null if none.
           example: '2026-05-12T00:00:00Z'
     ListCompanyStats200Response:
       type: object
@@ -22083,9 +23383,14 @@ components:
         success:
           type: boolean
         data:
-          type: array
-          items:
-            $ref: '#/components/schemas/CompanyStatsData'
+          type: object
+          required:
+            - stats
+          properties:
+            stats:
+              type: array
+              items:
+                $ref: '#/components/schemas/CompanyStatsData'
         meta:
           $ref: '#/components/schemas/ResponseMeta'
     IssuingReadinessResponse:
@@ -22215,9 +23520,14 @@ components:
         success:
           type: boolean
         data:
-          type: array
-          items:
-            $ref: '#/components/schemas/ManagedPaymentConnection'
+          type: object
+          required:
+            - connections
+          properties:
+            connections:
+              type: array
+              items:
+                $ref: '#/components/schemas/ManagedPaymentConnection'
         meta:
           $ref: '#/components/schemas/ResponseMeta'
     WebhookAccountRelationship:
@@ -22903,11 +24213,16 @@ components:
           type: boolean
           example: true
         data:
-          type: array
-          items:
-            $ref: '#/components/schemas/RequestLogSummary'
-        pagination:
-          $ref: '#/components/schemas/RequestLogCursorPagination'
+          type: object
+          required:
+            - request_logs
+          properties:
+            request_logs:
+              type: array
+              items:
+                $ref: '#/components/schemas/RequestLogSummary'
+            pagination:
+              $ref: '#/components/schemas/RequestLogCursorPagination'
         meta:
           $ref: '#/components/schemas/ResponseMeta'
     RequestLogDetail:
@@ -24721,6 +26036,12 @@ components:
         meta:
           timestamp: '2025-01-20T11:00:00Z'
           request_id: b6c7d8e9-f0a1-4b2c-3d4e-5f6a7b8c9d0e
+  headers:
+    CreatedResourceLocation:
+      description: URI of the created resource — its canonical GET (`/v1/companies/{company_id}/...` or `/v1/accounts/{account_id}/...`).
+      schema:
+        type: string
+        format: uri
 x-tagGroups:
   - name: Invoices
     x-icon: FileText
@@ -24762,6 +26083,7 @@ x-tagGroups:
     x-icon: Building2
     tags:
       - Accounts
+      - AccountImports
       - Provisioning
   - name: Invoice Series
     x-icon: List
@@ -24795,7 +26117,7 @@ x-tagGroups:
     x-icon: Building2
     tags:
       - CompanyRepresentation
-      - PublicCompanies
+      - AccountCompanies
       - Company
       - CompanyActivations
       - PublicCompanyRepresentations
