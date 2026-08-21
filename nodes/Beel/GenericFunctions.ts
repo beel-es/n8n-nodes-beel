@@ -11,7 +11,7 @@ import type {
 	IWebhookFunctions,
 	JsonObject,
 } from 'n8n-workflow';
-import { NodeApiError, NodeOperationError } from 'n8n-workflow';
+import { NodeApiError, NodeOperationError, sleep } from 'n8n-workflow';
 
 import { CONTRACT_PATHS } from './descriptions/generated/operations.generated';
 import { placeholderOf, scopeAxesOf } from './scope';
@@ -226,7 +226,7 @@ export async function beelApiRequest(
 					] ?? 0,
 				);
 				const waitMs = (retryAfter > 0 && retryAfter <= 120 ? retryAfter : 2 ** attempt + 1) * 1000;
-				await new Promise((resolve) => setTimeout(resolve, waitMs));
+				await sleep(waitMs);
 				continue;
 			}
 			throw new NodeApiError(this.getNode(), error as JsonObject, {
@@ -344,6 +344,8 @@ function currentParameter(context: ILoadOptionsFunctions, name: string): string 
 	try {
 		return ((context.getCurrentNodeParameter(name) as string) ?? '').trim();
 	} catch {
+		// getCurrentNodeParameter throws during editor configuration when the parameter is not yet
+		// available; return an empty string so the dropdown loads without a pre-fill.
 		return '';
 	}
 }
