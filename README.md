@@ -71,7 +71,7 @@ The **Company** dropdown is filled from `/v1/accounts/{account_id}/companies`, w
 
 The **BeeL Trigger** is the exception: webhook subscriptions belong to the account, not to a company, so one trigger receives the events of every NIF. Filter on the payload if you only want one.
 
-### Provisioners (gestorías, platforms)
+### Provisioners (tax advisory firms, platforms)
 
 If your key provisioned accounts for other people, the **Account** field picks which one an operation acts on — the contract allows `account_id` to be "your own account or an account you provisioned". Leave it empty and it resolves to the account the key belongs to, which is what you want on an ordinary key. The **Company** dropdown follows whichever account you pick, so onboarding a client's NIF and then operating on it is one workflow.
 
