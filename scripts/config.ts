@@ -116,7 +116,7 @@ export const OPERATION_NAMES: Record<string, string> = {
 	getCompanyIssuingReadiness: 'getIssuingReadiness',
 	listCompanyStats: 'getStats',
 	getCompanyFiscalSummary: 'getFiscalSummary',
-	// Account (provisioning). A platform — gestoría, SaaS, marketplace — creates
+	// Account (provisioning). A platform — tax advisory firm, SaaS, marketplace — creates
 	// and hands over accounts by API, repeatedly. `provisionAccount` is
 	// idempotent by `external_ref`, so a re-run never duplicates one.
 	provisionAccount: 'provision',

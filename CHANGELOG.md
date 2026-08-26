@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2
+
+Review fixes for the n8n community node submission. Replaced the Spanish term
+"gestoría" with "tax advisory firm" in code comments and the README, and
+republished through the GitHub Actions workflow so the package carries an npm
+provenance attestation (0.2.1 was published manually and lacked one).
+
 ## 0.2.0
 
 Migration to the company-scoped API. **Breaking**: BeeL retired the flat routes
@@ -53,7 +60,7 @@ key defaulted to, which on a multi-NIF account is the wrong NIF.
 
 The first cut of this migration exposed only what a self-employed user does for
 their own invoicing, and pushed account provisioning and payment integrations
-to "that is the dashboard". For a gestoría, a SaaS or a marketplace invoicing on
+to "that is the dashboard". For a tax advisory firm, a SaaS or a marketplace invoicing on
 behalf of others, the dashboard is precisely what does not scale: they do these
 things hundreds of times, by API. Fifteen operations come back:
 

@@ -401,7 +401,7 @@ describe('scoping', () => {
 
 	it('lets a provisioner name the account instead of using the key\'s own', async () => {
 		// The contract: account_id "may be your own account or an account you
-		// provisioned". Without this a gestoría could only ever reach itself.
+		// provisioned". Without this a tax advisory firm could only ever reach itself.
 		const managed = '99999999-8888-7777-6666-555555555555';
 		const { request } = await run('company', 'getAll', {
 			parameters: { activeAccount: managed, returnAll: false, limit: 10, filters: {} },

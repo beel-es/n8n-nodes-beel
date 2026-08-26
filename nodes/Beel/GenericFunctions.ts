@@ -49,7 +49,7 @@ export interface BeelScope {
 	 *
 	 * A provisioner operates on accounts it created, not only its own — the
 	 * contract is explicit that `account_id` "may be your own account or an
-	 * account you provisioned" — so a gestoría has to be able to name one.
+	 * account you provisioned" — so a tax advisory firm has to be able to name one.
 	 */
 	accountId?: string;
 }
