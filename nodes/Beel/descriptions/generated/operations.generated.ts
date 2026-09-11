@@ -349,6 +349,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "REJECTED",
 						"value": "REJECTED"
+					},
+					{
+						"name": "NOT SUBMITTED",
+						"value": "NOT_SUBMITTED"
 					}
 				],
 				"default": ""
@@ -1623,6 +1627,14 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"apiName": "send_automatically",
 						"displayName": "Send Automatically",
 						"description": "Only applies when `issue_directly` is `true`",
+						"type": "boolean",
+						"default": false
+					},
+					{
+						"name": "attach_source_invoices",
+						"apiName": "attach_source_invoices",
+						"displayName": "Attach Source Invoices",
+						"description": "Only applies when `send_automatically` is `true`",
 						"type": "boolean",
 						"default": false
 					},
@@ -3117,11 +3129,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"description": "If `true`, waits for PDF generation and returns the URL in the response",
 				"type": "boolean",
 				"default": false
+			},
+			{
+				"name": "attach_source_invoices",
+				"apiName": "attach_source_invoices",
+				"displayName": "Attach Source Invoices",
+				"description": "Only applies when the invoice has automatic email sending enabled",
+				"type": "boolean",
+				"default": false
 			}
 		],
 		"optionalCollectionName": "options",
 		"queryParamNames": [
-			"wait_for_pdf"
+			"wait_for_pdf",
+			"attach_source_invoices"
 		],
 		"paginated": false,
 		"isList": false,
@@ -3958,6 +3979,14 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"default": false
 					},
 					{
+						"name": "attach_source_invoices",
+						"apiName": "attach_source_invoices",
+						"displayName": "Attach Source Invoices",
+						"description": "Only applies when `send_automatically` is `true`",
+						"type": "boolean",
+						"default": false
+					},
+					{
 						"name": "email_config_recipients",
 						"apiName": "email_config.recipients",
 						"displayName": "Email Config Recipients",
@@ -4242,6 +4271,39 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 	},
 	{
 		"resource": "invoice",
+		"operation": "getPreviewImage",
+		"displayName": "Get Preview Image",
+		"action": "Get the preview image URL of an invoice",
+		"description": "Returns a temporary pre-signed URL to a preview image (WebP) of the invoice, suitable for inline rendering",
+		"operationId": "getCompanyInvoicePreview",
+		"method": "GET",
+		"path": "/v1/companies/{company_id}/invoices/{invoice_id}/preview",
+		"pathParams": [
+			{
+				"name": "invoiceId",
+				"apiName": "invoice_id",
+				"displayName": "Invoice ID",
+				"description": "Invoice ID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": "",
+				"placeholder": "550e8400-e29b-41d4-a716-446655440000"
+			}
+		],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "invoice",
 		"operation": "schedule",
 		"displayName": "Schedule",
 		"action": "Schedule or reschedule an invoice",
@@ -4425,6 +4487,14 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"displayName": "Attach Pdf",
 				"type": "boolean",
 				"default": true
+			},
+			{
+				"name": "attach_source_invoices",
+				"apiName": "attach_source_invoices",
+				"displayName": "Attach Source Invoices",
+				"description": "Attach a ZIP archive (`suplidos_<invoice-number>.zip`) containing the PDFs of the source invoices referenced by the invoice's SUPLIDO consolidation lines (`source_invoice_ids`)",
+				"type": "boolean",
+				"default": false
 			},
 			{
 				"name": "language",
@@ -6867,7 +6937,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		],
 		"paginated": true,
 		"isList": true,
-		"listKey": ""
+		"listKey": "series"
 	},
 	{
 		"resource": "series",
@@ -7338,7 +7408,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"optionalCollectionName": "options",
 		"queryParamNames": [],
 		"paginated": false,
-		"isList": true,
+		"isList": false,
 		"listKey": ""
 	},
 	{
@@ -7357,7 +7427,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"optionalCollectionName": "updateFields",
 		"queryParamNames": [],
 		"paginated": false,
-		"isList": true,
+		"isList": false,
 		"listKey": ""
 	},
 	{
@@ -7472,7 +7542,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		],
 		"paginated": true,
 		"isList": true,
-		"listKey": ""
+		"listKey": "recurring_invoices"
 	},
 	{
 		"resource": "recurringInvoice",
@@ -7666,6 +7736,24 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 			}
 		],
 		"optionalFields": [
+			{
+				"name": "frequency",
+				"apiName": "frequency",
+				"displayName": "Frequency",
+				"description": "Generation cadence",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "MONTHLY",
+						"value": "MONTHLY"
+					}
+				],
+				"default": ""
+			},
 			{
 				"name": "preview_days",
 				"apiName": "preview_days",
@@ -7904,6 +7992,24 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					"maxLength": 255
 				},
 				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "frequency",
+				"apiName": "frequency",
+				"displayName": "Frequency",
+				"description": "Generation cadence",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "MONTHLY",
+						"value": "MONTHLY"
+					}
+				],
 				"default": ""
 			},
 			{
@@ -8436,7 +8542,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"optionalCollectionName": "options",
 		"queryParamNames": [],
 		"paginated": false,
-		"isList": true,
+		"isList": false,
 		"listKey": ""
 	},
 	{
@@ -8502,6 +8608,24 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 			}
 		],
 		"optionalFields": [
+			{
+				"name": "frequency",
+				"apiName": "frequency",
+				"displayName": "Frequency",
+				"description": "Generation cadence",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "MONTHLY",
+						"value": "MONTHLY"
+					}
+				],
+				"default": ""
+			},
 			{
 				"name": "end_date",
 				"apiName": "end_date",
@@ -9684,7 +9808,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		],
 		"paginated": true,
 		"isList": true,
-		"listKey": ""
+		"listKey": "companies"
 	},
 	{
 		"resource": "company",
@@ -10462,7 +10586,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"optionalCollectionName": "options",
 		"queryParamNames": [],
 		"paginated": false,
-		"isList": true,
+		"isList": false,
 		"listKey": ""
 	},
 	{
@@ -11473,7 +11597,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"optionalCollectionName": "options",
 		"queryParamNames": [],
 		"paginated": false,
-		"isList": true,
+		"isList": false,
 		"listKey": ""
 	},
 	{
@@ -11587,7 +11711,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"queryParamNames": [],
 		"paginated": true,
 		"isList": true,
-		"listKey": ""
+		"listKey": "events"
 	},
 	{
 		"resource": "paymentEvent",

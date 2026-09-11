@@ -132,10 +132,14 @@ describe('pagination', () => {
  * The contract can be wrong about the shape of a response, and when it is, the
  * node does not fail: it lists zero items behind a 200 and nobody notices.
  *
- * This happened. `GET /v1/accounts/{account_id}/companies` declares `data` as an
- * array while the API returns `data.companies[]`, so "Company → Get Many"
+ * This happened. `GET /v1/accounts/{account_id}/companies` declared `data` as an
+ * array while the API returned `data.companies[]`, so "Company → Get Many"
  * answered ZERO companies against the real API. No test caught it, because every
  * test answers what the contract says rather than what the server sends.
+ *
+ * That particular declaration has since been fixed upstream. The tolerance stays:
+ * it costs nothing, and the next such mismatch will be found the same way — by a
+ * user, in production, unless the node keeps looking past what it was told.
  */
 describe('when the contract gets the response shape wrong', () => {
 	it('finds the list anyway instead of silently returning none', async () => {

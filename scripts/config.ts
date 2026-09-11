@@ -23,7 +23,11 @@ export const RESOURCES: Array<{ resource: string; displayName: string; tags: str
 	{ resource: 'recurringInvoice', displayName: 'Recurring Invoice', tags: ['CompanyRecurringInvoices'] },
 	{ resource: 'configuration', displayName: 'Configuration', tags: ['CompanyTaxConfiguration', 'CompanyVeriFactuConfiguration', 'TaxTypes', 'InvoiceCustomization'] },
 	{ resource: 'nif', displayName: 'NIF', tags: ['NIF'] },
-	{ resource: 'company', displayName: 'Company', tags: ['PublicCompanies', 'Company', 'CompanyRepresentation', 'CompanyFiscalSummary'] },
+	// `AccountCompanies` covers listing and creating companies, which live at the
+	// account level rather than inside one; the contract used to tag them
+	// `PublicCompanies`. They stay on the `company` resource here either way —
+	// the tag is a grouping in the contract, not a name users see.
+	{ resource: 'company', displayName: 'Company', tags: ['AccountCompanies', 'Company', 'CompanyRepresentation', 'CompanyFiscalSummary'] },
 	{ resource: 'account', displayName: 'Account', tags: ['Provisioning', 'Accounts'] },
 	{ resource: 'paymentConnection', displayName: 'Payment Connection', tags: ['CompanyPaymentConnections'] },
 	{ resource: 'paymentEvent', displayName: 'Payment Event', tags: ['CompanyPaymentEvents'] },
@@ -53,6 +57,10 @@ export const OPERATION_NAMES: Record<string, string> = {
 	setCompanyInvoiceStatus: 'setStatus',
 	// Scheduling is a sub-resource: PUT schedules or reschedules, DELETE unschedules.
 	getCompanyInvoiceSchedule: 'getSchedule',
+	// Returns a pre-signed URL to a WebP render of the invoice, not the bytes, so
+	// it is plain JSON — unlike the PDF endpoints, which are hand-written because
+	// they move a file. Handy for posting a thumbnail into Slack or an email.
+	getCompanyInvoicePreview: 'getPreviewImage',
 	setCompanyInvoiceSchedule: 'schedule',
 	deleteCompanyInvoiceSchedule: 'unschedule',
 	sendCompanyInvoice: 'send',
@@ -190,13 +198,10 @@ export const EXCLUDED_OPERATION_IDS = [
 	// Bulk, import and export — n8n's own batching and file nodes do this better.
 	'createCompanyCustomersBulk', 'deleteCompanyCustomersBulk',
 	'createCompanyCustomerImport', 'previewCompanyCustomerImport', 'downloadCustomerImportTemplate',
+	'createAccountImport', 'previewAccountImport', 'downloadAccountImportTemplate',
 	'createCompanyProductsBulk', 'deleteCompanyProductsBulk',
 	'createCompanyInvoiceBatch', 'createCompanyInvoicePdfArchive', 'createCompanyInvoiceDelivery',
 	'createCompanyInvoiceExport',
-	// `PUT /v1/configuration/series/{series_id}`: the only flat route the contract
-	// does not mark deprecated, though every sibling is and the company-scoped
-	// `patchCompanySeries` replaces it. Excluded by hand until the flag catches up.
-	'updateSeries',
 	// One-off configuration, genuinely done once in the dashboard: branding,
 	// template customisation, and the tax/VeriFactu settings of a NIF.
 	'updateMe', 'updateCompanyTaxConfiguration', 'updateCompanyVeriFactuConfiguration',
