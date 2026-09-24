@@ -461,6 +461,35 @@ export async function getSeries(this: ILoadOptionsFunctions): Promise<INodePrope
 	}));
 }
 
+/** The company's payment connections, for the connection pickers. */
+export async function getPaymentConnections(
+	this: ILoadOptionsFunctions,
+): Promise<INodePropertyOptions[]> {
+	// Not paginated: `data.connections` holds every connection of the NIF.
+	const response = (await beelApiRequest.call(
+		this,
+		'GET',
+		contractPath('listCompanyPaymentConnections'),
+		undefined,
+		{},
+		currentScope(this),
+	)) as IBeelEnvelope;
+	const connections = itemsOf(response?.data, 'connections');
+
+	return connections.map((connection) => {
+		const provider = String(connection.provider ?? '');
+		const label = provider ? provider.charAt(0).toUpperCase() + provider.slice(1) : 'Connection';
+		const account = (connection.external_account_name ?? connection.external_account_id) as
+			| string
+			| undefined;
+		return {
+			name: account ? `${label} — ${account}` : label,
+			value: connection.id as string,
+			description: connection.status ? `Status: ${String(connection.status)}` : undefined,
+		};
+	});
+}
+
 /** Registered customers, for the recipient pickers. */
 export async function getCustomers(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
 	const customers = await beelApiRequestAllItems.call(
@@ -506,7 +535,11 @@ export async function getWebhookEvents(
 	}));
 }
 
-/** Mirrors `WebhookEventTypeEnum` in openapi/public-api.yaml. */
+/**
+ * Labels for `WebhookEventTypeEnum` in openapi/public-api.yaml. The values come
+ * from the contract (`CONTRACT_WEBHOOK_EVENTS`); a test fails when the two
+ * disagree, so an event the API adds cannot go missing from the Trigger.
+ */
 export const WEBHOOK_EVENTS = [
 	{
 		name: 'Invoice Issued',
@@ -514,24 +547,35 @@ export const WEBHOOK_EVENTS = [
 		description: 'An invoice was issued (numbered and finalised)',
 	},
 	{
-		name: 'Invoice Voided',
-		value: 'invoice.voided',
-		description: 'An issued invoice was voided',
-	},
-	{
 		name: 'Invoice Email Sent',
 		value: 'invoice.email.sent',
 		description: 'An invoice was sent by email',
 	},
 	{
-		name: 'VeriFactu Status Updated',
-		value: 'verifactu.status.updated',
-		description: 'AEAT accepted or rejected a VeriFactu submission',
+		name: 'Invoice PDF Generated',
+		value: 'invoice.pdf.generated',
+		description: 'The PDF of an invoice was (re)rendered, so any cached copy is stale',
+	},
+	{
+		name: 'Invoice Voided',
+		value: 'invoice.voided',
+		description: 'An issued invoice was voided',
 	},
 	{
 		name: 'Recurring Invoice Paused',
 		value: 'recurring_invoice.paused',
 		description: 'A recurring invoice was paused (e.g. after repeated failures)',
+	},
+	{
+		name: 'Invoice Schedule Failed',
+		value: 'invoice.schedule_failed',
+		description:
+			'A scheduled invoice could not be issued on its date; it stays a draft until issued by hand',
+	},
+	{
+		name: 'VeriFactu Status Updated',
+		value: 'verifactu.status.updated',
+		description: 'AEAT accepted or rejected a VeriFactu submission',
 	},
 	{
 		name: 'Account Claimed',

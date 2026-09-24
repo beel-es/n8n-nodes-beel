@@ -17,7 +17,14 @@ import {
 	buildOperationSelector,
 	mergeProperties,
 } from './descriptions/propertyBuilder';
-import { getAccounts, getCompanies, getCustomers, getProducts, getSeries } from './GenericFunctions';
+import {
+	getAccounts,
+	getCompanies,
+	getCustomers,
+	getPaymentConnections,
+	getProducts,
+	getSeries,
+} from './GenericFunctions';
 import { executeGeneratedOperation } from './genericExecutor';
 import {
 	downloadInvoicePdf,
@@ -117,7 +124,7 @@ export class Beel implements INodeType {
 	};
 
 	methods = {
-		loadOptions: { getAccounts, getCompanies, getCustomers, getProducts, getSeries },
+		loadOptions: { getAccounts, getCompanies, getCustomers, getPaymentConnections, getProducts, getSeries },
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {

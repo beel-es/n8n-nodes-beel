@@ -24,6 +24,7 @@ import {
 	OPERATION_NAMES,
 	REFERENCED_OPERATION_IDS,
 	RESERVED_PARAMETER_NAMES,
+	KEEP_NAME_ON_VALIDATION_CHANGE,
 	RESOURCES,
 	TAX_PERCENTAGES,
 } from './config';
@@ -331,9 +332,9 @@ function toField(apiName: string, rawSchema: Json, required: boolean, depth = 0)
 	const uiOverride = FIELD_UI_OVERRIDES[apiName] ?? {};
 
 	const base = {
-		name: apiName,
+		name: uiOverride.name ?? apiName,
 		apiName,
-		displayName: titleCase(apiName),
+		displayName: uiOverride.displayName ?? titleCase(apiName),
 		description: uiOverride.description ?? firstSentence(schema.description),
 		...(required ? { required: true } : {}),
 		...(validation ? { validation } : {}),
@@ -641,6 +642,11 @@ const operations: GeneratedOperation[] = Object.entries(OPERATION_NAMES)
 
 const signatures = new Map<string, string>();
 
+function withoutValidation(signature: string): string {
+	const { validation, ...rest } = JSON.parse(signature) as Record<string, unknown>;
+	return JSON.stringify(rest);
+}
+
 for (const operation of operations) {
 	const suffix = `${operation.resource}_${operation.operation}`;
 
@@ -662,6 +668,13 @@ for (const operation of operations) {
 			continue;
 		}
 		if (existing === signature) continue;
+		if (
+			KEEP_NAME_ON_VALIDATION_CHANGE.includes(operation.operationId) &&
+			field.type === 'string' &&
+			withoutValidation(existing) === withoutValidation(signature)
+		) {
+			continue;
+		}
 
 		field.name = `${field.name}_${suffix}`;
 		signatures.set(field.name, signature);
@@ -726,6 +739,16 @@ const deprecatedInUse = exposed.filter((operationId) => specOperations.get(opera
 /** Exclusions the contract has since dropped, so the list does not rot. */
 const staleExclusions = EXCLUDED_OPERATION_IDS.filter((operationId) => !specOperations.has(operationId));
 
+// ── Webhook events ──────────────────────────────────────────────────────────
+// The Trigger's event list mirrors the contract's enum. Emitting it here means a
+// re-sync that adds an event fails the test that pins the Trigger's labels,
+// instead of the dropdown silently missing it.
+
+const webhookEvents = spec.components?.schemas?.WebhookEventTypeEnum?.enum as string[] | undefined;
+if (!webhookEvents?.length) {
+	throw new Error('The contract has no `WebhookEventTypeEnum`: the BeeL Trigger has nothing to subscribe to.');
+}
+
 // ── Emit ────────────────────────────────────────────────────────────────────
 
 const output = `/**
@@ -757,6 +780,9 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = ${JSON.stringify(opera
  * contract drops one, so a retired route can never be left hardcoded in a caller.
  */
 export const CONTRACT_PATHS: Record<string, string> = ${JSON.stringify(contractPaths, null, '\t')};
+
+/** \`WebhookEventTypeEnum\`, in contract order: every event a subscription can listen to. */
+export const CONTRACT_WEBHOOK_EVENTS: string[] = ${JSON.stringify(webhookEvents, null, '\t')};
 `;
 
 /**

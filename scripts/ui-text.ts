@@ -16,6 +16,12 @@
 
 /** A field's UI text, overriding whatever the contract's schema implies. */
 export type FieldUiOverride = {
+	/**
+	 * The parameter's n8n name and label, for a property whose own name is a
+	 * Spanish word. The key sent to the API is still the contract's.
+	 */
+	name?: string;
+	displayName?: string;
 	default?: string;
 	placeholder?: string;
 	description?: string;
@@ -46,6 +52,12 @@ export const FIELD_UI_OVERRIDES: Record<string, FieldUiOverride> = {
 	trade_name: { placeholder: 'My Company' },
 	// "María García López", on the company's legal representative.
 	full_name: { placeholder: 'Jane Smith' },
+	// A payment connection's series, one per Spanish invoice type: `ordinaria`,
+	// `simplificada` (simplified) and `rectificativa` (corrective, for refunds).
+	ordinaria: { name: 'ordinary', displayName: 'Ordinary Invoice Series' },
+	simplificada: { name: 'simplified', displayName: 'Simplified Invoice Series' },
+	rectificativa: { name: 'corrective', displayName: 'Corrective Invoice Series' },
+	simplificada_threshold: { name: 'simplified_threshold', displayName: 'Simplified Invoice Threshold' },
 };
 
 /**

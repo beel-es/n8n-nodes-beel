@@ -7,8 +7,10 @@ import { parse } from 'yaml';
 
 import {
 	CONTRACT_PATHS,
+	CONTRACT_WEBHOOK_EVENTS,
 	GENERATED_OPERATIONS,
 } from '../nodes/Beel/descriptions/generated/operations.generated';
+import { WEBHOOK_EVENTS } from '../nodes/Beel/GenericFunctions';
 import { MANUAL_OPERATIONS } from '../nodes/Beel/manualOperations';
 import { scopeAxesOf } from '../nodes/Beel/scope';
 
@@ -130,8 +132,47 @@ describe('the generated operations match the contract', () => {
 		)!;
 
 		expect(invoices).toMatchObject({ paginated: true, isList: true, listKey: 'invoices' });
-		expect(companies).toMatchObject({ isList: true, listKey: '' });
+		expect(companies).toMatchObject({ isList: true, listKey: 'companies' });
 		// A single invoice has a `lines` array, which is a field, not a collection.
 		expect(single.isList).toBe(false);
+	});
+
+	/**
+	 * The Trigger once listed eight events while the contract had ten, so
+	 * `invoice.pdf.generated` and `invoice.schedule_failed` could not be
+	 * subscribed to from n8n. The labels are hand-written; the set is not.
+	 */
+	it('offers exactly the webhook events the contract defines', () => {
+		expect(WEBHOOK_EVENTS.map((event) => event.value).sort()).toEqual(
+			[...CONTRACT_WEBHOOK_EVENTS].sort(),
+		);
+	});
+
+	/**
+	 * n8n stores values by parameter name, so a contract that only tightens a
+	 * string's validation must not rename the field under saved workflows.
+	 */
+	it('keeps the shipped name of a field whose validation tightened', () => {
+		for (const operation of ['create', 'createFromInvoice']) {
+			const name = GENERATED_OPERATIONS.find(
+				(candidate) => candidate.resource === 'recurringInvoice' && candidate.operation === operation,
+			)!.requiredFields.find((field) => field.apiName === 'name');
+
+			expect(name?.name).toBe('name');
+		}
+	});
+
+	it('picks a payment connection by id from a dropdown', () => {
+		const paymentOperations = GENERATED_OPERATIONS.filter((operation) =>
+			operation.path.includes('{connection_id}'),
+		);
+		expect(paymentOperations.length).toBeGreaterThan(0);
+
+		for (const operation of paymentOperations) {
+			const connection = operation.pathParams.find((field) => field.apiName === 'connection_id');
+			expect(connection?.loadOptionsMethod, `${operation.resource}.${operation.operation}`).toBe(
+				'getPaymentConnections',
+			);
+		}
 	});
 });

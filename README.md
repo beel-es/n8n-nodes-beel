@@ -113,7 +113,7 @@ Create ──▶ Generate Representation ──▶ Download Representation
 
 ### Recurring Invoice
 
-Create · Create From Invoice · Get · Get Many · Update · Delete · Set Status · Generate Now · Skip Next · Get Next Occurrence · Get History.
+Create · Create From Invoice · Get · Get Many · Update · Delete · Set Status · Generate Now · Skip Next · Get Next Occurrence · Get History · Get Stats.
 
 Pausing and resuming are **Set Status** (`PAUSED` / `ACTIVE`), matching invoices. `COMPLETED` is reached on its own when the schedule runs out and cannot be set.
 
@@ -125,9 +125,9 @@ For platforms that onboard clients: Provision · Get · Get Many · Get Usage ·
 
 ### Payment Connection, Payment Event
 
-`Payment Connection → Initiate` opens a white-label authorization so a managed NIF's holder can connect Stripe; from then on BeeL auto-invoices every charge.
+`Payment Connection → Initiate` opens a white-label authorization so a managed NIF's holder can connect Stripe; from then on BeeL auto-invoices every charge. `Update` changes a connection's settings (auto-invoicing, series, tax-inclusive prices, filters). A connection is addressed by its ID, picked from the **Connection ID** dropdown.
 
-`Payment Event` is the other half, and the reason it is here: automatic invoicing sometimes fails, **there is no webhook for it**, and the list takes no server-side filter. A charge that took money without producing an invoice is only visible by sweeping this collection and sifting on `needs_action`. Each event carries `failure_category` and `failure_reason`, plus `retry_available` and `draft_available` telling you which recovery it accepts — `Retry` when the cause was transient (a missing default series, say), `Generate Draft` when it needs a human to look before issuing.
+`Payment Event` is the other half, and the reason it is here: automatic invoicing sometimes fails, **there is no webhook for it**, and a charge that took money without producing an invoice is only visible by sweeping this collection — **Get Many** filters on `needs_action`, `status`, `failure_category` and dates. Each event carries `failure_category` and `failure_reason`, plus `retry_available` and `draft_available` telling you which recovery it accepts — `Retry` when the cause was transient (a missing default series, say), `Generate Draft` when it needs a human to look before issuing. `Resolve` closes an event invoiced outside BeeL, `Discard` one that should never be invoiced, and `Restore` undoes a discard.
 
 ### Customer, Product, Series, Configuration, NIF
 
@@ -139,7 +139,7 @@ Full CRUD on customers, products and numbering series, plus series Set Default, 
 
 Drop in a **BeeL Trigger**, choose your events, activate the workflow — the node registers the subscription with BeeL and stores the signing secret. Deactivating deletes it. If the URL or the event list drifts, the next activation realigns the subscription without losing the secret.
 
-Events: `invoice.issued`, `invoice.email.sent`, `invoice.voided`, `verifactu.status.updated`, `recurring_invoice.paused`, `account.claimed`, `company.created`, `representation.signed`.
+Events: `invoice.issued`, `invoice.email.sent`, `invoice.pdf.generated`, `invoice.voided`, `invoice.schedule_failed`, `recurring_invoice.paused`, `verifactu.status.updated`, `account.claimed`, `company.created`, `representation.signed`.
 
 A subscription belongs to the account, not to a company, so on a multi-NIF account one trigger receives the events of every NIF — filter on the payload if you only want one.
 
