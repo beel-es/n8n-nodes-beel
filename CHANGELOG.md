@@ -15,6 +15,9 @@ payment connections or payment events: a connection is now addressed by its ID.
 - `VeriFactu Enabled` is gone from Invoice → Create, Update, Create Corrective and
   Convert to Invoice, and from Recurring Invoice → Create, Update and Create From
   Invoice: the contract no longer accepts it on these requests.
+- **Series → Create** requires **Document Type**, which starts on `STANDARD`:
+  the API rejects a series created without one, or with `UNASSIGNED`. Saved
+  workflows that did not set it now send `STANDARD`.
 
 ### Added
 
@@ -35,6 +38,10 @@ payment connections or payment events: a connection is now addressed by its ID.
 ### Fixed
 
 - Company → Get Many follows the list shape the contract now returns (`data.companies`).
+- The **Country** field on addresses no longer says the API expects the Spanish
+  name: it takes an ISO code or the country's name in English, Spanish or
+  Catalan, and **Country Code** is the field that decides. If both are set they
+  must name the same country.
 
 ## 0.2.2
 

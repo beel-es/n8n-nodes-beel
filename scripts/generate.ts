@@ -364,7 +364,7 @@ function toField(apiName: string, rawSchema: Json, required: boolean, depth = 0)
 			};
 		}
 
-		return { ...base, type: 'options', options, default: schema.default ?? options[0].value };
+		return { ...base, type: 'options', options, default: uiOverride.default ?? schema.default ?? options[0].value };
 	}
 
 	if (LOAD_OPTIONS_BY_FIELD[apiName] && schema.type === 'string') {

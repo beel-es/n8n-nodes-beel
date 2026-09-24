@@ -120,6 +120,14 @@ describe('the generated operations match the contract', () => {
 		expect(exemption?.options?.[0].value).toBe('');
 	});
 
+	it('requires a series document type without starting on one the API rejects', () => {
+		const create = GENERATED_OPERATIONS.find((operation) => operation.operationId === 'createCompanySeries')!;
+		const documentType = create.requiredFields.find((field) => field.apiName === 'document_type');
+
+		expect(documentType?.required).toBe(true);
+		expect(documentType?.default).toBe('STANDARD');
+	});
+
 	it('knows which endpoints are paginated and where their list lives', () => {
 		const invoices = GENERATED_OPERATIONS.find(
 			(operation) => operation.resource === 'invoice' && operation.operation === 'getAll',
