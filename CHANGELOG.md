@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.3.0
+
+Sync with the current API contract. **Breaking** for saved workflows that use
+payment connections or payment events: a connection is now addressed by its ID.
+
+### Breaking
+
+- **Payment Connection → Disconnect** and **Payment Event → Get, Get Many, Retry,
+  Generate Draft** take a **Connection ID** (a dropdown of the company's
+  connections) instead of the provider name. The contract replaced `{provider}`
+  with `{connection_id}` in these paths, so saved workflows lose the old
+  `Provider` value and need the connection picked again.
+- `VeriFactu Enabled` is gone from Invoice → Create, Update, Create Corrective and
+  Convert to Invoice, and from Recurring Invoice → Create, Update and Create From
+  Invoice: the contract no longer accepts it on these requests.
+
+### Added
+
+- **BeeL Trigger**: `invoice.pdf.generated` and `invoice.schedule_failed`. The
+  Trigger's event list is now checked against the contract by a test, so an event
+  the API adds cannot go missing.
+- **Invoice → Get Preview**: a signed URL to a rendered image of the invoice.
+- **Recurring Invoice → Get Stats**, and `Frequency`, `Draft in Advance` and
+  `Max Invoices` on create and update; price mode, line totals and exemption
+  reason on recurring invoice lines.
+- **Payment Connection → Update**: auto-invoicing, series per invoice type,
+  tax-inclusive prices and filters.
+- **Payment Event → Resolve, Discard, Restore**, and server-side filters on
+  **Get Many** (`needs_action`, status, failure category, event kind, amount and
+  date range, text search).
+- `Attach Source Invoices` on Invoice → Create and Create Corrective.
+
+### Fixed
+
+- Company → Get Many follows the list shape the contract now returns (`data.companies`).
+
 ## 0.2.2
 
 Review fixes for the n8n community node submission. Replaced the Spanish term
