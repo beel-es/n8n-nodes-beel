@@ -59,6 +59,10 @@ export const OPERATION_NAMES: Record<string, string> = {
 	convertCompanyProformaToInvoice: 'convertToInvoice',
 	// A signed URL to a rendered image of the invoice, returned as JSON.
 	getCompanyInvoicePreview: 'getPreview',
+	// The invoice's VeriFactu records (registration, and cancellation if voided),
+	// each with its own AEAT status: what to read when `verifactu` on the invoice
+	// only summarises the registration.
+	listCompanyInvoiceVerifactuRecords: 'getVerifactuRecords',
 	// Customer
 	listCompanyCustomers: 'getAll',
 	createCompanyCustomer: 'create',

@@ -108,12 +108,21 @@ function camelCase(name: string): string {
 function enumOptions(schema: Json): GeneratedField['options'] | undefined {
 	if (!Array.isArray(schema.enum)) return undefined;
 
-	// Enum semantics are documented as "- VALUE: meaning" bullet lists.
+	// Enum semantics are documented as "- VALUE: meaning" bullet lists. Only the
+	// bullet's own line is read; when the meaning wraps onto the next line, it is
+	// cut at the last sentence that ends on this one, so the option does not end
+	// on the first word of a sentence the line break interrupted.
 	const docs = new Map<string, string>();
-	for (const line of String(schema.description ?? '').split('\n')) {
+	const lines = String(schema.description ?? '').split('\n');
+	lines.forEach((line, i) => {
 		const match = line.match(/^\s*[-*]\s*`?'?([A-Za-z0-9_.]+)'?`?\s*[:–-]\s*(.+)$/);
-		if (match) docs.set(match[1], match[2].trim());
-	}
+		if (!match) return;
+		let meaning = match[2].trim();
+		const wraps = /^\s+[^\s*-]/.test(lines[i + 1] ?? '');
+		const lastStop = wraps ? [...meaning.matchAll(/[.!?](?=\s+[A-Z])/g)].pop() : undefined;
+		if (lastStop?.index !== undefined) meaning = meaning.slice(0, lastStop.index + 1);
+		docs.set(match[1], meaning);
+	});
 
 	return (schema.enum as Array<string | number>).map((value) => ({
 		// The label may need translating (the value never does — it is the API's).

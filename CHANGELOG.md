@@ -34,6 +34,19 @@ payment connections or payment events: a connection is now addressed by its ID.
   **Get Many** (`needs_action`, status, failure category, event kind, amount and
   date range, text search).
 - `Attach Source Invoices` on Invoice → Create and Create Corrective.
+- **Invoice → Get Verifactu Records**: the invoice's VeriFactu records (its
+  registration and, if it was voided, its cancellation), each with its own status.
+- **Payment Method** filter on Invoice → Get Many.
+
+### Changed in the API
+
+- A **Simplified** invoice whose recipient carries a NIF or an alternative ID is
+  rejected with `SIMPLIFIED_INVOICE_FORBIDS_IDENTIFIED_RECIPIENT` when it is
+  created, updated or issued, at any amount. Use **Standard** for an identified
+  recipient.
+- An alternative ID of type `NIF_IVA` (02) must be for an EU member state other
+  than Spain (`ALTERNATIVE_ID_VAT_REQUIRES_EU_COUNTRY`) and follow that country's
+  VAT number structure, prefix included (`ALTERNATIVE_ID_VAT_INVALID_FORMAT`).
 
 ### Fixed
 

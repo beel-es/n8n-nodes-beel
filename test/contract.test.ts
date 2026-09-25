@@ -128,6 +128,29 @@ describe('the generated operations match the contract', () => {
 		expect(documentType?.default).toBe('STANDARD');
 	});
 
+	it('exposes the VeriFactu records of an invoice', () => {
+		const records = GENERATED_OPERATIONS.find(
+			(operation) => operation.operationId === 'listCompanyInvoiceVerifactuRecords',
+		);
+
+		expect(records).toMatchObject({ resource: 'invoice', operation: 'getVerifactuRecords', method: 'GET' });
+	});
+
+	it('filters invoices by payment method', () => {
+		const list = GENERATED_OPERATIONS.find((operation) => operation.operationId === 'listCompanyInvoices')!;
+		const paymentMethod = list.filters.find((field) => field.apiName === 'payment_method');
+
+		expect(paymentMethod?.options?.map((option) => option.value)).toContain('DIRECT_DEBIT');
+	});
+
+	it('does not end an enum option on the first word of a wrapped sentence', () => {
+		const list = GENERATED_OPERATIONS.find((operation) => operation.operationId === 'listCompanyInvoices')!;
+		const type = list.filters.find((field) => field.apiName === 'type');
+		const simplified = type?.options?.find((option) => option.value === 'SIMPLIFIED');
+
+		expect(simplified?.description).toBe('Simplified invoice (ticket), for a recipient that is not identified.');
+	});
+
 	it('knows which endpoints are paginated and where their list lives', () => {
 		const invoices = GENERATED_OPERATIONS.find(
 			(operation) => operation.resource === 'invoice' && operation.operation === 'getAll',

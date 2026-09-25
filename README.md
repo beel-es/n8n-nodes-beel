@@ -86,12 +86,17 @@ If your key provisioned accounts for other people, the **Account** field picks w
 | **Lifecycle** | Create · Get · Get Many · Update · Delete · Issue · Void · Create Corrective · Convert Proforma |
 | **Delivery** | Send by Email · Set Status · Download PDF |
 | **Scheduling** | Get Schedule · Schedule · Unschedule · Duplicate |
+| **VeriFactu** | Get Verifactu Records |
 
 **Lines** are a repeatable collection: description, quantity, unit, unit price, discount, tax, IRPF, equivalence surcharge and the exemption reasons from Ley 37/1992. The tax percentage dropdown follows the tax type — IVA offers 0/4/10/21, IGIC 0/3/5/7/9.5/15/20, IPSI 0.5/1/2/4/8/10, and only `OTHER` accepts a free value.
 
 **Recipient** is either an existing customer picked from a dropdown, or filled inline for a one-off. Pick a customer and the address fields stay out of the request entirely.
 
 **Options** decide what happens on creation: leave it a draft, `Issue Directly` for a definitive number and a VeriFactu submission, `Wait For PDF`, `Send Automatically` to email it.
+
+**Get Verifactu Records** lists the invoice's VeriFactu records — its registration and, if it was voided, its cancellation — each with its own status and the AEAT's error code when it gave one.
+
+A **Simplified** invoice is for a recipient who is not identified: the API rejects one whose recipient carries a NIF or an alternative ID (`SIMPLIFIED_INVOICE_FORBIDS_IDENTIFIED_RECIPIENT`), at any amount. Use **Standard** for an identified recipient.
 
 **Set Status** covers what used to be three operations — Mark as Paid, Mark as Sent and Revert to Issued are now values of one commercial status, which is how the API models it. Issuing and voiding stay separate: they are fiscal acts, not statuses. **Schedule** both schedules and reschedules, so there is nothing to undo before moving a date.
 

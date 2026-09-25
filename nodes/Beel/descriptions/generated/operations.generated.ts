@@ -121,7 +121,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "OVERDUE",
 						"value": "OVERDUE",
-						"description": "Reserved. No operation sets this status and it is not computed from `due_date`;"
+						"description": "Reserved."
 					},
 					{
 						"name": "RECTIFIED",
@@ -131,7 +131,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "VOIDED",
 						"value": "VOIDED",
-						"description": "Cancelled invoice. Reached either through a direct void request or"
+						"description": "Cancelled invoice."
 					},
 					{
 						"name": "CONVERTED",
@@ -141,12 +141,70 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "ACTIVE",
 						"value": "ACTIVE",
-						"description": "Active proforma. The single working state of a proforma (non-fiscal"
+						"description": "Active proforma."
 					},
 					{
 						"name": "EXPIRED",
 						"value": "EXPIRED",
-						"description": "Proforma whose offer validity (`valid_until`) has passed. Derived on read"
+						"description": "Proforma whose offer validity (`valid_until`) has passed."
+					}
+				],
+				"multipleValues": true,
+				"default": []
+			},
+			{
+				"name": "payment_method",
+				"apiName": "payment_method",
+				"displayName": "Payment Method",
+				"description": "Filter by payment method",
+				"validation": {
+					"minItems": 1
+				},
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "NONE",
+						"value": "NONE",
+						"description": "no payment information is shown."
+					},
+					{
+						"name": "BANK TRANSFER",
+						"value": "BANK_TRANSFER",
+						"description": "bank transfer to the IBAN of the payment details; the only method"
+					},
+					{
+						"name": "CARD",
+						"value": "CARD",
+						"description": "card payment."
+					},
+					{
+						"name": "CASH",
+						"value": "CASH",
+						"description": "cash payment."
+					},
+					{
+						"name": "CHECK",
+						"value": "CHECK",
+						"description": "payment by cheque."
+					},
+					{
+						"name": "DIRECT DEBIT",
+						"value": "DIRECT_DEBIT",
+						"description": "direct debit from the customer's bank account."
+					},
+					{
+						"name": "BIZUM",
+						"value": "BIZUM",
+						"description": "payment through Bizum."
+					},
+					{
+						"name": "OTHER",
+						"value": "OTHER",
+						"description": "any other method."
 					}
 				],
 				"multipleValues": true,
@@ -176,7 +234,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "SIMPLIFIED",
 						"value": "SIMPLIFIED",
-						"description": "Simplified invoice (ticket). The recipient's `nif` or `alternative_id`"
+						"description": "Simplified invoice (ticket), for a recipient that is not identified."
 					},
 					{
 						"name": "PROFORMA",
@@ -404,6 +462,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"queryParamNames": [
 			"search",
 			"status",
+			"payment_method",
 			"type",
 			"fiscal_only",
 			"customer_id",
@@ -591,7 +650,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "alternative_id_number",
 						"apiName": "alternative_id.number",
 						"displayName": "Alternative ID Number",
-						"description": "Format: max 20 characters",
+						"description": "Identifier number (max 20 characters)",
 						"validation": {
 							"minLength": 1,
 							"maxLength": 20
@@ -1977,7 +2036,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "alternative_id_number",
 						"apiName": "alternative_id.number",
 						"displayName": "Alternative ID Number",
-						"description": "Format: max 20 characters",
+						"description": "Identifier number (max 20 characters)",
 						"validation": {
 							"minLength": 1,
 							"maxLength": 20
@@ -4573,6 +4632,39 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"listKey": ""
 	},
 	{
+		"resource": "invoice",
+		"operation": "getVerifactuRecords",
+		"displayName": "Get Verifactu Records",
+		"action": "List the VeriFactu records of an invoice",
+		"description": "Returns the VeriFactu records of this invoice, each with its own status, ordered by `registered_at` ascending: the registration first and, if the invoice was voided, its cancellation after it",
+		"operationId": "listCompanyInvoiceVerifactuRecords",
+		"method": "GET",
+		"path": "/v1/companies/{company_id}/invoices/{invoice_id}/verifactu-records",
+		"pathParams": [
+			{
+				"name": "invoiceId",
+				"apiName": "invoice_id",
+				"displayName": "Invoice ID",
+				"description": "Invoice ID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": "",
+				"placeholder": "550e8400-e29b-41d4-a716-446655440000"
+			}
+		],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
 		"resource": "customer",
 		"operation": "getAll",
 		"displayName": "Get Many",
@@ -4995,7 +5087,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "number",
 						"apiName": "number",
 						"displayName": "Number",
-						"description": "Format: max 20 characters",
+						"description": "Identifier number (max 20 characters)",
 						"required": true,
 						"validation": {
 							"minLength": 1,
@@ -5351,7 +5443,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "number",
 						"apiName": "number",
 						"displayName": "Number",
-						"description": "Format: max 20 characters",
+						"description": "Identifier number (max 20 characters)",
 						"required": true,
 						"validation": {
 							"minLength": 1,
@@ -6941,7 +7033,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "UNASSIGNED",
 						"value": "UNASSIGNED",
-						"description": "Legacy value that only series created before types existed carry. Such a"
+						"description": "Legacy value that only series created before types existed carry."
 					},
 					{
 						"name": "STANDARD",
@@ -6998,7 +7090,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "UNASSIGNED",
 						"value": "UNASSIGNED",
-						"description": "Legacy value that only series created before types existed carry. Such a"
+						"description": "Legacy value that only series created before types existed carry."
 					},
 					{
 						"name": "STANDARD",
@@ -7214,7 +7306,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "UNASSIGNED",
 						"value": "UNASSIGNED",
-						"description": "Legacy value that only series created before types existed carry. Such a"
+						"description": "Legacy value that only series created before types existed carry."
 					},
 					{
 						"name": "STANDARD",
