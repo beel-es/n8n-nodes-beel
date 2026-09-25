@@ -86,12 +86,17 @@ If your key provisioned accounts for other people, the **Account** field picks w
 | **Lifecycle** | Create · Get · Get Many · Update · Delete · Issue · Void · Create Corrective · Convert Proforma |
 | **Delivery** | Send by Email · Set Status · Download PDF |
 | **Scheduling** | Get Schedule · Schedule · Unschedule · Duplicate |
+| **VeriFactu** | Get Verifactu Records |
 
 **Lines** are a repeatable collection: description, quantity, unit, unit price, discount, tax, IRPF, equivalence surcharge and the exemption reasons from Ley 37/1992. The tax percentage dropdown follows the tax type — IVA offers 0/4/10/21, IGIC 0/3/5/7/9.5/15/20, IPSI 0.5/1/2/4/8/10, and only `OTHER` accepts a free value.
 
 **Recipient** is either an existing customer picked from a dropdown, or filled inline for a one-off. Pick a customer and the address fields stay out of the request entirely.
 
 **Options** decide what happens on creation: leave it a draft, `Issue Directly` for a definitive number and a VeriFactu submission, `Wait For PDF`, `Send Automatically` to email it.
+
+**Get Verifactu Records** lists the invoice's VeriFactu records — its registration and, if it was voided, its cancellation — each with its own status and the AEAT's error code when it gave one.
+
+A **Simplified** invoice is for a recipient who is not identified: the API rejects one whose recipient carries a NIF or an alternative ID (`SIMPLIFIED_INVOICE_FORBIDS_IDENTIFIED_RECIPIENT`), at any amount. Use **Standard** for an identified recipient.
 
 **Set Status** covers what used to be three operations — Mark as Paid, Mark as Sent and Revert to Issued are now values of one commercial status, which is how the API models it. Issuing and voiding stay separate: they are fiscal acts, not statuses. **Schedule** both schedules and reschedules, so there is nothing to undo before moving a date.
 
@@ -113,7 +118,7 @@ Create ──▶ Generate Representation ──▶ Download Representation
 
 ### Recurring Invoice
 
-Create · Create From Invoice · Get · Get Many · Update · Delete · Set Status · Generate Now · Skip Next · Get Next Occurrence · Get History.
+Create · Create From Invoice · Get · Get Many · Update · Delete · Set Status · Generate Now · Skip Next · Get Next Occurrence · Get History · Get Stats.
 
 Pausing and resuming are **Set Status** (`PAUSED` / `ACTIVE`), matching invoices. `COMPLETED` is reached on its own when the schedule runs out and cannot be set.
 
@@ -125,9 +130,9 @@ For platforms that onboard clients: Provision · Get · Get Many · Get Usage ·
 
 ### Payment Connection, Payment Event
 
-`Payment Connection → Initiate` opens a white-label authorization so a managed NIF's holder can connect Stripe; from then on BeeL auto-invoices every charge.
+`Payment Connection → Initiate` opens a white-label authorization so a managed NIF's holder can connect Stripe; from then on BeeL auto-invoices every charge. `Update` changes a connection's settings (auto-invoicing, series, tax-inclusive prices, filters). A connection is addressed by its ID, picked from the **Connection ID** dropdown.
 
-`Payment Event` is the other half, and the reason it is here: automatic invoicing sometimes fails, **there is no webhook for it**, and the list takes no server-side filter. A charge that took money without producing an invoice is only visible by sweeping this collection and sifting on `needs_action`. Each event carries `failure_category` and `failure_reason`, plus `retry_available` and `draft_available` telling you which recovery it accepts — `Retry` when the cause was transient (a missing default series, say), `Generate Draft` when it needs a human to look before issuing.
+`Payment Event` is the other half, and the reason it is here: automatic invoicing sometimes fails, **there is no webhook for it**, and a charge that took money without producing an invoice is only visible by sweeping this collection — **Get Many** filters on `needs_action`, `status`, `failure_category` and dates. Each event carries `failure_category` and `failure_reason`, plus `retry_available` and `draft_available` telling you which recovery it accepts — `Retry` when the cause was transient (a missing default series, say), `Generate Draft` when it needs a human to look before issuing. `Resolve` closes an event invoiced outside BeeL, `Discard` one that should never be invoiced, and `Restore` undoes a discard.
 
 ### Customer, Product, Series, Configuration, NIF
 
@@ -139,7 +144,7 @@ Full CRUD on customers, products and numbering series, plus series Set Default, 
 
 Drop in a **BeeL Trigger**, choose your events, activate the workflow — the node registers the subscription with BeeL and stores the signing secret. Deactivating deletes it. If the URL or the event list drifts, the next activation realigns the subscription without losing the secret.
 
-Events: `invoice.issued`, `invoice.email.sent`, `invoice.voided`, `verifactu.status.updated`, `recurring_invoice.paused`, `account.claimed`, `company.created`, `representation.signed`.
+Events: `invoice.issued`, `invoice.email.sent`, `invoice.pdf.generated`, `invoice.voided`, `invoice.schedule_failed`, `recurring_invoice.paused`, `verifactu.status.updated`, `account.claimed`, `company.created`, `representation.signed`.
 
 A subscription belongs to the account, not to a company, so on a multi-NIF account one trigger receives the events of every NIF — filter on the payload if you only want one.
 

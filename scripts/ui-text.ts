@@ -16,6 +16,12 @@
 
 /** A field's UI text, overriding whatever the contract's schema implies. */
 export type FieldUiOverride = {
+	/**
+	 * The parameter's n8n name and label, for a property whose own name is a
+	 * Spanish word. The key sent to the API is still the contract's.
+	 */
+	name?: string;
+	displayName?: string;
 	default?: string;
 	placeholder?: string;
 	description?: string;
@@ -27,15 +33,18 @@ export type FieldUiOverride = {
  * flattened onto a company as `address_street`.
  */
 export const FIELD_UI_OVERRIDES: Record<string, FieldUiOverride> = {
-	// The API stores the country as its Spanish name, so the value cannot be
-	// anglicised — but the default must not pre-fill "España" into the editor.
-	// The field says so in English instead, and starts empty.
+	// `country_code` is the canonical field; `country` only accepts an ISO code or
+	// the country's name. The default must not pre-fill "España" into the editor:
+	// with both fields empty the API already assumes Spain.
 	country: {
 		default: '',
 		placeholder: 'Spain',
 		description:
-			"The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects",
+			'Country name (in English, Spanish or Catalan) or ISO code. Prefer Country Code; if both are set they must name the same country',
 	},
+	// `UNASSIGNED` is in the enum but rejected when creating a series, so the
+	// dropdown must not start on it.
+	document_type: { default: 'STANDARD' },
 	floor: { placeholder: '2nd floor, Apt A' },
 	// Spanish street examples: "Calle Mayor, 123", "Calle Mayor".
 	street: { placeholder: '123 Main Street' },
@@ -46,6 +55,12 @@ export const FIELD_UI_OVERRIDES: Record<string, FieldUiOverride> = {
 	trade_name: { placeholder: 'My Company' },
 	// "María García López", on the company's legal representative.
 	full_name: { placeholder: 'Jane Smith' },
+	// A payment connection's series, one per Spanish invoice type: `ordinaria`,
+	// `simplificada` (simplified) and `rectificativa` (corrective, for refunds).
+	ordinaria: { name: 'ordinary', displayName: 'Ordinary Invoice Series' },
+	simplificada: { name: 'simplified', displayName: 'Simplified Invoice Series' },
+	rectificativa: { name: 'corrective', displayName: 'Corrective Invoice Series' },
+	simplificada_threshold: { name: 'simplified_threshold', displayName: 'Simplified Invoice Threshold' },
 };
 
 /**
