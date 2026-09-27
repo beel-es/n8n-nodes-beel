@@ -412,11 +412,12 @@ describe('scoping', () => {
 	});
 
 	it('substitutes both axes on a path that carries the two', async () => {
+		const CONNECTION_ID = 'cccccccc-dddd-eeee-ffff-000000000000';
 		const { request } = await run('paymentEvent', 'getAll', {
 			parameters: {
 				activeCompany: COMPANY_ID,
-				// The generator suffixes the name when two operations word it differently.
-				provider_paymentEvent_getAll: 'stripe',
+				// The contract addresses a connection by id, not by provider name.
+				connectionId: CONNECTION_ID,
 				returnAll: false,
 				limit: 10,
 				filters: {},
@@ -424,7 +425,7 @@ describe('scoping', () => {
 			responses: { data: [], pagination: { total_pages: 1 } },
 		});
 
-		expect(request.url).toBe(`${COMPANY_BASE}/payment-connections/stripe/events`);
+		expect(request.url).toBe(`${COMPANY_BASE}/payment-connections/${CONNECTION_ID}/events`);
 	});
 
 	it('never leaves a placeholder in the URL it sends', async () => {

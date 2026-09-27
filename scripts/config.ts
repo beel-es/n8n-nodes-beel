@@ -23,7 +23,7 @@ export const RESOURCES: Array<{ resource: string; displayName: string; tags: str
 	{ resource: 'recurringInvoice', displayName: 'Recurring Invoice', tags: ['CompanyRecurringInvoices'] },
 	{ resource: 'configuration', displayName: 'Configuration', tags: ['CompanyTaxConfiguration', 'CompanyVeriFactuConfiguration', 'TaxTypes', 'InvoiceCustomization'] },
 	{ resource: 'nif', displayName: 'NIF', tags: ['NIF'] },
-	{ resource: 'company', displayName: 'Company', tags: ['PublicCompanies', 'Company', 'CompanyRepresentation', 'CompanyFiscalSummary'] },
+	{ resource: 'company', displayName: 'Company', tags: ['AccountCompanies', 'Company', 'CompanyRepresentation', 'CompanyFiscalSummary'] },
 	{ resource: 'account', displayName: 'Account', tags: ['Provisioning', 'Accounts'] },
 	{ resource: 'paymentConnection', displayName: 'Payment Connection', tags: ['CompanyPaymentConnections'] },
 	{ resource: 'paymentEvent', displayName: 'Payment Event', tags: ['CompanyPaymentEvents'] },
@@ -47,6 +47,10 @@ export const OPERATION_NAMES: Record<string, string> = {
 	issueCompanyInvoice: 'issue',
 	voidCompanyInvoice: 'void',
 	createCompanyCorrectiveInvoice: 'createCorrective',
+	// A full invoice issued in exchange for simplified ones when the customer asks
+	// for one with their details. Not a corrective: the simplified invoices end
+	// `VOIDED` with `void_cause` `EXCHANGED`.
+	createCompanySimplifiedExchange: 'exchangeSimplified',
 	// One `PUT .../status` replaces mark-paid, mark-sent and revert-to-issued: the
 	// contract now has one vocabulary for the commercial status instead of a verb
 	// per transition. Issuing and voiding stay separate — they are fiscal acts.
@@ -57,6 +61,12 @@ export const OPERATION_NAMES: Record<string, string> = {
 	deleteCompanyInvoiceSchedule: 'unschedule',
 	sendCompanyInvoice: 'send',
 	convertCompanyProformaToInvoice: 'convertToInvoice',
+	// A signed URL to a rendered image of the invoice, returned as JSON.
+	getCompanyInvoicePreview: 'getPreview',
+	// The invoice's VeriFactu records (registration, and cancellation if voided),
+	// each with its own AEAT status: what to read when `verifactu` on the invoice
+	// only summarises the registration.
+	listCompanyInvoiceVerifactuRecords: 'getVerifactuRecords',
 	// Customer
 	listCompanyCustomers: 'getAll',
 	createCompanyCustomer: 'create',
@@ -90,6 +100,7 @@ export const OPERATION_NAMES: Record<string, string> = {
 	generateCompanyRecurringInvoiceNow: 'generateNow',
 	getCompanyRecurringInvoiceNextOccurrence: 'getNextOccurrence',
 	getCompanyRecurringInvoiceHistory: 'getHistory',
+	getCompanyRecurringInvoiceStats: 'getStats',
 	createCompanyRecurringInvoiceDerivation: 'createFromInvoice',
 	// Configuration. Tax and VeriFactu settings are per company now; the tax-type
 	// and customisation catalogues are platform-wide and no longer company-scoped.
@@ -130,6 +141,7 @@ export const OPERATION_NAMES: Record<string, string> = {
 	// connect Stripe, after which BeeL auto-invoices every charge.
 	listCompanyPaymentConnections: 'getAll',
 	initiatePaymentConnection: 'initiate',
+	updateCompanyPaymentConnection: 'update',
 	disconnectCompanyPaymentConnection: 'disconnect',
 	// Payment events. There is NO webhook for a charge that failed to invoice, and
 	// the list has no server-side filter, so finding them means sweeping this
@@ -138,6 +150,11 @@ export const OPERATION_NAMES: Record<string, string> = {
 	getCompanyPaymentEvent: 'get',
 	retryCompanyPaymentEvent: 'retry',
 	generateCompanyPaymentEventDraft: 'generateDraft',
+	// Closing an event by hand: resolved when it was invoiced outside BeeL,
+	// discarded when it should never be invoiced, and restore undoes a discard.
+	resolveCompanyPaymentEvent: 'resolve',
+	discardCompanyPaymentEvent: 'discard',
+	restoreCompanyPaymentEvent: 'restore',
 };
 
 /**
@@ -170,6 +187,7 @@ export const REFERENCED_OPERATION_IDS = [
 	'listCompanySeries',
 	'listCompanyCustomers',
 	'listCompanyProducts',
+	'listCompanyPaymentConnections',
 	// BeeL Trigger, which owns its subscription's whole lifecycle.
 	'listAccountWebhookSubscriptions',
 	'createAccountWebhookSubscription',
@@ -193,6 +211,7 @@ export const EXCLUDED_OPERATION_IDS = [
 	'createCompanyProductsBulk', 'deleteCompanyProductsBulk',
 	'createCompanyInvoiceBatch', 'createCompanyInvoicePdfArchive', 'createCompanyInvoiceDelivery',
 	'createCompanyInvoiceExport',
+	'createAccountImport', 'previewAccountImport', 'downloadAccountImportTemplate',
 	// `PUT /v1/configuration/series/{series_id}`: the only flat route the contract
 	// does not mark deprecated, though every sibling is and the company-scoped
 	// `patchCompanySeries` replaces it. Excluded by hand until the flag catches up.
@@ -245,10 +264,29 @@ export const RESERVED_PARAMETER_NAMES = [
 	'draftPreview',
 ];
 
+/**
+ * Operations whose fields keep the name they shipped with when a re-sync changes
+ * only their string validation.
+ *
+ * n8n stores a workflow's values by parameter name, so a rename blanks every
+ * saved workflow's field. The disambiguation below treats any difference as a
+ * different parameter, but a string's `validation` never reaches the n8n
+ * property: the executor checks it against the operation's own field. Listing an
+ * operation here stops a tightened pattern or length in the contract from
+ * renaming, say, `name` to `name_recurringInvoice_create`.
+ */
+export const KEEP_NAME_ON_VALIDATION_CHANGE = [
+	// `name` gained `pattern` and `minLength` in the contract (it must not start blank).
+	'createCompanyRecurringInvoice',
+	'createCompanyRecurringInvoiceDerivation',
+];
+
 /** Fields that get a resource dropdown instead of a free-text UUID. */
 export const LOAD_OPTIONS_BY_FIELD: Record<string, string> = {
 	series_id: 'getSeries',
 	customer_id: 'getCustomers',
+	// The contract replaced `{provider}` with the connection's id in these paths.
+	connection_id: 'getPaymentConnections',
 };
 
 /**
@@ -259,9 +297,12 @@ export const LOAD_OPTIONS_BY_FIELD: Record<string, string> = {
  * and let an invalid rate reach the API. `null` means the type accepts any value.
  */
 export const TAX_PERCENTAGES: Record<string, number[] | null> = {
-	IVA: [0, 4, 10, 21],
+	// 2, 5 and 7.5 are temporary rates the API accepts only for operations dated
+	// in the period they were in force (`VAT_RATE_NOT_ACCEPTED_ON_DATE` otherwise).
+	// 0 under IVA and IPSI is the exemption sentinel: it needs an exemption reason.
+	IVA: [0, 2, 4, 5, 7.5, 10, 21],
 	IGIC: [0, 3, 5, 7, 9.5, 15, 20],
-	IPSI: [0.5, 1, 2, 4, 8, 10],
+	IPSI: [0, 0.5, 1, 2, 4, 8, 10],
 	OTHER: null,
 };
 

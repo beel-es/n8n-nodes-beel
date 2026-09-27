@@ -2,7 +2,7 @@
  * GENERATED FILE — DO NOT EDIT.
  *
  * Produced by `npm run generate` from `openapi/public-api.yaml`
- * (BeeL Public API 1.7.1).
+ * (BeeL Public API 1.9.0).
  *
  * Hand-written operations live in `../InvoiceDescription.ts`.
  */
@@ -62,8 +62,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "invoice",
 		"operation": "getAll",
 		"displayName": "Get Many",
-		"action": "List the invoices of a company",
-		"description": "Returns a paginated list of the invoices issued under this company (NIF), with the same filters as the flat route",
+		"action": "List invoices",
+		"description": "Returns a paginated list of the invoices of this company, filterable by status, type, series, customer, date range and free text",
 		"operationId": "listCompanyInvoices",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/invoices",
@@ -84,9 +84,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"apiName": "status",
 				"displayName": "Status",
 				"description": "Filter by invoice status",
-				"validation": {
-					"minItems": 1
-				},
 				"type": "options",
 				"options": [
 					{
@@ -121,7 +118,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "OVERDUE",
 						"value": "OVERDUE",
-						"description": "Overdue invoice (not paid after due date)"
+						"description": "Reserved."
 					},
 					{
 						"name": "RECTIFIED",
@@ -131,7 +128,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "VOIDED",
 						"value": "VOIDED",
-						"description": "Completely cancelled invoice (TOTAL corrective invoice)"
+						"description": "Cancelled invoice."
 					},
 					{
 						"name": "CONVERTED",
@@ -141,12 +138,67 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "ACTIVE",
 						"value": "ACTIVE",
-						"description": "Active proforma. The single working state of a proforma (non-fiscal"
+						"description": "Active proforma."
 					},
 					{
 						"name": "EXPIRED",
 						"value": "EXPIRED",
-						"description": "Proforma whose offer validity (`valid_until`) has passed. Derived on read"
+						"description": "Proforma whose offer validity (`valid_until`) has passed."
+					}
+				],
+				"multipleValues": true,
+				"default": []
+			},
+			{
+				"name": "payment_method",
+				"apiName": "payment_method",
+				"displayName": "Payment Method",
+				"description": "Filter by payment method",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "NONE",
+						"value": "NONE",
+						"description": "no payment information is shown."
+					},
+					{
+						"name": "BANK TRANSFER",
+						"value": "BANK_TRANSFER",
+						"description": "bank transfer to the IBAN of the payment details; the only method"
+					},
+					{
+						"name": "CARD",
+						"value": "CARD",
+						"description": "card payment."
+					},
+					{
+						"name": "CASH",
+						"value": "CASH",
+						"description": "cash payment."
+					},
+					{
+						"name": "CHECK",
+						"value": "CHECK",
+						"description": "payment by cheque."
+					},
+					{
+						"name": "DIRECT DEBIT",
+						"value": "DIRECT_DEBIT",
+						"description": "direct debit from the customer's bank account."
+					},
+					{
+						"name": "BIZUM",
+						"value": "BIZUM",
+						"description": "payment through Bizum."
+					},
+					{
+						"name": "OTHER",
+						"value": "OTHER",
+						"description": "any other method."
 					}
 				],
 				"multipleValues": true,
@@ -176,7 +228,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "SIMPLIFIED",
 						"value": "SIMPLIFIED",
-						"description": "Simplified invoice without all recipient requirements (up to 3,000€ VAT included)"
+						"description": "Simplified invoice (ticket), for a recipient that is not identified."
 					},
 					{
 						"name": "PROFORMA",
@@ -256,7 +308,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "series_code",
 				"apiName": "series_code",
 				"displayName": "Series Code",
-				"description": "Filter by series code",
+				"description": "Filter by series code (exact match, case-insensitive)",
 				"type": "string",
 				"default": ""
 			},
@@ -349,6 +401,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "REJECTED",
 						"value": "REJECTED"
+					},
+					{
+						"name": "NOT SUBMITTED",
+						"value": "NOT_SUBMITTED"
 					}
 				],
 				"default": ""
@@ -373,7 +429,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "sort_by",
 				"apiName": "sort_by",
 				"displayName": "Sort By",
-				"description": "Field to sort by (e.g., issue_date, invoice_number, invoice_total)",
+				"description": "Field to sort by: `issue_date` (default), `operation_date`, `due_date`, `invoice_number`, `series_code`, `status`, `invoice_total`, `taxable_base`, `total_vat`, `total_equivalence_surcharge`, `total_discounts`, `recipient_name`, `recipient_nif`, `created_at` or `updated_at`",
 				"type": "string",
 				"default": ""
 			},
@@ -400,6 +456,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"queryParamNames": [
 			"search",
 			"status",
+			"payment_method",
 			"type",
 			"fiscal_only",
 			"customer_id",
@@ -429,8 +486,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "invoice",
 		"operation": "create",
 		"displayName": "Create",
-		"action": "Create an invoice for a company",
-		"description": "Creates a new invoice under this company (NIF)",
+		"action": "Create an invoice",
+		"description": "Creates an invoice for this company",
 		"operationId": "createCompanyInvoice",
 		"method": "POST",
 		"path": "/v1/companies/{company_id}/invoices",
@@ -467,6 +524,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "recipient",
 				"apiName": "recipient",
 				"displayName": "Recipient",
+				"description": "Invoice recipient: either a registered customer (`customer_id`) or the recipient's data inline (`legal_name`, `nif`, `address`…), never both",
 				"required": true,
 				"type": "fixedCollection",
 				"fields": [
@@ -520,7 +578,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": "",
-						"placeholder": "B12345678"
+						"placeholder": "B12345674"
 					},
 					{
 						"name": "alternative_id_type",
@@ -586,7 +644,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "alternative_id_number",
 						"apiName": "alternative_id.number",
 						"displayName": "Alternative ID Number",
-						"description": "Format: max 20 characters",
+						"description": "Identifier number (max 20 characters)",
 						"validation": {
 							"minLength": 1,
 							"maxLength": 20
@@ -600,7 +658,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "alternative_id_country_code",
 						"apiName": "alternative_id.country_code",
 						"displayName": "Alternative ID Country Code",
-						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"description": "ISO 3166-1 alpha-2 code of the country that issued the document (exactly 2 characters)",
 						"validation": {
 							"pattern": "^[A-Z]{2}$",
 							"minLength": 2,
@@ -616,7 +674,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address Street",
 						"description": "Full address (street, number, floor, etc.) - Latin characters only (max 255 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 255
 						},
@@ -638,8 +696,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "123",
-						"required": false,
-						"groupRequired": true
+						"required": false
 					},
 					{
 						"name": "address_floor",
@@ -688,7 +745,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address City",
 						"description": "City or town - Latin characters only (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª()]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -704,7 +761,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address Province",
 						"description": "Province or state - Latin characters only (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -718,9 +775,9 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "address_country",
 						"apiName": "address.country",
 						"displayName": "Address Country",
-						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
+						"description": "Country name (in English, Spanish or Catalan) or ISO code. Prefer Country Code; if both are set they must name the same country (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -733,7 +790,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "address_country_code",
 						"apiName": "address.country_code",
 						"displayName": "Address Country Code",
-						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"description": "ISO 3166-1 alpha-2 country code: the canonical field that decides the country of the address (exactly 2 characters)",
 						"validation": {
 							"pattern": "^[A-Z]{2}$",
 							"minLength": 2,
@@ -748,7 +805,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "phone",
 						"apiName": "phone",
 						"displayName": "Phone",
-						"description": "Phone number (min 9 characters, max 20 characters)",
+						"description": "A phone number as this API accepts it: 9 to 20 characters, and only digits, spaces, dashes, parentheses and an optional leading `+` (min 9 characters, max 20 characters)",
 						"validation": {
 							"pattern": "^[+]?[0-9\\s\\-\\(\\)]+$",
 							"minLength": 9,
@@ -844,11 +901,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "unit_price",
 						"apiName": "unit_price",
 						"displayName": "Unit Price",
-						"description": "Unit price before taxes (between 0 (exclusive) and 999999.9999)",
+						"description": "Unit price before taxes (between 0 and 999999.9999)",
 						"validation": {
 							"minimum": 0,
-							"maximum": 999999.9999,
-							"exclusiveMinimum": true
+							"maximum": 999999.9999
 						},
 						"type": "number",
 						"default": 0,
@@ -909,13 +965,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "main_tax_type",
 						"apiName": "main_tax.type",
 						"displayName": "Main Tax Type",
-						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100%",
+						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100% Under IVA and IPSI, 0...",
 						"type": "options",
 						"options": [
 							{
 								"name": "IVA",
 								"value": "IVA",
-								"description": "Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%)"
+								"description": "Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period)"
 							},
 							{
 								"name": "IGIC",
@@ -956,8 +1012,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": 0
 							},
 							{
+								"name": "2%",
+								"value": 2
+							},
+							{
 								"name": "4%",
 								"value": 4
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7.5%",
+								"value": 7.5
 							},
 							{
 								"name": "10%",
@@ -1040,6 +1108,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"groupRequired": true,
 						"options": [
 							{
+								"name": "0%",
+								"value": 0
+							},
+							{
 								"name": "0.5%",
 								"value": 0.5
 							},
@@ -1110,17 +1182,17 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "02",
 								"value": "02",
-								"description": "Export"
+								"description": "Export (IVA and IGIC; not IPSI, whose AEAT list is `01, 08, 11, 18, 19, 20`)"
 							},
 							{
 								"name": "03",
 								"value": "03",
-								"description": "Used goods, art, antiques"
+								"description": "Used goods, art, antiques (not accepted, see below)"
 							},
 							{
 								"name": "04",
 								"value": "04",
-								"description": "Investment gold"
+								"description": "only reverse charge (an `ISP_ART_84_2_*` reason) or an exemption"
 							},
 							{
 								"name": "05",
@@ -1130,7 +1202,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "06",
 								"value": "06",
-								"description": "Group of entities"
+								"description": "Group of entities (not accepted, see below)"
 							},
 							{
 								"name": "07",
@@ -1140,7 +1212,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "08",
 								"value": "08",
-								"description": "IPSI/IVA/IGIC operations"
+								"description": "only `exemption_reason: NO_SUJETA_LOCALIZACION`, at 0 %"
 							},
 							{
 								"name": "09",
@@ -1150,7 +1222,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "10",
 								"value": "10",
-								"description": "Third-party collections"
+								"description": "only `exemption_reason: NO_SUJETA_ART_7_9`, on a `STANDARD` invoice whose"
 							},
 							{
 								"name": "11",
@@ -1160,7 +1232,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "14",
 								"value": "14",
-								"description": "VAT pending in certifications"
+								"description": "VAT pending in certifications (not accepted, see below)"
 							},
 							{
 								"name": "15",
@@ -1195,7 +1267,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "equivalence_surcharge_rate",
 						"apiName": "equivalence_surcharge_rate",
 						"displayName": "Equivalence Surcharge Rate",
-						"description": "Equivalence surcharge percentage in decimal format",
+						"description": "Equivalence surcharge rate for this line",
 						"type": "options",
 						"options": [
 							{
@@ -1203,23 +1275,35 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": ""
 							},
 							{
-								"name": "0",
+								"name": "0%",
 								"value": 0
 							},
 							{
-								"name": "0 5",
+								"name": "0.26%",
+								"value": 0.26
+							},
+							{
+								"name": "0.5%",
 								"value": 0.5
 							},
 							{
-								"name": "0 625",
-								"value": 0.625
+								"name": "0.62%",
+								"value": 0.62
 							},
 							{
-								"name": "1 4",
+								"name": "1%",
+								"value": 1
+							},
+							{
+								"name": "1.4%",
 								"value": 1.4
 							},
 							{
-								"name": "5 2",
+								"name": "1.75%",
+								"value": 1.75
+							},
+							{
+								"name": "5.2%",
 								"value": 5.2
 							}
 						],
@@ -1237,31 +1321,47 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": ""
 							},
 							{
-								"name": "0",
+								"name": "0%",
 								"value": 0
 							},
 							{
-								"name": "1",
+								"name": "1%",
 								"value": 1
 							},
 							{
-								"name": "2",
+								"name": "2%",
 								"value": 2
 							},
 							{
-								"name": "7",
+								"name": "2.8%",
+								"value": 2.8
+							},
+							{
+								"name": "6%",
+								"value": 6
+							},
+							{
+								"name": "7%",
 								"value": 7
 							},
 							{
-								"name": "15",
+								"name": "7.6%",
+								"value": 7.6
+							},
+							{
+								"name": "9.5%",
+								"value": 9.5
+							},
+							{
+								"name": "15%",
 								"value": 15
 							},
 							{
-								"name": "19",
+								"name": "19%",
 								"value": 19
 							},
 							{
-								"name": "24",
+								"name": "24%",
 								"value": 24
 							}
 						],
@@ -1271,7 +1371,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "exemption_reason",
 						"apiName": "exemption_reason",
 						"displayName": "Exemption Reason",
-						"description": "Tax exemption reason code per Spanish VAT Law (Ley 37/1992 LIVA)",
+						"description": "Tax exemption reason code per the Spanish VAT Law (Ley 37/1992, LIVA), with the VeriFactu code each one is reported as",
 						"type": "options",
 						"options": [
 							{
@@ -1280,43 +1380,64 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							},
 							{
 								"name": "Exempt — Art. 20 LIVA",
-								"value": "EXENTA_ART_20"
+								"value": "EXENTA_ART_20",
+								"description": "exempt, art. 20 (domestic operations such as medical, educational,"
 							},
 							{
 								"name": "Exempt — Art. 21 LIVA",
-								"value": "EXENTA_ART_21"
+								"value": "EXENTA_ART_21",
+								"description": "exempt, art. 21 (exports of goods). E2."
 							},
 							{
 								"name": "Exempt — Art. 22 LIVA",
-								"value": "EXENTA_ART_22"
+								"value": "EXENTA_ART_22",
+								"description": "exempt, art. 22 (operations treated as exports). E3."
 							},
 							{
 								"name": "Exempt — Art. 24 LIVA",
-								"value": "EXENTA_ART_24"
+								"value": "EXENTA_ART_24",
+								"description": "exempt, art. 24 (free zones, warehouses and customs regimes). E4."
 							},
 							{
 								"name": "Exempt — Art. 25 LIVA",
-								"value": "EXENTA_ART_25"
+								"value": "EXENTA_ART_25",
+								"description": "exempt, art. 25 (intra-community supplies of goods). E5."
 							},
 							{
 								"name": "Exempt — Art. 26 LIVA",
-								"value": "EXENTA_ART_26"
+								"value": "EXENTA_ART_26",
+								"description": "exempt, art. 26 (intra-community acquisitions of goods)."
 							},
 							{
 								"name": "Exempt — Art. 140 LIVA",
-								"value": "EXENTA_ART_140"
+								"value": "EXENTA_ART_140",
+								"description": "investment gold exemption, art. 140 bis (usually with `regime_key`"
 							},
 							{
 								"name": "Not Subject to VAT — Art. 7.9 LIVA",
-								"value": "NO_SUJETA_ART_7_9"
+								"value": "NO_SUJETA_ART_7_9",
+								"description": "not subject under art. 7 (such as the transfer of a business as"
 							},
 							{
 								"name": "Not Subject to VAT — Outside the Spanish VAT Territory",
-								"value": "NO_SUJETA_LOCALIZACION"
+								"value": "NO_SUJETA_LOCALIZACION",
+								"description": "not subject by the place-of-supply rules (intra-community"
 							},
 							{
 								"name": "Reverse Charge — Art. 84.2.a LIVA",
 								"value": "ISP_ART_84_2_A"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.b LIVA",
+								"value": "ISP_ART_84_2_B"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.c LIVA",
+								"value": "ISP_ART_84_2_C"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.d LIVA",
+								"value": "ISP_ART_84_2_D"
 							},
 							{
 								"name": "Reverse Charge — Art. 84.2.e LIVA",
@@ -1325,6 +1446,11 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "Reverse Charge — Art. 84.2.f LIVA",
 								"value": "ISP_ART_84_2_F"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.g LIVA",
+								"value": "ISP_ART_84_2_G",
+								"description": "reverse charge of letter g) (silver, platinum, palladium, mobile phones,"
 							},
 							{
 								"name": "Special Regime — Art. 129 LIVA",
@@ -1348,7 +1474,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							},
 							{
 								"name": "Other",
-								"value": "OTRO"
+								"value": "OTRO",
+								"description": "any other provision. Requires the text in `exemption_reason_text`. E6."
 							}
 						],
 						"default": ""
@@ -1415,7 +1542,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "series_id",
 				"apiName": "series_id",
 				"displayName": "Series ID",
-				"description": "Invoicing series ID (if not specified, uses default)",
+				"description": "Invoicing series",
 				"validation": {
 					"format": "uuid"
 				},
@@ -1595,14 +1722,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"type": "fixedCollection",
 				"fields": [
 					{
-						"name": "verifactu_enabled",
-						"apiName": "verifactu_enabled",
-						"displayName": "Verifactu Enabled",
-						"description": "Whether VeriFactu information should be generated for this invoice",
-						"type": "boolean",
-						"default": false
-					},
-					{
 						"name": "issue_directly",
 						"apiName": "issue_directly",
 						"displayName": "Issue Directly",
@@ -1623,6 +1742,14 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"apiName": "send_automatically",
 						"displayName": "Send Automatically",
 						"description": "Only applies when `issue_directly` is `true`",
+						"type": "boolean",
+						"default": false
+					},
+					{
+						"name": "attach_source_invoices",
+						"apiName": "attach_source_invoices",
+						"displayName": "Attach Source Invoices",
+						"description": "Only applies when `send_automatically` is `true`",
 						"type": "boolean",
 						"default": false
 					},
@@ -1712,8 +1839,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "invoice",
 		"operation": "get",
 		"displayName": "Get",
-		"action": "Get an invoice of a company",
-		"description": "Retrieves the full details of an invoice of this company (NIF)",
+		"action": "Get an invoice",
+		"description": "Retrieves the full details of an invoice of this company",
 		"operationId": "getCompanyInvoice",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/invoices/{invoice_id}",
@@ -1745,7 +1872,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "invoice",
 		"operation": "update",
 		"displayName": "Update",
-		"action": "Update an invoice of a company partially",
+		"action": "Update an invoice",
 		"description": "Updates only the fields present in the body, leaving every other field of the invoice as it is",
 		"operationId": "patchCompanyInvoice",
 		"method": "PATCH",
@@ -1899,7 +2026,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": "",
-						"placeholder": "B12345678"
+						"placeholder": "B12345674"
 					},
 					{
 						"name": "alternative_id_type",
@@ -1965,7 +2092,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "alternative_id_number",
 						"apiName": "alternative_id.number",
 						"displayName": "Alternative ID Number",
-						"description": "Format: max 20 characters",
+						"description": "Identifier number (max 20 characters)",
 						"validation": {
 							"minLength": 1,
 							"maxLength": 20
@@ -1979,7 +2106,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "alternative_id_country_code",
 						"apiName": "alternative_id.country_code",
 						"displayName": "Alternative ID Country Code",
-						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"description": "ISO 3166-1 alpha-2 code of the country that issued the document (exactly 2 characters)",
 						"validation": {
 							"pattern": "^[A-Z]{2}$",
 							"minLength": 2,
@@ -1995,7 +2122,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address Street",
 						"description": "Full address (street, number, floor, etc.) - Latin characters only (max 255 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 255
 						},
@@ -2017,8 +2144,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "123",
-						"required": false,
-						"groupRequired": true
+						"required": false
 					},
 					{
 						"name": "address_floor",
@@ -2067,7 +2193,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address City",
 						"description": "City or town - Latin characters only (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª()]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -2083,7 +2209,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address Province",
 						"description": "Province or state - Latin characters only (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -2097,9 +2223,9 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "address_country",
 						"apiName": "address.country",
 						"displayName": "Address Country",
-						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
+						"description": "Country name (in English, Spanish or Catalan) or ISO code. Prefer Country Code; if both are set they must name the same country (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -2112,7 +2238,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "address_country_code",
 						"apiName": "address.country_code",
 						"displayName": "Address Country Code",
-						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"description": "ISO 3166-1 alpha-2 country code: the canonical field that decides the country of the address (exactly 2 characters)",
 						"validation": {
 							"pattern": "^[A-Z]{2}$",
 							"minLength": 2,
@@ -2127,7 +2253,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "phone",
 						"apiName": "phone",
 						"displayName": "Phone",
-						"description": "Phone number (min 9 characters, max 20 characters)",
+						"description": "A phone number as this API accepts it: 9 to 20 characters, and only digits, spaces, dashes, parentheses and an optional leading `+` (min 9 characters, max 20 characters)",
 						"validation": {
 							"pattern": "^[+]?[0-9\\s\\-\\(\\)]+$",
 							"minLength": 9,
@@ -2216,11 +2342,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "unit_price",
 						"apiName": "unit_price",
 						"displayName": "Unit Price",
-						"description": "Unit price before taxes (between 0 (exclusive) and 999999.9999)",
+						"description": "Unit price before taxes (between 0 and 999999.9999)",
 						"validation": {
 							"minimum": 0,
-							"maximum": 999999.9999,
-							"exclusiveMinimum": true
+							"maximum": 999999.9999
 						},
 						"type": "number",
 						"default": 0,
@@ -2276,13 +2401,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "main_tax_type",
 						"apiName": "main_tax.type",
 						"displayName": "Main Tax Type",
-						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100%",
+						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100% Under IVA and IPSI, 0...",
 						"type": "options",
 						"options": [
 							{
 								"name": "IVA",
 								"value": "IVA",
-								"description": "Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%)"
+								"description": "Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period)"
 							},
 							{
 								"name": "IGIC",
@@ -2323,8 +2448,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": 0
 							},
 							{
+								"name": "2%",
+								"value": 2
+							},
+							{
 								"name": "4%",
 								"value": 4
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7.5%",
+								"value": 7.5
 							},
 							{
 								"name": "10%",
@@ -2407,6 +2544,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"groupRequired": true,
 						"options": [
 							{
+								"name": "0%",
+								"value": 0
+							},
+							{
 								"name": "0.5%",
 								"value": 0.5
 							},
@@ -2477,17 +2618,17 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "02",
 								"value": "02",
-								"description": "Export"
+								"description": "Export (IVA and IGIC; not IPSI, whose AEAT list is `01, 08, 11, 18, 19, 20`)"
 							},
 							{
 								"name": "03",
 								"value": "03",
-								"description": "Used goods, art, antiques"
+								"description": "Used goods, art, antiques (not accepted, see below)"
 							},
 							{
 								"name": "04",
 								"value": "04",
-								"description": "Investment gold"
+								"description": "only reverse charge (an `ISP_ART_84_2_*` reason) or an exemption"
 							},
 							{
 								"name": "05",
@@ -2497,7 +2638,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "06",
 								"value": "06",
-								"description": "Group of entities"
+								"description": "Group of entities (not accepted, see below)"
 							},
 							{
 								"name": "07",
@@ -2507,7 +2648,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "08",
 								"value": "08",
-								"description": "IPSI/IVA/IGIC operations"
+								"description": "only `exemption_reason: NO_SUJETA_LOCALIZACION`, at 0 %"
 							},
 							{
 								"name": "09",
@@ -2517,7 +2658,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "10",
 								"value": "10",
-								"description": "Third-party collections"
+								"description": "only `exemption_reason: NO_SUJETA_ART_7_9`, on a `STANDARD` invoice whose"
 							},
 							{
 								"name": "11",
@@ -2527,7 +2668,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "14",
 								"value": "14",
-								"description": "VAT pending in certifications"
+								"description": "VAT pending in certifications (not accepted, see below)"
 							},
 							{
 								"name": "15",
@@ -2562,7 +2703,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "equivalence_surcharge_rate",
 						"apiName": "equivalence_surcharge_rate",
 						"displayName": "Equivalence Surcharge Rate",
-						"description": "Equivalence surcharge percentage in decimal format",
+						"description": "Equivalence surcharge percentage in decimal format, one of the values AEAT accepts",
 						"type": "options",
 						"options": [
 							{
@@ -2570,23 +2711,35 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": ""
 							},
 							{
-								"name": "0",
+								"name": "0%",
 								"value": 0
 							},
 							{
-								"name": "0 5",
+								"name": "0.26%",
+								"value": 0.26
+							},
+							{
+								"name": "0.5%",
 								"value": 0.5
 							},
 							{
-								"name": "0 625",
-								"value": 0.625
+								"name": "0.62%",
+								"value": 0.62
 							},
 							{
-								"name": "1 4",
+								"name": "1%",
+								"value": 1
+							},
+							{
+								"name": "1.4%",
 								"value": 1.4
 							},
 							{
-								"name": "5 2",
+								"name": "1.75%",
+								"value": 1.75
+							},
+							{
+								"name": "5.2%",
 								"value": 5.2
 							}
 						],
@@ -2604,31 +2757,47 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": ""
 							},
 							{
-								"name": "0",
+								"name": "0%",
 								"value": 0
 							},
 							{
-								"name": "1",
+								"name": "1%",
 								"value": 1
 							},
 							{
-								"name": "2",
+								"name": "2%",
 								"value": 2
 							},
 							{
-								"name": "7",
+								"name": "2.8%",
+								"value": 2.8
+							},
+							{
+								"name": "6%",
+								"value": 6
+							},
+							{
+								"name": "7%",
 								"value": 7
 							},
 							{
-								"name": "15",
+								"name": "7.6%",
+								"value": 7.6
+							},
+							{
+								"name": "9.5%",
+								"value": 9.5
+							},
+							{
+								"name": "15%",
 								"value": 15
 							},
 							{
-								"name": "19",
+								"name": "19%",
 								"value": 19
 							},
 							{
-								"name": "24",
+								"name": "24%",
 								"value": 24
 							}
 						],
@@ -2638,7 +2807,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "exemption_reason",
 						"apiName": "exemption_reason",
 						"displayName": "Exemption Reason",
-						"description": "Tax exemption reason code per Spanish VAT Law (Ley 37/1992 LIVA)",
+						"description": "Tax exemption reason code per the Spanish VAT Law (Ley 37/1992, LIVA), with the VeriFactu code each one is reported as",
 						"type": "options",
 						"options": [
 							{
@@ -2647,43 +2816,64 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							},
 							{
 								"name": "Exempt — Art. 20 LIVA",
-								"value": "EXENTA_ART_20"
+								"value": "EXENTA_ART_20",
+								"description": "exempt, art. 20 (domestic operations such as medical, educational,"
 							},
 							{
 								"name": "Exempt — Art. 21 LIVA",
-								"value": "EXENTA_ART_21"
+								"value": "EXENTA_ART_21",
+								"description": "exempt, art. 21 (exports of goods). E2."
 							},
 							{
 								"name": "Exempt — Art. 22 LIVA",
-								"value": "EXENTA_ART_22"
+								"value": "EXENTA_ART_22",
+								"description": "exempt, art. 22 (operations treated as exports). E3."
 							},
 							{
 								"name": "Exempt — Art. 24 LIVA",
-								"value": "EXENTA_ART_24"
+								"value": "EXENTA_ART_24",
+								"description": "exempt, art. 24 (free zones, warehouses and customs regimes). E4."
 							},
 							{
 								"name": "Exempt — Art. 25 LIVA",
-								"value": "EXENTA_ART_25"
+								"value": "EXENTA_ART_25",
+								"description": "exempt, art. 25 (intra-community supplies of goods). E5."
 							},
 							{
 								"name": "Exempt — Art. 26 LIVA",
-								"value": "EXENTA_ART_26"
+								"value": "EXENTA_ART_26",
+								"description": "exempt, art. 26 (intra-community acquisitions of goods)."
 							},
 							{
 								"name": "Exempt — Art. 140 LIVA",
-								"value": "EXENTA_ART_140"
+								"value": "EXENTA_ART_140",
+								"description": "investment gold exemption, art. 140 bis (usually with `regime_key`"
 							},
 							{
 								"name": "Not Subject to VAT — Art. 7.9 LIVA",
-								"value": "NO_SUJETA_ART_7_9"
+								"value": "NO_SUJETA_ART_7_9",
+								"description": "not subject under art. 7 (such as the transfer of a business as"
 							},
 							{
 								"name": "Not Subject to VAT — Outside the Spanish VAT Territory",
-								"value": "NO_SUJETA_LOCALIZACION"
+								"value": "NO_SUJETA_LOCALIZACION",
+								"description": "not subject by the place-of-supply rules (intra-community"
 							},
 							{
 								"name": "Reverse Charge — Art. 84.2.a LIVA",
 								"value": "ISP_ART_84_2_A"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.b LIVA",
+								"value": "ISP_ART_84_2_B"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.c LIVA",
+								"value": "ISP_ART_84_2_C"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.d LIVA",
+								"value": "ISP_ART_84_2_D"
 							},
 							{
 								"name": "Reverse Charge — Art. 84.2.e LIVA",
@@ -2692,6 +2882,11 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "Reverse Charge — Art. 84.2.f LIVA",
 								"value": "ISP_ART_84_2_F"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.g LIVA",
+								"value": "ISP_ART_84_2_G",
+								"description": "reverse charge of letter g) (silver, platinum, palladium, mobile phones,"
 							},
 							{
 								"name": "Special Regime — Art. 129 LIVA",
@@ -2715,7 +2910,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							},
 							{
 								"name": "Other",
-								"value": "OTRO"
+								"value": "OTRO",
+								"description": "any other provision. Requires the text in `exemption_reason_text`. E6."
 							}
 						],
 						"default": ""
@@ -2958,14 +3154,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"default": "",
 						"placeholder": "Dear customer, please find attached the invoice for the services provided. Thank you for your trust.",
 						"required": false
-					},
-					{
-						"name": "verifactu_enabled",
-						"apiName": "verifactu_enabled",
-						"displayName": "Verifactu Enabled",
-						"description": "Whether VeriFactu submission is enabled at issue time",
-						"type": "boolean",
-						"default": false
 					}
 				],
 				"default": {}
@@ -2982,7 +3170,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "invoice",
 		"operation": "delete",
 		"displayName": "Delete",
-		"action": "Delete a draft invoice of a company",
+		"action": "Delete a draft invoice",
 		"description": "Deletes a draft invoice of this company",
 		"operationId": "deleteCompanyInvoice",
 		"method": "DELETE",
@@ -3016,7 +3204,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "duplicate",
 		"displayName": "Duplicate",
 		"action": "Derive a draft invoice from an existing one",
-		"description": "Creates a new draft invoice derived from an existing invoice of this company",
+		"description": "Creates a draft invoice derived from an existing invoice of this company",
 		"operationId": "createCompanyInvoiceDerivation",
 		"method": "POST",
 		"path": "/v1/companies/{company_id}/invoices/derivations",
@@ -3087,7 +3275,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "invoice",
 		"operation": "issue",
 		"displayName": "Issue",
-		"action": "Issue an invoice (DRAFT → ISSUED)",
+		"action": "Issue an invoice",
 		"description": "Finalizes a draft invoice of this company: assigns its definitive number from the configured series and makes it immutable",
 		"operationId": "issueCompanyInvoice",
 		"method": "POST",
@@ -3117,11 +3305,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"description": "If `true`, waits for PDF generation and returns the URL in the response",
 				"type": "boolean",
 				"default": false
+			},
+			{
+				"name": "attach_source_invoices",
+				"apiName": "attach_source_invoices",
+				"displayName": "Attach Source Invoices",
+				"description": "Only applies when the invoice has automatic email sending enabled",
+				"type": "boolean",
+				"default": false
 			}
 		],
 		"optionalCollectionName": "options",
 		"queryParamNames": [
-			"wait_for_pdf"
+			"wait_for_pdf",
+			"attach_source_invoices"
 		],
 		"paginated": false,
 		"isList": false,
@@ -3164,15 +3361,23 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				},
 				"type": "string",
 				"default": "",
-				"placeholder": "Invoice issued with incorrect customer data"
+				"placeholder": "Duplicate of invoice F-2026-0142, issued twice by mistake"
 			}
 		],
 		"optionalFields": [
 			{
+				"name": "issued_in_error",
+				"apiName": "issued_in_error",
+				"displayName": "Issued In Error",
+				"description": "Confirms that the invoice was issued by mistake: the operation it describes never took place, it was a test, or it is an accidental duplicate",
+				"type": "boolean",
+				"default": false
+			},
+			{
 				"name": "void_date",
 				"apiName": "void_date",
 				"displayName": "Void Date",
-				"description": "Void date (defaults to today) (YYYY-MM-DD)",
+				"description": "**Deprecated.** The void is recorded with the instant it actually takes place, returned as `voided_at` on the invoice: a void cannot be dated by the caller, and this value never changes `voided_at` (YYYY-MM-DD)",
 				"validation": {
 					"format": "date"
 				},
@@ -3217,14 +3422,14 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "rectification_type",
 				"apiName": "rectification_type",
 				"displayName": "Rectification Type",
-				"description": "Type of rectification applied to a corrective invoice: - TOTAL: Completely cancels the original invoice (status → VOIDED) - PARTIAL: Partially corrects the original invoice (status → RECTIFIED)",
+				"description": "Type of rectification applied to a corrective invoice: - TOTAL: Rectifies everything still invoiced on the original, its live correctives included (status → VOIDED) - PARTIAL: Partially corrects the original invoice (status → RECTIFIED)",
 				"required": true,
 				"type": "options",
 				"options": [
 					{
 						"name": "TOTAL",
 						"value": "TOTAL",
-						"description": "Completely cancels the original invoice (status → VOIDED)"
+						"description": "Rectifies everything still invoiced on the original, its live correctives included (status → VOIDED)"
 					},
 					{
 						"name": "PARTIAL",
@@ -3265,7 +3470,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "R5",
 						"value": "R5",
-						"description": "Simplified invoices (Art. 80 One and Two LIVA) - ONLY for simplified invoices"
+						"description": "Corrective of a simplified invoice - ONLY for simplified invoices"
 					}
 				],
 				"default": "R1"
@@ -3290,7 +3495,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "lines",
 				"apiName": "lines",
 				"displayName": "Lines",
-				"description": "**TOTAL**: Optional (if not sent, original invoice lines are copied negated) **PARTIAL**: REQUIRED (adjustment lines with positive or negative amounts)",
+				"description": "**TOTAL**: not accepted",
 				"type": "fixedCollection",
 				"fields": [
 					{
@@ -3415,13 +3620,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "main_tax_type",
 						"apiName": "main_tax.type",
 						"displayName": "Main Tax Type",
-						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100%",
+						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100% Under IVA and IPSI, 0...",
 						"type": "options",
 						"options": [
 							{
 								"name": "IVA",
 								"value": "IVA",
-								"description": "Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%)"
+								"description": "Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period)"
 							},
 							{
 								"name": "IGIC",
@@ -3462,8 +3667,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": 0
 							},
 							{
+								"name": "2%",
+								"value": 2
+							},
+							{
 								"name": "4%",
 								"value": 4
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7.5%",
+								"value": 7.5
 							},
 							{
 								"name": "10%",
@@ -3546,6 +3763,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"groupRequired": true,
 						"options": [
 							{
+								"name": "0%",
+								"value": 0
+							},
+							{
 								"name": "0.5%",
 								"value": 0.5
 							},
@@ -3616,17 +3837,17 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "02",
 								"value": "02",
-								"description": "Export"
+								"description": "Export (IVA and IGIC; not IPSI, whose AEAT list is `01, 08, 11, 18, 19, 20`)"
 							},
 							{
 								"name": "03",
 								"value": "03",
-								"description": "Used goods, art, antiques"
+								"description": "Used goods, art, antiques (not accepted, see below)"
 							},
 							{
 								"name": "04",
 								"value": "04",
-								"description": "Investment gold"
+								"description": "only reverse charge (an `ISP_ART_84_2_*` reason) or an exemption"
 							},
 							{
 								"name": "05",
@@ -3636,7 +3857,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "06",
 								"value": "06",
-								"description": "Group of entities"
+								"description": "Group of entities (not accepted, see below)"
 							},
 							{
 								"name": "07",
@@ -3646,7 +3867,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "08",
 								"value": "08",
-								"description": "IPSI/IVA/IGIC operations"
+								"description": "only `exemption_reason: NO_SUJETA_LOCALIZACION`, at 0 %"
 							},
 							{
 								"name": "09",
@@ -3656,7 +3877,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "10",
 								"value": "10",
-								"description": "Third-party collections"
+								"description": "only `exemption_reason: NO_SUJETA_ART_7_9`, on a `STANDARD` invoice whose"
 							},
 							{
 								"name": "11",
@@ -3666,7 +3887,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "14",
 								"value": "14",
-								"description": "VAT pending in certifications"
+								"description": "VAT pending in certifications (not accepted, see below)"
 							},
 							{
 								"name": "15",
@@ -3701,7 +3922,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "equivalence_surcharge_rate",
 						"apiName": "equivalence_surcharge_rate",
 						"displayName": "Equivalence Surcharge Rate",
-						"description": "Equivalence surcharge percentage in decimal format",
+						"description": "Equivalence surcharge rate for this line of the corrective invoice",
 						"type": "options",
 						"options": [
 							{
@@ -3709,23 +3930,35 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": ""
 							},
 							{
-								"name": "0",
+								"name": "0%",
 								"value": 0
 							},
 							{
-								"name": "0 5",
+								"name": "0.26%",
+								"value": 0.26
+							},
+							{
+								"name": "0.5%",
 								"value": 0.5
 							},
 							{
-								"name": "0 625",
-								"value": 0.625
+								"name": "0.62%",
+								"value": 0.62
 							},
 							{
-								"name": "1 4",
+								"name": "1%",
+								"value": 1
+							},
+							{
+								"name": "1.4%",
 								"value": 1.4
 							},
 							{
-								"name": "5 2",
+								"name": "1.75%",
+								"value": 1.75
+							},
+							{
+								"name": "5.2%",
 								"value": 5.2
 							}
 						],
@@ -3735,7 +3968,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "irpf_rate",
 						"apiName": "irpf_rate",
 						"displayName": "IRPF Rate",
-						"description": "IRPF withholding rate for this line",
+						"description": "IRPF withholding rate for this line of the corrective invoice",
 						"type": "options",
 						"options": [
 							{
@@ -3743,31 +3976,47 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": ""
 							},
 							{
-								"name": "0",
+								"name": "0%",
 								"value": 0
 							},
 							{
-								"name": "1",
+								"name": "1%",
 								"value": 1
 							},
 							{
-								"name": "2",
+								"name": "2%",
 								"value": 2
 							},
 							{
-								"name": "7",
+								"name": "2.8%",
+								"value": 2.8
+							},
+							{
+								"name": "6%",
+								"value": 6
+							},
+							{
+								"name": "7%",
 								"value": 7
 							},
 							{
-								"name": "15",
+								"name": "7.6%",
+								"value": 7.6
+							},
+							{
+								"name": "9.5%",
+								"value": 9.5
+							},
+							{
+								"name": "15%",
 								"value": 15
 							},
 							{
-								"name": "19",
+								"name": "19%",
 								"value": 19
 							},
 							{
-								"name": "24",
+								"name": "24%",
 								"value": 24
 							}
 						],
@@ -3777,7 +4026,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "exemption_reason",
 						"apiName": "exemption_reason",
 						"displayName": "Exemption Reason",
-						"description": "Tax exemption reason code per Spanish VAT Law (Ley 37/1992 LIVA)",
+						"description": "Tax exemption reason code per the Spanish VAT Law (Ley 37/1992, LIVA), with the VeriFactu code each one is reported as",
 						"type": "options",
 						"options": [
 							{
@@ -3786,43 +4035,64 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							},
 							{
 								"name": "Exempt — Art. 20 LIVA",
-								"value": "EXENTA_ART_20"
+								"value": "EXENTA_ART_20",
+								"description": "exempt, art. 20 (domestic operations such as medical, educational,"
 							},
 							{
 								"name": "Exempt — Art. 21 LIVA",
-								"value": "EXENTA_ART_21"
+								"value": "EXENTA_ART_21",
+								"description": "exempt, art. 21 (exports of goods). E2."
 							},
 							{
 								"name": "Exempt — Art. 22 LIVA",
-								"value": "EXENTA_ART_22"
+								"value": "EXENTA_ART_22",
+								"description": "exempt, art. 22 (operations treated as exports). E3."
 							},
 							{
 								"name": "Exempt — Art. 24 LIVA",
-								"value": "EXENTA_ART_24"
+								"value": "EXENTA_ART_24",
+								"description": "exempt, art. 24 (free zones, warehouses and customs regimes). E4."
 							},
 							{
 								"name": "Exempt — Art. 25 LIVA",
-								"value": "EXENTA_ART_25"
+								"value": "EXENTA_ART_25",
+								"description": "exempt, art. 25 (intra-community supplies of goods). E5."
 							},
 							{
 								"name": "Exempt — Art. 26 LIVA",
-								"value": "EXENTA_ART_26"
+								"value": "EXENTA_ART_26",
+								"description": "exempt, art. 26 (intra-community acquisitions of goods)."
 							},
 							{
 								"name": "Exempt — Art. 140 LIVA",
-								"value": "EXENTA_ART_140"
+								"value": "EXENTA_ART_140",
+								"description": "investment gold exemption, art. 140 bis (usually with `regime_key`"
 							},
 							{
 								"name": "Not Subject to VAT — Art. 7.9 LIVA",
-								"value": "NO_SUJETA_ART_7_9"
+								"value": "NO_SUJETA_ART_7_9",
+								"description": "not subject under art. 7 (such as the transfer of a business as"
 							},
 							{
 								"name": "Not Subject to VAT — Outside the Spanish VAT Territory",
-								"value": "NO_SUJETA_LOCALIZACION"
+								"value": "NO_SUJETA_LOCALIZACION",
+								"description": "not subject by the place-of-supply rules (intra-community"
 							},
 							{
 								"name": "Reverse Charge — Art. 84.2.a LIVA",
 								"value": "ISP_ART_84_2_A"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.b LIVA",
+								"value": "ISP_ART_84_2_B"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.c LIVA",
+								"value": "ISP_ART_84_2_C"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.d LIVA",
+								"value": "ISP_ART_84_2_D"
 							},
 							{
 								"name": "Reverse Charge — Art. 84.2.e LIVA",
@@ -3831,6 +4101,11 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "Reverse Charge — Art. 84.2.f LIVA",
 								"value": "ISP_ART_84_2_F"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.g LIVA",
+								"value": "ISP_ART_84_2_G",
+								"description": "reverse charge of letter g) (silver, platinum, palladium, mobile phones,"
 							},
 							{
 								"name": "Special Regime — Art. 129 LIVA",
@@ -3854,7 +4129,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							},
 							{
 								"name": "Other",
-								"value": "OTRO"
+								"value": "OTRO",
+								"description": "any other provision. Requires the text in `exemption_reason_text`. E6."
 							}
 						],
 						"default": ""
@@ -3873,6 +4149,26 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				],
 				"multipleValues": true,
 				"default": {}
+			},
+			{
+				"name": "circumstance_date",
+				"apiName": "circumstance_date",
+				"displayName": "Circumstance Date",
+				"description": "When the circumstance that causes the rectification took place, if it is one of article 80 of the VAT Act (Ley 37/1992): a discount granted after the sale, an operation cancelled or a price changed after it took place, the customer's insolvency, a bad debt (YYYY-MM-DD)",
+				"validation": {
+					"format": "date"
+				},
+				"type": "string",
+				"default": "",
+				"placeholder": "2026-03-10"
+			},
+			{
+				"name": "recipient_is_business",
+				"apiName": "recipient_is_business",
+				"displayName": "Recipient Is Business",
+				"description": "Declares that the recipient acted as a business or professional in the operation being rectified",
+				"type": "boolean",
+				"default": false
 			},
 			{
 				"name": "notes",
@@ -3919,20 +4215,323 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"default": "{}"
 			},
 			{
+				"name": "recipient",
+				"apiName": "recipient",
+				"displayName": "Recipient",
+				"description": "Only to correct the recipient's data",
+				"type": "fixedCollection",
+				"fields": [
+					{
+						"name": "customer_id",
+						"apiName": "customer_id",
+						"displayName": "Customer ID",
+						"description": "UUID of a registered customer",
+						"validation": {
+							"format": "uuid"
+						},
+						"type": "options",
+						"loadOptionsMethod": "getCustomers",
+						"default": ""
+					},
+					{
+						"name": "legal_name",
+						"apiName": "legal_name",
+						"displayName": "Legal Name",
+						"description": "Recipient legal name (max 255 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 255
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "My Company Ltd"
+					},
+					{
+						"name": "trade_name",
+						"apiName": "trade_name",
+						"displayName": "Trade Name",
+						"description": "Recipient trade name (optional) (max 255 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 255
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "My Company"
+					},
+					{
+						"name": "nif",
+						"apiName": "nif",
+						"displayName": "NIF",
+						"description": "Spanish Tax ID (9 alphanumeric characters) (exactly 9 characters)",
+						"validation": {
+							"pattern": "^[A-Za-z0-9]{9}$",
+							"minLength": 9,
+							"maxLength": 9
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "B12345674"
+					},
+					{
+						"name": "alternative_id_type",
+						"apiName": "alternative_id.type",
+						"displayName": "Alternative ID Type",
+						"description": "Identifier type",
+						"type": "options",
+						"options": [
+							{
+								"name": "NIF IVA",
+								"value": "NIF_IVA"
+							},
+							{
+								"name": "PASSPORT",
+								"value": "PASSPORT"
+							},
+							{
+								"name": "COUNTRY ID",
+								"value": "COUNTRY_ID"
+							},
+							{
+								"name": "RESIDENCE CERTIFICATE",
+								"value": "RESIDENCE_CERTIFICATE"
+							},
+							{
+								"name": "OTHER DOCUMENT",
+								"value": "OTHER_DOCUMENT"
+							},
+							{
+								"name": "NOT REGISTERED",
+								"value": "NOT_REGISTERED"
+							},
+							{
+								"name": "02",
+								"value": "02"
+							},
+							{
+								"name": "03",
+								"value": "03"
+							},
+							{
+								"name": "04",
+								"value": "04"
+							},
+							{
+								"name": "05",
+								"value": "05"
+							},
+							{
+								"name": "06",
+								"value": "06"
+							},
+							{
+								"name": "07",
+								"value": "07"
+							}
+						],
+						"default": "NIF_IVA",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "alternative_id_number",
+						"apiName": "alternative_id.number",
+						"displayName": "Alternative ID Number",
+						"description": "Identifier number (max 20 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 20
+						},
+						"type": "string",
+						"default": "",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "alternative_id_country_code",
+						"apiName": "alternative_id.country_code",
+						"displayName": "Alternative ID Country Code",
+						"description": "ISO 3166-1 alpha-2 code of the country that issued the document (exactly 2 characters)",
+						"validation": {
+							"pattern": "^[A-Z]{2}$",
+							"minLength": 2,
+							"maxLength": 2
+						},
+						"type": "string",
+						"default": "",
+						"required": false
+					},
+					{
+						"name": "address_street",
+						"apiName": "address.street",
+						"displayName": "Address Street",
+						"description": "Full address (street, number, floor, etc.) - Latin characters only (max 255 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"minLength": 1,
+							"maxLength": 255
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "123 Main Street",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "address_number",
+						"apiName": "address.number",
+						"displayName": "Address Number",
+						"description": "Street number (max 20 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 20
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "123",
+						"required": false
+					},
+					{
+						"name": "address_floor",
+						"apiName": "address.floor",
+						"displayName": "Address Floor",
+						"description": "Floor or level (max 10 characters)",
+						"validation": {
+							"maxLength": 10
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "2nd floor, Apt A",
+						"required": false
+					},
+					{
+						"name": "address_door",
+						"apiName": "address.door",
+						"displayName": "Address Door",
+						"description": "Door or apartment (max 10 characters)",
+						"validation": {
+							"maxLength": 10
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "A",
+						"required": false
+					},
+					{
+						"name": "address_postal_code",
+						"apiName": "address.postal_code",
+						"displayName": "Address Postal Code",
+						"description": "Postal code (5 digits for Spain, free format for other countries) (max 20 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 20
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "28001",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "address_city",
+						"apiName": "address.city",
+						"displayName": "Address City",
+						"description": "City or town - Latin characters only (max 100 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"minLength": 1,
+							"maxLength": 100
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Madrid",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "address_province",
+						"apiName": "address.province",
+						"displayName": "Address Province",
+						"description": "Province or state - Latin characters only (max 100 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"minLength": 1,
+							"maxLength": 100
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Madrid",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "address_country",
+						"apiName": "address.country",
+						"displayName": "Address Country",
+						"description": "Country name (in English, Spanish or Catalan) or ISO code. Prefer Country Code; if both are set they must name the same country (max 100 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"minLength": 1,
+							"maxLength": 100
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Spain",
+						"required": false
+					},
+					{
+						"name": "address_country_code",
+						"apiName": "address.country_code",
+						"displayName": "Address Country Code",
+						"description": "ISO 3166-1 alpha-2 country code: the canonical field that decides the country of the address (exactly 2 characters)",
+						"validation": {
+							"pattern": "^[A-Z]{2}$",
+							"minLength": 2,
+							"maxLength": 2
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "ES",
+						"required": false
+					},
+					{
+						"name": "phone",
+						"apiName": "phone",
+						"displayName": "Phone",
+						"description": "A phone number as this API accepts it: 9 to 20 characters, and only digits, spaces, dashes, parentheses and an optional leading `+` (min 9 characters, max 20 characters)",
+						"validation": {
+							"pattern": "^[+]?[0-9\\s\\-\\(\\)]+$",
+							"minLength": 9,
+							"maxLength": 20
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "+34 612 345 678"
+					},
+					{
+						"name": "email",
+						"apiName": "email",
+						"displayName": "Email",
+						"description": "Email address (minimum valid email is 5 chars, e.g (email address, min 5 characters, max 255 characters)",
+						"validation": {
+							"minLength": 5,
+							"maxLength": 255,
+							"format": "email"
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "user@example.com"
+					}
+				],
+				"default": {}
+			},
+			{
 				"name": "options",
 				"apiName": "options",
 				"displayName": "Options",
 				"description": "Controls how the invoice is processed after creation",
 				"type": "fixedCollection",
 				"fields": [
-					{
-						"name": "verifactu_enabled",
-						"apiName": "verifactu_enabled",
-						"displayName": "Verifactu Enabled",
-						"description": "Whether VeriFactu information should be generated for this invoice",
-						"type": "boolean",
-						"default": false
-					},
 					{
 						"name": "issue_directly",
 						"apiName": "issue_directly",
@@ -3954,6 +4553,14 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"apiName": "send_automatically",
 						"displayName": "Send Automatically",
 						"description": "Only applies when `issue_directly` is `true`",
+						"type": "boolean",
+						"default": false
+					},
+					{
+						"name": "attach_source_invoices",
+						"apiName": "attach_source_invoices",
+						"displayName": "Attach Source Invoices",
+						"description": "Only applies when `send_automatically` is `true`",
 						"type": "boolean",
 						"default": false
 					},
@@ -4030,10 +4637,482 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 	},
 	{
 		"resource": "invoice",
+		"operation": "exchangeSimplified",
+		"displayName": "Exchange Simplified",
+		"action": "Exchange simplified invoices for a full invoice",
+		"description": "Issues a full invoice in exchange for one or more simplified invoices already issued, when the customer asks for an invoice with their details",
+		"operationId": "createCompanySimplifiedExchange",
+		"method": "POST",
+		"path": "/v1/companies/{company_id}/invoices/simplified-exchanges",
+		"pathParams": [],
+		"requiredFields": [
+			{
+				"name": "simplified_invoice_ids",
+				"apiName": "simplified_invoice_ids",
+				"displayName": "Simplified Invoice IDs",
+				"description": "The simplified invoices the full invoice replaces, issued and not voided, exchanged or corrected (UUID)",
+				"required": true,
+				"validation": {
+					"format": "uuid",
+					"minItems": 1
+				},
+				"type": "string",
+				"multipleValues": true,
+				"default": []
+			},
+			{
+				"name": "recipient",
+				"apiName": "recipient",
+				"displayName": "Recipient",
+				"description": "The customer the full invoice goes to, identified as a standard invoice requires: a registered `customer_id` or inline data with a tax ID and address",
+				"required": true,
+				"type": "fixedCollection",
+				"fields": [
+					{
+						"name": "customer_id",
+						"apiName": "customer_id",
+						"displayName": "Customer ID",
+						"description": "UUID of a registered customer",
+						"validation": {
+							"format": "uuid"
+						},
+						"type": "options",
+						"loadOptionsMethod": "getCustomers",
+						"default": ""
+					},
+					{
+						"name": "legal_name",
+						"apiName": "legal_name",
+						"displayName": "Legal Name",
+						"description": "Recipient legal name (max 255 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 255
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "My Company Ltd"
+					},
+					{
+						"name": "trade_name",
+						"apiName": "trade_name",
+						"displayName": "Trade Name",
+						"description": "Recipient trade name (optional) (max 255 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 255
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "My Company"
+					},
+					{
+						"name": "nif",
+						"apiName": "nif",
+						"displayName": "NIF",
+						"description": "Spanish Tax ID (9 alphanumeric characters) (exactly 9 characters)",
+						"validation": {
+							"pattern": "^[A-Za-z0-9]{9}$",
+							"minLength": 9,
+							"maxLength": 9
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "B12345674"
+					},
+					{
+						"name": "alternative_id_type",
+						"apiName": "alternative_id.type",
+						"displayName": "Alternative ID Type",
+						"description": "Identifier type",
+						"type": "options",
+						"options": [
+							{
+								"name": "NIF IVA",
+								"value": "NIF_IVA"
+							},
+							{
+								"name": "PASSPORT",
+								"value": "PASSPORT"
+							},
+							{
+								"name": "COUNTRY ID",
+								"value": "COUNTRY_ID"
+							},
+							{
+								"name": "RESIDENCE CERTIFICATE",
+								"value": "RESIDENCE_CERTIFICATE"
+							},
+							{
+								"name": "OTHER DOCUMENT",
+								"value": "OTHER_DOCUMENT"
+							},
+							{
+								"name": "NOT REGISTERED",
+								"value": "NOT_REGISTERED"
+							},
+							{
+								"name": "02",
+								"value": "02"
+							},
+							{
+								"name": "03",
+								"value": "03"
+							},
+							{
+								"name": "04",
+								"value": "04"
+							},
+							{
+								"name": "05",
+								"value": "05"
+							},
+							{
+								"name": "06",
+								"value": "06"
+							},
+							{
+								"name": "07",
+								"value": "07"
+							}
+						],
+						"default": "NIF_IVA",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "alternative_id_number",
+						"apiName": "alternative_id.number",
+						"displayName": "Alternative ID Number",
+						"description": "Identifier number (max 20 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 20
+						},
+						"type": "string",
+						"default": "",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "alternative_id_country_code",
+						"apiName": "alternative_id.country_code",
+						"displayName": "Alternative ID Country Code",
+						"description": "ISO 3166-1 alpha-2 code of the country that issued the document (exactly 2 characters)",
+						"validation": {
+							"pattern": "^[A-Z]{2}$",
+							"minLength": 2,
+							"maxLength": 2
+						},
+						"type": "string",
+						"default": "",
+						"required": false
+					},
+					{
+						"name": "address_street",
+						"apiName": "address.street",
+						"displayName": "Address Street",
+						"description": "Full address (street, number, floor, etc.) - Latin characters only (max 255 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"minLength": 1,
+							"maxLength": 255
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "123 Main Street",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "address_number",
+						"apiName": "address.number",
+						"displayName": "Address Number",
+						"description": "Street number (max 20 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 20
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "123",
+						"required": false
+					},
+					{
+						"name": "address_floor",
+						"apiName": "address.floor",
+						"displayName": "Address Floor",
+						"description": "Floor or level (max 10 characters)",
+						"validation": {
+							"maxLength": 10
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "2nd floor, Apt A",
+						"required": false
+					},
+					{
+						"name": "address_door",
+						"apiName": "address.door",
+						"displayName": "Address Door",
+						"description": "Door or apartment (max 10 characters)",
+						"validation": {
+							"maxLength": 10
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "A",
+						"required": false
+					},
+					{
+						"name": "address_postal_code",
+						"apiName": "address.postal_code",
+						"displayName": "Address Postal Code",
+						"description": "Postal code (5 digits for Spain, free format for other countries) (max 20 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 20
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "28001",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "address_city",
+						"apiName": "address.city",
+						"displayName": "Address City",
+						"description": "City or town - Latin characters only (max 100 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"minLength": 1,
+							"maxLength": 100
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Madrid",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "address_province",
+						"apiName": "address.province",
+						"displayName": "Address Province",
+						"description": "Province or state - Latin characters only (max 100 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"minLength": 1,
+							"maxLength": 100
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Madrid",
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "address_country",
+						"apiName": "address.country",
+						"displayName": "Address Country",
+						"description": "Country name (in English, Spanish or Catalan) or ISO code. Prefer Country Code; if both are set they must name the same country (max 100 characters)",
+						"validation": {
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"minLength": 1,
+							"maxLength": 100
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Spain",
+						"required": false
+					},
+					{
+						"name": "address_country_code",
+						"apiName": "address.country_code",
+						"displayName": "Address Country Code",
+						"description": "ISO 3166-1 alpha-2 country code: the canonical field that decides the country of the address (exactly 2 characters)",
+						"validation": {
+							"pattern": "^[A-Z]{2}$",
+							"minLength": 2,
+							"maxLength": 2
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "ES",
+						"required": false
+					},
+					{
+						"name": "phone",
+						"apiName": "phone",
+						"displayName": "Phone",
+						"description": "A phone number as this API accepts it: 9 to 20 characters, and only digits, spaces, dashes, parentheses and an optional leading `+` (min 9 characters, max 20 characters)",
+						"validation": {
+							"pattern": "^[+]?[0-9\\s\\-\\(\\)]+$",
+							"minLength": 9,
+							"maxLength": 20
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "+34 612 345 678"
+					},
+					{
+						"name": "email",
+						"apiName": "email",
+						"displayName": "Email",
+						"description": "Email address (minimum valid email is 5 chars, e.g (email address, min 5 characters, max 255 characters)",
+						"validation": {
+							"minLength": 5,
+							"maxLength": 255,
+							"format": "email"
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "user@example.com"
+					}
+				],
+				"default": {}
+			}
+		],
+		"optionalFields": [
+			{
+				"name": "series_id",
+				"apiName": "series_id",
+				"displayName": "Series ID",
+				"description": "Series of the full invoice",
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "options",
+				"loadOptionsMethod": "getSeries",
+				"default": ""
+			},
+			{
+				"name": "notes",
+				"apiName": "notes",
+				"displayName": "Notes",
+				"description": "Observations printed on the full invoice (max 1000 characters)",
+				"validation": {
+					"maxLength": 1000
+				},
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "options",
+				"apiName": "options",
+				"displayName": "Options",
+				"description": "Controls how the invoice is processed after creation",
+				"type": "fixedCollection",
+				"fields": [
+					{
+						"name": "issue_directly",
+						"apiName": "issue_directly",
+						"displayName": "Issue Directly",
+						"description": "If `true`, creates the invoice directly as **ISSUED** with a definitive number and PDF",
+						"type": "boolean",
+						"default": false
+					},
+					{
+						"name": "wait_for_pdf",
+						"apiName": "wait_for_pdf",
+						"displayName": "Wait For Pdf",
+						"description": "Only applies when `issue_directly` is `true`",
+						"type": "boolean",
+						"default": false
+					},
+					{
+						"name": "send_automatically",
+						"apiName": "send_automatically",
+						"displayName": "Send Automatically",
+						"description": "Only applies when `issue_directly` is `true`",
+						"type": "boolean",
+						"default": false
+					},
+					{
+						"name": "attach_source_invoices",
+						"apiName": "attach_source_invoices",
+						"displayName": "Attach Source Invoices",
+						"description": "Only applies when `send_automatically` is `true`",
+						"type": "boolean",
+						"default": false
+					},
+					{
+						"name": "email_config_recipients",
+						"apiName": "email_config.recipients",
+						"displayName": "Email Config Recipients",
+						"description": "List of recipient emails (at least 1 required) (email address, min 5 characters, max 255 characters)",
+						"validation": {
+							"minLength": 5,
+							"maxLength": 255,
+							"format": "email",
+							"minItems": 1
+						},
+						"type": "string",
+						"multipleValues": true,
+						"default": [],
+						"required": false,
+						"groupRequired": true
+					},
+					{
+						"name": "email_config_cc",
+						"apiName": "email_config.cc",
+						"displayName": "Email Config CC",
+						"description": "List of CC emails (optional) (email address, min 5 characters, max 255 characters)",
+						"type": "string",
+						"validation": {
+							"minLength": 5,
+							"maxLength": 255,
+							"format": "email"
+						},
+						"multipleValues": true,
+						"default": [],
+						"required": false
+					},
+					{
+						"name": "email_config_subject",
+						"apiName": "email_config.subject",
+						"displayName": "Email Config Subject",
+						"description": "Custom email subject (optional, if not specified uses a default) (max 200 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 200
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Invoice 2025/0001 - Web development services",
+						"required": false
+					},
+					{
+						"name": "email_config_message",
+						"apiName": "email_config.message",
+						"displayName": "Email Config Message",
+						"description": "Custom message (optional, added to email body) (max 2000 characters)",
+						"validation": {
+							"minLength": 1,
+							"maxLength": 2000
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Dear customer, please find attached the invoice for the services provided. Thank you for your trust.",
+						"required": false
+					}
+				],
+				"default": {}
+			}
+		],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "invoice",
 		"operation": "setStatus",
 		"displayName": "Set Status",
 		"action": "Set the status of an invoice",
-		"description": "Sets the commercial status of an invoice: paid, sent, or back to issued",
+		"description": "Sets the commercial status of an invoice",
 		"operationId": "setCompanyInvoiceStatus",
 		"method": "PUT",
 		"path": "/v1/companies/{company_id}/invoices/{invoice_id}/status",
@@ -4244,8 +5323,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "invoice",
 		"operation": "schedule",
 		"displayName": "Schedule",
-		"action": "Schedule or reschedule an invoice",
-		"description": "Replaces the scheduling of a draft invoice, whether it had one or not: scheduling for the first time and moving an existing schedule are the same act on the same sub-resource",
+		"action": "Schedule an invoice",
+		"description": "Replaces the scheduling of a draft invoice, whether it had one or not, moving it to `SCHEDULED`",
 		"operationId": "setCompanyInvoiceSchedule",
 		"method": "PUT",
 		"path": "/v1/companies/{company_id}/invoices/{invoice_id}/schedule",
@@ -4313,7 +5392,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "unschedule",
 		"displayName": "Unschedule",
 		"action": "Remove the scheduling of an invoice",
-		"description": "Removes the scheduling of an invoice, leaving it as a plain draft",
+		"description": "Removes the scheduling of an invoice, returning it to a plain draft",
 		"operationId": "deleteCompanyInvoiceSchedule",
 		"method": "DELETE",
 		"path": "/v1/companies/{company_id}/invoices/{invoice_id}/schedule",
@@ -4371,7 +5450,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "recipients",
 				"apiName": "recipients",
 				"displayName": "Recipients",
-				"description": "If not specified, uses the customer's email (email address, min 5 characters, max 255 characters)",
+				"description": "Recipients of the email (email address, min 5 characters, max 255 characters)",
 				"type": "string",
 				"validation": {
 					"minLength": 5,
@@ -4385,7 +5464,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "cc",
 				"apiName": "cc",
 				"displayName": "CC",
-				"description": "Format: email address, min 5 characters, max 255 characters",
+				"description": "CC recipients (email address, min 5 characters, max 255 characters)",
 				"type": "string",
 				"validation": {
 					"minLength": 5,
@@ -4427,10 +5506,18 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"default": true
 			},
 			{
+				"name": "attach_source_invoices",
+				"apiName": "attach_source_invoices",
+				"displayName": "Attach Source Invoices",
+				"description": "Attach a ZIP archive (`suplidos_<invoice-number>.zip`) containing the PDFs of the source invoices referenced by the invoice's SUPLIDO consolidation lines (`source_invoice_ids`)",
+				"type": "boolean",
+				"default": false
+			},
+			{
 				"name": "language",
 				"apiName": "language",
 				"displayName": "Language",
-				"description": "Email language",
+				"description": "Language of the email",
 				"type": "options",
 				"options": [
 					{
@@ -4493,16 +5580,74 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"description": "If `true`, emit the resulting invoice atomically in the same act (assigns a fiscal number and runs the quota/ledger/VeriFactu→PDF flow)",
 				"type": "boolean",
 				"default": false
-			},
-			{
-				"name": "verifactu_enabled",
-				"apiName": "verifactu_enabled",
-				"displayName": "Verifactu Enabled",
-				"description": "Whether the resulting invoice generates VeriFactu information",
-				"type": "boolean",
-				"default": false
 			}
 		],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "invoice",
+		"operation": "getPreview",
+		"displayName": "Get Preview",
+		"action": "Get the preview image URL of an invoice",
+		"description": "Returns a temporary pre-signed URL to a preview image (WebP) of the invoice, suitable for inline rendering",
+		"operationId": "getCompanyInvoicePreview",
+		"method": "GET",
+		"path": "/v1/companies/{company_id}/invoices/{invoice_id}/preview",
+		"pathParams": [
+			{
+				"name": "invoiceId",
+				"apiName": "invoice_id",
+				"displayName": "Invoice ID",
+				"description": "Invoice ID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": "",
+				"placeholder": "550e8400-e29b-41d4-a716-446655440000"
+			}
+		],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "invoice",
+		"operation": "getVerifactuRecords",
+		"displayName": "Get Verifactu Records",
+		"action": "List the VeriFactu records of an invoice",
+		"description": "Returns the VeriFactu records of this invoice, each with its own status, ordered by `registered_at` ascending: the registration first and, if the invoice was voided, its cancellation after it",
+		"operationId": "listCompanyInvoiceVerifactuRecords",
+		"method": "GET",
+		"path": "/v1/companies/{company_id}/invoices/{invoice_id}/verifactu-records",
+		"pathParams": [
+			{
+				"name": "invoiceId",
+				"apiName": "invoice_id",
+				"displayName": "Invoice ID",
+				"description": "Invoice ID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": "",
+				"placeholder": "550e8400-e29b-41d4-a716-446655440000"
+			}
+		],
+		"requiredFields": [],
+		"optionalFields": [],
 		"filters": [],
 		"optionalCollectionName": "options",
 		"queryParamNames": [],
@@ -4515,7 +5660,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "getAll",
 		"displayName": "Get Many",
 		"action": "List the customers of a company",
-		"description": "Returns a paginated list of the customers of this company (NIF), with optional filters",
+		"description": "Returns a paginated list of the customers of this company, with optional filters",
 		"operationId": "listCompanyCustomers",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/customers",
@@ -4592,9 +5737,51 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "sort_by",
 				"apiName": "sort_by",
 				"displayName": "Sort By",
-				"description": "Field to sort by (eg",
-				"type": "string",
-				"default": ""
+				"description": "Field to sort by",
+				"type": "options",
+				"options": [
+					{
+						"name": "Legal Name",
+						"value": "legal_name",
+						"description": "legal name."
+					},
+					{
+						"name": "NIF",
+						"value": "nif",
+						"description": "tax identifier."
+					},
+					{
+						"name": "Email",
+						"value": "email",
+						"description": "email address."
+					},
+					{
+						"name": "Phone",
+						"value": "phone",
+						"description": "phone number."
+					},
+					{
+						"name": "City",
+						"value": "city",
+						"description": "city of the address."
+					},
+					{
+						"name": "Province",
+						"value": "province",
+						"description": "province of the address."
+					},
+					{
+						"name": "Active",
+						"value": "active",
+						"description": "whether the customer is active."
+					},
+					{
+						"name": "Created At",
+						"value": "created_at",
+						"description": "creation instant."
+					}
+				],
+				"default": "legal_name"
 			},
 			{
 				"name": "sort_order",
@@ -4637,7 +5824,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "create",
 		"displayName": "Create",
 		"action": "Create a customer for a company",
-		"description": "Creates a new customer under this company (NIF)",
+		"description": "Creates a new customer under this company",
 		"operationId": "createCompanyCustomer",
 		"method": "POST",
 		"path": "/v1/companies/{company_id}/customers",
@@ -4673,7 +5860,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Full address (street, number, floor, etc.) - Latin characters only (max 255 characters)",
 						"required": true,
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 255
 						},
@@ -4686,7 +5873,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"apiName": "number",
 						"displayName": "Number",
 						"description": "Street number (max 20 characters)",
-						"required": true,
 						"validation": {
 							"minLength": 1,
 							"maxLength": 20
@@ -4740,7 +5926,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "City or town - Latin characters only (max 100 characters)",
 						"required": true,
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª()]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -4755,7 +5941,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Province or state - Latin characters only (max 100 characters)",
 						"required": true,
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -4767,9 +5953,9 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "country",
 						"apiName": "country",
 						"displayName": "Country",
-						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
+						"description": "Country name (in English, Spanish or Catalan) or ISO code. Prefer Country Code; if both are set they must name the same country (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -4781,7 +5967,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "country_code",
 						"apiName": "country_code",
 						"displayName": "Country Code",
-						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"description": "ISO 3166-1 alpha-2 country code: the canonical field that decides the country of the address (exactly 2 characters)",
 						"validation": {
 							"pattern": "^[A-Z]{2}$",
 							"minLength": 2,
@@ -4800,7 +5986,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "trade_name",
 				"apiName": "trade_name",
 				"displayName": "Trade Name",
-				"description": "Customer trade name (optional) (max 120 characters)",
+				"description": "Customer trade name (max 120 characters)",
 				"validation": {
 					"maxLength": 120
 				},
@@ -4892,7 +6078,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "number",
 						"apiName": "number",
 						"displayName": "Number",
-						"description": "Format: max 20 characters",
+						"description": "Identifier number (max 20 characters)",
 						"required": true,
 						"validation": {
 							"minLength": 1,
@@ -4905,7 +6091,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "country_code",
 						"apiName": "country_code",
 						"displayName": "Country Code",
-						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"description": "ISO 3166-1 alpha-2 code of the country that issued the document (exactly 2 characters)",
 						"validation": {
 							"pattern": "^[A-Z]{2}$",
 							"minLength": 2,
@@ -4921,7 +6107,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "phone",
 				"apiName": "phone",
 				"displayName": "Phone",
-				"description": "Phone number (min 9 characters, max 20 characters)",
+				"description": "A phone number as this API accepts it: 9 to 20 characters, and only digits, spaces, dashes, parentheses and an optional leading `+` (min 9 characters, max 20 characters)",
 				"validation": {
 					"pattern": "^[+]?[0-9\\s\\-\\(\\)]+$",
 					"minLength": 9,
@@ -4935,7 +6121,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "email",
 				"apiName": "email",
 				"displayName": "Email",
-				"description": "Email address (minimum valid email is 5 chars, e.g (email address, min 5 characters, max 255 characters)",
+				"description": "Main contact address (minimum valid email is 5 chars, e.g (email address, min 5 characters, max 255 characters)",
 				"validation": {
 					"minLength": 5,
 					"maxLength": 255,
@@ -4960,7 +6146,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "billing_emails",
 				"apiName": "billing_emails",
 				"displayName": "Billing Emails",
-				"description": "Additional emails for invoice delivery (optional) (email address, min 5 characters, max 255 characters)",
+				"description": "Addresses that receive the customer's invoice emails (email address, min 5 characters, max 255 characters)",
 				"type": "string",
 				"validation": {
 					"minLength": 5,
@@ -5110,7 +6296,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "get",
 		"displayName": "Get",
 		"action": "Get a customer of a company",
-		"description": "Retrieves the complete details of a customer of this company (NIF)",
+		"description": "Retrieves the complete details of a customer of this company",
 		"operationId": "getCompanyCustomer",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/customers/{customer_id}",
@@ -5248,7 +6434,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "number",
 						"apiName": "number",
 						"displayName": "Number",
-						"description": "Format: max 20 characters",
+						"description": "Identifier number (max 20 characters)",
 						"required": true,
 						"validation": {
 							"minLength": 1,
@@ -5261,7 +6447,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "country_code",
 						"apiName": "country_code",
 						"displayName": "Country Code",
-						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"description": "ISO 3166-1 alpha-2 code of the country that issued the document (exactly 2 characters)",
 						"validation": {
 							"pattern": "^[A-Z]{2}$",
 							"minLength": 2,
@@ -5312,7 +6498,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Full address (street, number, floor, etc.) - Latin characters only (max 255 characters)",
 						"required": true,
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 255
 						},
@@ -5325,7 +6511,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"apiName": "number",
 						"displayName": "Number",
 						"description": "Street number (max 20 characters)",
-						"required": true,
 						"validation": {
 							"minLength": 1,
 							"maxLength": 20
@@ -5379,7 +6564,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "City or town - Latin characters only (max 100 characters)",
 						"required": true,
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª()]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -5394,7 +6579,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Province or state - Latin characters only (max 100 characters)",
 						"required": true,
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -5406,9 +6591,9 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "country",
 						"apiName": "country",
 						"displayName": "Country",
-						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
+						"description": "Country name (in English, Spanish or Catalan) or ISO code. Prefer Country Code; if both are set they must name the same country (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -5420,7 +6605,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "country_code",
 						"apiName": "country_code",
 						"displayName": "Country Code",
-						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"description": "ISO 3166-1 alpha-2 country code: the canonical field that decides the country of the address (exactly 2 characters)",
 						"validation": {
 							"pattern": "^[A-Z]{2}$",
 							"minLength": 2,
@@ -5451,7 +6636,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "email",
 				"apiName": "email",
 				"displayName": "Email",
-				"description": "Email address (email address, min 5 characters, max 255 characters)",
+				"description": "Main contact address (email address, min 5 characters, max 255 characters)",
 				"validation": {
 					"minLength": 5,
 					"maxLength": 255,
@@ -5476,7 +6661,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "billing_emails",
 				"apiName": "billing_emails",
 				"displayName": "Billing Emails",
-				"description": "Additional emails for invoice delivery (email address, min 5 characters, max 255 characters)",
+				"description": "Addresses that receive the customer's invoice emails (email address, min 5 characters, max 255 characters)",
 				"type": "string",
 				"validation": {
 					"minLength": 5,
@@ -5635,7 +6820,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "delete",
 		"displayName": "Delete",
 		"action": "Delete a customer of a company",
-		"description": "Deletes a customer of this company (NIF) that has no invoices",
+		"description": "Deletes a customer of this company that has no invoices",
 		"operationId": "deleteCompanyCustomer",
 		"method": "DELETE",
 		"path": "/v1/companies/{company_id}/customers/{customer_id}",
@@ -5668,7 +6853,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "getAll",
 		"displayName": "Get Many",
 		"action": "List the products of a company",
-		"description": "Returns a paginated list of the products/services of this company (NIF), with optional filters",
+		"description": "Returns a paginated list of the products/services of this company, with optional filters",
 		"operationId": "listCompanyProducts",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/products",
@@ -5786,23 +6971,28 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"options": [
 					{
 						"name": "Name",
-						"value": "name"
+						"value": "name",
+						"description": "product name."
 					},
 					{
 						"name": "Code",
-						"value": "code"
+						"value": "code",
+						"description": "product code."
 					},
 					{
 						"name": "Category",
-						"value": "category"
+						"value": "category",
+						"description": "product category."
 					},
 					{
 						"name": "Default Price",
-						"value": "default_price"
+						"value": "default_price",
+						"description": "default unit price."
 					},
 					{
 						"name": "Created At",
-						"value": "created_at"
+						"value": "created_at",
+						"description": "creation instant."
 					}
 				],
 				"default": "name"
@@ -5847,7 +7037,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "create",
 		"displayName": "Create",
 		"action": "Create a product for a company",
-		"description": "Creates a new product or service in the catalog of this company (NIF)",
+		"description": "Creates a product or service in the catalog of the company in the path and returns it with its `id`",
 		"operationId": "createCompanyProduct",
 		"method": "POST",
 		"path": "/v1/companies/{company_id}/products",
@@ -5962,21 +7152,21 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "main_tax",
 				"apiName": "main_tax",
 				"displayName": "Main Tax",
-				"description": "Complete tax information with cross-validations: - IVA: only percentages 0, 4, 10, 21 - IGIC: only percentages 0, 3, 5, 7, 9.5, 15, 20 - IPSI: only percentages 0.5, 1, 2, 4, 8, 10 - OTHER: any percentage between 0 and 100 Exception: when regime_key = \"17\" (OSS/IOSS) the invoice applies the destin...",
+				"description": "Complete tax information with cross-validations: - IVA: real rates 4, 10, 21, and the temporary 2, 5 and 7.5 (see below for 0) - IGIC: 0, 3, 5, 7, 9.5, 15, 20 — here 0 is the real \"Tipo Cero\" - IPSI: real rates 0.5, 1, 2, 4, 8, 10 (see below for 0) - OTHER: any percentage between 0 and 100 **0 % ...",
 				"type": "fixedCollection",
 				"fields": [
 					{
 						"name": "type",
 						"apiName": "type",
 						"displayName": "Type",
-						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100%",
+						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100% Under IVA and IPSI, 0...",
 						"required": true,
 						"type": "options",
 						"options": [
 							{
 								"name": "IVA",
 								"value": "IVA",
-								"description": "Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%)"
+								"description": "Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period)"
 							},
 							{
 								"name": "IGIC",
@@ -6014,8 +7204,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": 0
 							},
 							{
+								"name": "2%",
+								"value": 2
+							},
+							{
 								"name": "4%",
 								"value": 4
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7.5%",
+								"value": 7.5
 							},
 							{
 								"name": "10%",
@@ -6096,6 +7298,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"default": 0.5,
 						"options": [
 							{
+								"name": "0%",
+								"value": 0
+							},
+							{
 								"name": "0.5%",
 								"value": 0.5
 							},
@@ -6165,17 +7371,17 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "02",
 								"value": "02",
-								"description": "Export"
+								"description": "Export (IVA and IGIC; not IPSI, whose AEAT list is `01, 08, 11, 18, 19, 20`)"
 							},
 							{
 								"name": "03",
 								"value": "03",
-								"description": "Used goods, art, antiques"
+								"description": "Used goods, art, antiques (not accepted, see below)"
 							},
 							{
 								"name": "04",
 								"value": "04",
-								"description": "Investment gold"
+								"description": "only reverse charge (an `ISP_ART_84_2_*` reason) or an exemption"
 							},
 							{
 								"name": "05",
@@ -6185,7 +7391,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "06",
 								"value": "06",
-								"description": "Group of entities"
+								"description": "Group of entities (not accepted, see below)"
 							},
 							{
 								"name": "07",
@@ -6195,7 +7401,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "08",
 								"value": "08",
-								"description": "IPSI/IVA/IGIC operations"
+								"description": "only `exemption_reason: NO_SUJETA_LOCALIZACION`, at 0 %"
 							},
 							{
 								"name": "09",
@@ -6205,7 +7411,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "10",
 								"value": "10",
-								"description": "Third-party collections"
+								"description": "only `exemption_reason: NO_SUJETA_ART_7_9`, on a `STANDARD` invoice whose"
 							},
 							{
 								"name": "11",
@@ -6215,7 +7421,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "14",
 								"value": "14",
-								"description": "VAT pending in certifications"
+								"description": "VAT pending in certifications (not accepted, see below)"
 							},
 							{
 								"name": "15",
@@ -6287,7 +7493,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "get",
 		"displayName": "Get",
 		"action": "Get a product of a company",
-		"description": "Retrieves the details of a product of this company (NIF)",
+		"description": "Retrieves one product of the catalog of this company",
 		"operationId": "getCompanyProduct",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/products/{product_id}",
@@ -6318,7 +7524,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "product",
 		"operation": "update",
 		"displayName": "Update",
-		"action": "Update a product of a company",
+		"action": "Update a product of a company partially",
 		"description": "Updates only the fields present in the body, leaving every other field of the product as it is — in particular `main_tax`, `irpf_rate` and `equivalence_surcharge_rate`",
 		"operationId": "patchCompanyProduct",
 		"method": "PATCH",
@@ -6446,14 +7652,14 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "type",
 						"apiName": "type",
 						"displayName": "Type",
-						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100%",
+						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100% Under IVA and IPSI, 0...",
 						"required": true,
 						"type": "options",
 						"options": [
 							{
 								"name": "IVA",
 								"value": "IVA",
-								"description": "Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%)"
+								"description": "Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period)"
 							},
 							{
 								"name": "IGIC",
@@ -6491,8 +7697,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": 0
 							},
 							{
+								"name": "2%",
+								"value": 2
+							},
+							{
 								"name": "4%",
 								"value": 4
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7.5%",
+								"value": 7.5
 							},
 							{
 								"name": "10%",
@@ -6573,6 +7791,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"default": 0.5,
 						"options": [
 							{
+								"name": "0%",
+								"value": 0
+							},
+							{
 								"name": "0.5%",
 								"value": 0.5
 							},
@@ -6642,17 +7864,17 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "02",
 								"value": "02",
-								"description": "Export"
+								"description": "Export (IVA and IGIC; not IPSI, whose AEAT list is `01, 08, 11, 18, 19, 20`)"
 							},
 							{
 								"name": "03",
 								"value": "03",
-								"description": "Used goods, art, antiques"
+								"description": "Used goods, art, antiques (not accepted, see below)"
 							},
 							{
 								"name": "04",
 								"value": "04",
-								"description": "Investment gold"
+								"description": "only reverse charge (an `ISP_ART_84_2_*` reason) or an exemption"
 							},
 							{
 								"name": "05",
@@ -6662,7 +7884,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "06",
 								"value": "06",
-								"description": "Group of entities"
+								"description": "Group of entities (not accepted, see below)"
 							},
 							{
 								"name": "07",
@@ -6672,7 +7894,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "08",
 								"value": "08",
-								"description": "IPSI/IVA/IGIC operations"
+								"description": "only `exemption_reason: NO_SUJETA_LOCALIZACION`, at 0 %"
 							},
 							{
 								"name": "09",
@@ -6682,7 +7904,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "10",
 								"value": "10",
-								"description": "Third-party collections"
+								"description": "only `exemption_reason: NO_SUJETA_ART_7_9`, on a `STANDARD` invoice whose"
 							},
 							{
 								"name": "11",
@@ -6692,7 +7914,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "14",
 								"value": "14",
-								"description": "VAT pending in certifications"
+								"description": "VAT pending in certifications (not accepted, see below)"
 							},
 							{
 								"name": "15",
@@ -6772,7 +7994,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "delete",
 		"displayName": "Delete",
 		"action": "Delete a product of a company",
-		"description": "Deletes a product from the catalog of this company (NIF)",
+		"description": "Deletes a product from the catalog of this company",
 		"operationId": "deleteCompanyProduct",
 		"method": "DELETE",
 		"path": "/v1/companies/{company_id}/products/{product_id}",
@@ -6804,7 +8026,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "getAll",
 		"displayName": "Get Many",
 		"action": "List the invoice series of a company",
-		"description": "Retrieves the invoice series of this company (NIF)",
+		"description": "Returns the invoice series of a company",
 		"operationId": "listCompanySeries",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/series",
@@ -6816,7 +8038,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "active",
 				"apiName": "active",
 				"displayName": "Active",
-				"description": "Filter by active/inactive series",
+				"description": "Filters by activity: `true` returns only active series, `false` only inactive ones",
 				"type": "boolean",
 				"default": false
 			},
@@ -6824,7 +8046,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "document_type",
 				"apiName": "document_type",
 				"displayName": "Document Type",
-				"description": "Filter by document type (UNASSIGNED series are always included)",
+				"description": "Filter by document type",
 				"type": "options",
 				"options": [
 					{
@@ -6834,7 +8056,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "UNASSIGNED",
 						"value": "UNASSIGNED",
-						"description": "Legacy series, compatible with any invoice type"
+						"description": "Legacy value of series created before types existed."
 					},
 					{
 						"name": "STANDARD",
@@ -6867,19 +8089,55 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		],
 		"paginated": true,
 		"isList": true,
-		"listKey": ""
+		"listKey": "series"
 	},
 	{
 		"resource": "series",
 		"operation": "create",
 		"displayName": "Create",
 		"action": "Create an invoice series for a company",
-		"description": "Creates a new invoice series under this company (NIF)",
+		"description": "Creates an invoice series under a company",
 		"operationId": "createCompanySeries",
 		"method": "POST",
 		"path": "/v1/companies/{company_id}/series",
 		"pathParams": [],
 		"requiredFields": [
+			{
+				"name": "document_type",
+				"apiName": "document_type",
+				"displayName": "Document Type",
+				"description": "Document type associated with a series",
+				"required": true,
+				"type": "options",
+				"options": [
+					{
+						"name": "UNASSIGNED",
+						"value": "UNASSIGNED",
+						"description": "Legacy value of series created before types existed."
+					},
+					{
+						"name": "STANDARD",
+						"value": "STANDARD",
+						"description": "Standard invoice"
+					},
+					{
+						"name": "SIMPLIFIED",
+						"value": "SIMPLIFIED",
+						"description": "Simplified invoice"
+					},
+					{
+						"name": "CORRECTIVE",
+						"value": "CORRECTIVE",
+						"description": "Corrects or cancels a previous invoice"
+					},
+					{
+						"name": "PROFORMA",
+						"value": "PROFORMA",
+						"description": "Proforma (commercial document, non-fiscal numbering)"
+					}
+				],
+				"default": "STANDARD"
+			},
 			{
 				"name": "name_series_create",
 				"apiName": "name",
@@ -6923,13 +8181,26 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"type": "string",
 				"default": "",
 				"placeholder": "{CODIGO}-{YYYY}-{NUM:4}"
+			}
+		],
+		"optionalFields": [
+			{
+				"name": "description",
+				"apiName": "description",
+				"displayName": "Description",
+				"description": "Optional series description (max 1000 characters)",
+				"validation": {
+					"maxLength": 1000
+				},
+				"type": "string",
+				"default": "",
+				"placeholder": "Series for standard invoices"
 			},
 			{
 				"name": "counter_reset",
 				"apiName": "counter_reset",
 				"displayName": "Counter Reset",
 				"description": "When this series' counter resets",
-				"required": true,
 				"type": "options",
 				"options": [
 					{
@@ -6946,59 +8217,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					}
 				],
 				"default": "ANNUAL"
-			}
-		],
-		"optionalFields": [
-			{
-				"name": "document_type",
-				"apiName": "document_type",
-				"displayName": "Document Type",
-				"description": "Document type associated with a series",
-				"type": "options",
-				"options": [
-					{
-						"name": "— Not set —",
-						"value": ""
-					},
-					{
-						"name": "UNASSIGNED",
-						"value": "UNASSIGNED",
-						"description": "Legacy series, compatible with any invoice type"
-					},
-					{
-						"name": "STANDARD",
-						"value": "STANDARD",
-						"description": "Standard invoice"
-					},
-					{
-						"name": "SIMPLIFIED",
-						"value": "SIMPLIFIED",
-						"description": "Simplified invoice"
-					},
-					{
-						"name": "CORRECTIVE",
-						"value": "CORRECTIVE",
-						"description": "Corrects or cancels a previous invoice"
-					},
-					{
-						"name": "PROFORMA",
-						"value": "PROFORMA",
-						"description": "Proforma (commercial document, non-fiscal numbering)"
-					}
-				],
-				"default": ""
-			},
-			{
-				"name": "description",
-				"apiName": "description",
-				"displayName": "Description",
-				"description": "Optional series description (max 1000 characters)",
-				"validation": {
-					"maxLength": 1000
-				},
-				"type": "string",
-				"default": "",
-				"placeholder": "Series for standard invoices"
 			},
 			{
 				"name": "initial_number",
@@ -7042,8 +8260,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "series",
 		"operation": "get",
 		"displayName": "Get",
-		"action": "Get one invoice series of a company",
-		"description": "Retrieves a single invoice series of this company (NIF)",
+		"action": "Get an invoice series",
+		"description": "Returns one invoice series of a company, with its code, format, counter state, document type and whether it is the default of that type",
 		"operationId": "getCompanySeries",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/series/{series_id}",
@@ -7075,7 +8293,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "series",
 		"operation": "update",
 		"displayName": "Update",
-		"action": "Update an invoice series of a company partially",
+		"action": "Update an invoice series",
 		"description": "Updates only the fields present in the body, leaving every other field of the series as it is",
 		"operationId": "patchCompanySeries",
 		"method": "PATCH",
@@ -7111,7 +8329,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "UNASSIGNED",
 						"value": "UNASSIGNED",
-						"description": "Legacy series, compatible with any invoice type"
+						"description": "Legacy value of series created before types existed."
 					},
 					{
 						"name": "STANDARD",
@@ -7260,8 +8478,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "series",
 		"operation": "delete",
 		"displayName": "Delete",
-		"action": "Delete an invoice series of a company",
-		"description": "Soft-deletes an invoice series",
+		"action": "Delete an invoice series",
+		"description": "Soft-deletes an invoice series, deactivating it first if it is active",
 		"operationId": "deleteCompanySeries",
 		"method": "DELETE",
 		"path": "/v1/companies/{company_id}/series/{series_id}",
@@ -7293,8 +8511,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "series",
 		"operation": "setDefault",
 		"displayName": "Set Default",
-		"action": "Mark a series as the default of a company",
-		"description": "Marks an invoice series as the default of this company (NIF)",
+		"action": "Mark a series as default",
+		"description": "Marks an invoice series as the default of its document type for this company, and unmarks the previous one",
 		"operationId": "setCompanyDefaultSeries",
 		"method": "PUT",
 		"path": "/v1/companies/{company_id}/series/{series_id}/default",
@@ -7326,8 +8544,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "series",
 		"operation": "getDefaults",
 		"displayName": "Get Defaults",
-		"action": "Get the default series of a company, per document type",
-		"description": "Reports, for each `DocumentType` relevant to automatic invoicing flows (Stripe Connect, etc.), whether this company (NIF) has a default invoice series and which one",
+		"action": "Get the default series of a company",
+		"description": "Reports, for each `DocumentType` used by automatic invoicing flows, whether the company (NIF) has a default invoice series and which one: `exists`, plus the `series_id` when there is one",
 		"operationId": "getCompanyDefaultSeries",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/series/defaults",
@@ -7338,15 +8556,15 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"optionalCollectionName": "options",
 		"queryParamNames": [],
 		"paginated": false,
-		"isList": true,
+		"isList": false,
 		"listKey": ""
 	},
 	{
 		"resource": "series",
 		"operation": "ensureDefaults",
 		"displayName": "Ensure Defaults",
-		"action": "Ensure the company has a default series for every document type",
-		"description": "Idempotently ensures this company (NIF) has a default invoice series for each relevant `DocumentType` (STANDARD, SIMPLIFIED, CORRECTIVE) in the current environment",
+		"action": "Ensure a default series per document type",
+		"description": "Ensures the company has a default invoice series for `STANDARD`, `SIMPLIFIED` and `CORRECTIVE` in the current environment, and returns the resulting set",
 		"operationId": "ensureCompanyDefaultSeries",
 		"method": "PUT",
 		"path": "/v1/companies/{company_id}/series/defaults",
@@ -7357,15 +8575,15 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"optionalCollectionName": "updateFields",
 		"queryParamNames": [],
 		"paginated": false,
-		"isList": true,
+		"isList": false,
 		"listKey": ""
 	},
 	{
 		"resource": "recurringInvoice",
 		"operation": "getAll",
 		"displayName": "Get Many",
-		"action": "List the recurring invoices of a company",
-		"description": "Lists the recurring invoice templates of this company (NIF), with filters and pagination",
+		"action": "List recurring invoices",
+		"description": "Lists the recurring invoice templates of this company, with filters and pagination",
 		"operationId": "listCompanyRecurringInvoices",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/recurring-invoices",
@@ -7377,7 +8595,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "status",
 				"apiName": "status",
 				"displayName": "Status",
-				"description": "Lifecycle state of a recurring invoice schedule",
+				"description": "Keeps only the schedules in this lifecycle state",
 				"type": "options",
 				"options": [
 					{
@@ -7386,15 +8604,18 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					},
 					{
 						"name": "ACTIVE",
-						"value": "ACTIVE"
+						"value": "ACTIVE",
+						"description": "invoices are generated on schedule."
 					},
 					{
 						"name": "PAUSED",
-						"value": "PAUSED"
+						"value": "PAUSED",
+						"description": "automatic generation is stopped and the schedule is kept; `pause` says who"
 					},
 					{
 						"name": "COMPLETED",
-						"value": "COMPLETED"
+						"value": "COMPLETED",
+						"description": "the schedule has ended for good and generates nothing more; `completion`"
 					}
 				],
 				"default": ""
@@ -7403,11 +8624,38 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "customer_id",
 				"apiName": "customer_id",
 				"displayName": "Customer ID",
+				"description": "Keeps only the schedules that invoice this customer of the company",
 				"validation": {
 					"format": "uuid"
 				},
 				"type": "options",
 				"loadOptionsMethod": "getCustomers",
+				"default": ""
+			},
+			{
+				"name": "pause_reason",
+				"apiName": "pause_reason",
+				"displayName": "Pause Reason",
+				"description": "Keeps only the schedules stopped for this reason — the same value the response returns in `pause.reason`",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "USER",
+						"value": "USER"
+					},
+					{
+						"name": "DOWNGRADE",
+						"value": "DOWNGRADE"
+					},
+					{
+						"name": "GENERATION FAILURE",
+						"value": "GENERATION_FAILURE"
+					}
+				],
 				"default": ""
 			},
 			{
@@ -7467,19 +8715,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"queryParamNames": [
 			"status",
 			"customer_id",
+			"pause_reason",
 			"sort_by",
 			"sort_order"
 		],
 		"paginated": true,
 		"isList": true,
-		"listKey": ""
+		"listKey": "recurring_invoices"
 	},
 	{
 		"resource": "recurringInvoice",
 		"operation": "create",
 		"displayName": "Create",
-		"action": "Create a recurring invoice for a company",
-		"description": "Creates a new recurring invoice template under this company (NIF) with all its template data (lines, recipient, series, payment) and recurrence configuration",
+		"action": "Create a recurring invoice",
+		"description": "Creates a recurring invoice template under this company: the invoice data it repeats (lines, recipient, series, payment) plus the recurrence that drives it",
 		"operationId": "createCompanyRecurringInvoice",
 		"method": "POST",
 		"path": "/v1/companies/{company_id}/recurring-invoices",
@@ -7492,6 +8741,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"description": "Format: max 255 characters",
 				"required": true,
 				"validation": {
+					"pattern": "^\\S.*$",
+					"minLength": 1,
 					"maxLength": 255
 				},
 				"type": "string",
@@ -7501,7 +8752,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "day_of_month",
 				"apiName": "day_of_month",
 				"displayName": "Day Of Month",
-				"description": "Format: between 1 and 31",
+				"description": "Day of the month the invoices are issued (between 1 and 31)",
 				"required": true,
 				"validation": {
 					"minimum": 1,
@@ -7539,6 +8790,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "invoice_type",
 				"apiName": "invoice_type",
 				"displayName": "Invoice Type",
+				"description": "Type of the invoices a recurring template generates: `STANDARD` for an identified recipient, `SIMPLIFIED` for a recipient that is not identified",
 				"required": true,
 				"type": "options",
 				"options": [
@@ -7582,7 +8834,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Format: min 0.01",
 						"required": true,
 						"validation": {
-							"minimum": 0.01
+							"minimum": 0.01,
+							"multipleOf": 0.0001
 						},
 						"type": "number",
 						"default": 0
@@ -7599,16 +8852,84 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"default": ""
 					},
 					{
+						"name": "price_mode",
+						"apiName": "price_mode",
+						"displayName": "Price Given As",
+						"description": "Which figure you are stating for this line. BeeL works the other two out.",
+						"type": "options",
+						"uiOnly": true,
+						"options": [
+							{
+								"name": "Unit Price",
+								"value": "unit_price",
+								"description": "Price per unit, before taxes — the usual case"
+							},
+							{
+								"name": "Line Total Without Tax",
+								"value": "total_excluding_tax",
+								"description": "You know the taxable base and want it respected exactly"
+							},
+							{
+								"name": "Line Total With Tax",
+								"value": "total_including_tax",
+								"description": "You know what the customer pays and want the base worked back from it"
+							}
+						],
+						"default": "unit_price"
+					},
+					{
 						"name": "unit_price",
 						"apiName": "unit_price",
 						"displayName": "Unit Price",
-						"description": "Format: min 0",
-						"required": true,
+						"description": "Unit price before taxes (between 0 and 999999.9999)",
 						"validation": {
-							"minimum": 0
+							"minimum": 0,
+							"maximum": 999999.9999
 						},
 						"type": "number",
-						"default": 0
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"unit_price"
+							]
+						}
+					},
+					{
+						"name": "total_excluding_tax",
+						"apiName": "total_excluding_tax",
+						"displayName": "Total Excluding Tax",
+						"description": "Declared line total excluding taxes: this amount IS the taxable base, exactly, with no recalculation (between 0 and 99999999.99)",
+						"validation": {
+							"minimum": 0,
+							"maximum": 99999999.99
+						},
+						"type": "number",
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"total_excluding_tax"
+							]
+						}
+					},
+					{
+						"name": "total_including_tax",
+						"apiName": "total_including_tax",
+						"displayName": "Total Including Tax",
+						"description": "Declared line total including taxes — what the customer pays (between 0 and 99999999.99)",
+						"validation": {
+							"minimum": 0,
+							"maximum": 99999999.99
+						},
+						"type": "number",
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"total_including_tax"
+							]
+						}
 					},
 					{
 						"name": "discount_percentage",
@@ -7659,6 +8980,130 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "IRPF Rate",
 						"type": "number",
 						"default": 0
+					},
+					{
+						"name": "exemption_reason",
+						"apiName": "exemption_reason",
+						"displayName": "Exemption Reason",
+						"description": "Tax exemption reason code per the Spanish VAT Law (Ley 37/1992, LIVA), with the VeriFactu code each one is reported as",
+						"type": "options",
+						"options": [
+							{
+								"name": "— Not set —",
+								"value": ""
+							},
+							{
+								"name": "Exempt — Art. 20 LIVA",
+								"value": "EXENTA_ART_20",
+								"description": "exempt, art. 20 (domestic operations such as medical, educational,"
+							},
+							{
+								"name": "Exempt — Art. 21 LIVA",
+								"value": "EXENTA_ART_21",
+								"description": "exempt, art. 21 (exports of goods). E2."
+							},
+							{
+								"name": "Exempt — Art. 22 LIVA",
+								"value": "EXENTA_ART_22",
+								"description": "exempt, art. 22 (operations treated as exports). E3."
+							},
+							{
+								"name": "Exempt — Art. 24 LIVA",
+								"value": "EXENTA_ART_24",
+								"description": "exempt, art. 24 (free zones, warehouses and customs regimes). E4."
+							},
+							{
+								"name": "Exempt — Art. 25 LIVA",
+								"value": "EXENTA_ART_25",
+								"description": "exempt, art. 25 (intra-community supplies of goods). E5."
+							},
+							{
+								"name": "Exempt — Art. 26 LIVA",
+								"value": "EXENTA_ART_26",
+								"description": "exempt, art. 26 (intra-community acquisitions of goods)."
+							},
+							{
+								"name": "Exempt — Art. 140 LIVA",
+								"value": "EXENTA_ART_140",
+								"description": "investment gold exemption, art. 140 bis (usually with `regime_key`"
+							},
+							{
+								"name": "Not Subject to VAT — Art. 7.9 LIVA",
+								"value": "NO_SUJETA_ART_7_9",
+								"description": "not subject under art. 7 (such as the transfer of a business as"
+							},
+							{
+								"name": "Not Subject to VAT — Outside the Spanish VAT Territory",
+								"value": "NO_SUJETA_LOCALIZACION",
+								"description": "not subject by the place-of-supply rules (intra-community"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.a LIVA",
+								"value": "ISP_ART_84_2_A"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.b LIVA",
+								"value": "ISP_ART_84_2_B"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.c LIVA",
+								"value": "ISP_ART_84_2_C"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.d LIVA",
+								"value": "ISP_ART_84_2_D"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.e LIVA",
+								"value": "ISP_ART_84_2_E"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.f LIVA",
+								"value": "ISP_ART_84_2_F"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.g LIVA",
+								"value": "ISP_ART_84_2_G",
+								"description": "reverse charge of letter g) (silver, platinum, palladium, mobile phones,"
+							},
+							{
+								"name": "Special Regime — Art. 129 LIVA",
+								"value": "REGIMEN_ART_129"
+							},
+							{
+								"name": "Special Regime — Art. 135 LIVA",
+								"value": "REGIMEN_ART_135"
+							},
+							{
+								"name": "Special Regime — Art. 141 LIVA",
+								"value": "REGIMEN_ART_141"
+							},
+							{
+								"name": "Special Regime — Art. 154 LIVA",
+								"value": "REGIMEN_ART_154"
+							},
+							{
+								"name": "Special Regime — Art. 163 Decies LIVA",
+								"value": "REGIMEN_ART_163_DECIES"
+							},
+							{
+								"name": "Other",
+								"value": "OTRO",
+								"description": "any other provision. Requires the text in `exemption_reason_text`. E6."
+							}
+						],
+						"default": ""
+					},
+					{
+						"name": "exemption_reason_text",
+						"apiName": "exemption_reason_text",
+						"displayName": "Exemption Reason Text",
+						"description": "Custom exemption text (max 500 characters)",
+						"validation": {
+							"maxLength": 500
+						},
+						"type": "string",
+						"default": ""
 					}
 				],
 				"multipleValues": true,
@@ -7667,10 +9112,44 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		],
 		"optionalFields": [
 			{
+				"name": "frequency",
+				"apiName": "frequency",
+				"displayName": "Frequency",
+				"description": "Generation cadence: `MONTHLY` every month, `QUARTERLY` every 3 months, `YEARLY` every 12 months",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "MONTHLY",
+						"value": "MONTHLY"
+					},
+					{
+						"name": "QUARTERLY",
+						"value": "QUARTERLY"
+					},
+					{
+						"name": "YEARLY",
+						"value": "YEARLY"
+					}
+				],
+				"default": ""
+			},
+			{
+				"name": "draft_in_advance",
+				"apiName": "draft_in_advance",
+				"displayName": "Draft In Advance",
+				"description": "Whether the template prepares a draft for review before emitting",
+				"type": "boolean",
+				"default": false
+			},
+			{
 				"name": "preview_days",
 				"apiName": "preview_days",
 				"displayName": "Preview Days",
-				"description": "Days before emission date to create a draft for review (between 0 and 30)",
+				"description": "**Deprecated.** Superseded by `draft_in_advance`, because the review window is no longer a number you pick: it is fixed at 5 days (between 0 and 30)",
 				"validation": {
 					"minimum": 0,
 					"maximum": 30
@@ -7691,6 +9170,15 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"default": ""
 			},
 			{
+				"name": "max_invoices",
+				"apiName": "max_invoices",
+				"displayName": "Max Invoices",
+				"description": "Total number of invoices this template will generate before ending on its own, between 2 and 600",
+				"type": "number",
+				"default": 0,
+				"numberPrecision": 0
+			},
+			{
 				"name": "customer_id",
 				"apiName": "customer_id",
 				"displayName": "Customer ID",
@@ -7705,7 +9193,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "payment_method",
 				"apiName": "payment_method",
 				"displayName": "Payment Method",
-				"description": "Payment method for invoices and recurring invoices",
+				"description": "Payment method",
 				"type": "options",
 				"options": [
 					{
@@ -7777,14 +9265,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"default": ""
 			},
 			{
-				"name": "verifactu_enabled",
-				"apiName": "verifactu_enabled",
-				"displayName": "Verifactu Enabled",
-				"description": "Whether the invoices generated by this template carry VeriFactu information",
-				"type": "boolean",
-				"default": false
-			},
-			{
 				"name": "send_automatically",
 				"apiName": "send_automatically",
 				"displayName": "Send Automatically",
@@ -7801,7 +9281,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "recipients",
 						"apiName": "recipients",
 						"displayName": "Recipients",
+						"description": "Format: email address, min 5 characters, max 255 characters",
 						"type": "string",
+						"validation": {
+							"minLength": 5,
+							"maxLength": 255,
+							"format": "email"
+						},
 						"multipleValues": true,
 						"default": []
 					},
@@ -7809,7 +9295,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "cc",
 						"apiName": "cc",
 						"displayName": "CC",
+						"description": "Format: email address, min 5 characters, max 255 characters",
 						"type": "string",
+						"validation": {
+							"minLength": 5,
+							"maxLength": 255,
+							"format": "email"
+						},
 						"multipleValues": true,
 						"default": []
 					},
@@ -7842,8 +9334,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "recurringInvoice",
 		"operation": "get",
 		"displayName": "Get",
-		"action": "Get a recurring invoice of a company",
-		"description": "Retrieves the full details of a recurring invoice template of this company (NIF), including its schedule, template lines and next generation date",
+		"action": "Get a recurring invoice",
+		"description": "Retrieves the full details of a recurring invoice template of this company, including its schedule, template lines and next generation date",
 		"operationId": "getCompanyRecurringInvoice",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/recurring-invoices/{recurring_invoice_id}",
@@ -7852,7 +9344,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "recurringInvoiceId",
 				"apiName": "recurring_invoice_id",
 				"displayName": "Recurring Invoice ID",
-				"description": "Format: UUID",
+				"description": "Unique identifier (UUID) of the recurring invoice template, as returned when it is created or listed",
 				"required": true,
 				"validation": {
 					"format": "uuid"
@@ -7874,8 +9366,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "recurringInvoice",
 		"operation": "update",
 		"displayName": "Update",
-		"action": "Update a recurring invoice of a company partially",
-		"description": "Updates only the fields present in the body, leaving every other field of the recurring invoice as it is — in particular the recipient, which survives a change of `lines`",
+		"action": "Update a recurring invoice",
+		"description": "Updates only the fields present in the body, leaving every other field of the recurring invoice template as it is",
 		"operationId": "patchCompanyRecurringInvoice",
 		"method": "PATCH",
 		"path": "/v1/companies/{company_id}/recurring-invoices/{recurring_invoice_id}",
@@ -7884,7 +9376,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "recurringInvoiceId",
 				"apiName": "recurring_invoice_id",
 				"displayName": "Recurring Invoice ID",
-				"description": "Format: UUID",
+				"description": "Unique identifier (UUID) of the recurring invoice template, as returned when it is created or listed",
 				"required": true,
 				"validation": {
 					"format": "uuid"
@@ -7901,16 +9393,44 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"displayName": "Name",
 				"description": "Template name (max 255 characters)",
 				"validation": {
+					"pattern": "^\\S.*$",
+					"minLength": 1,
 					"maxLength": 255
 				},
 				"type": "string",
 				"default": ""
 			},
 			{
+				"name": "frequency",
+				"apiName": "frequency",
+				"displayName": "Frequency",
+				"description": "Generation cadence: `MONTHLY` every month, `QUARTERLY` every 3 months, `YEARLY` every 12 months",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "MONTHLY",
+						"value": "MONTHLY"
+					},
+					{
+						"name": "QUARTERLY",
+						"value": "QUARTERLY"
+					},
+					{
+						"name": "YEARLY",
+						"value": "YEARLY"
+					}
+				],
+				"default": ""
+			},
+			{
 				"name": "day_of_month",
 				"apiName": "day_of_month",
 				"displayName": "Day Of Month",
-				"description": "Day of the month the invoice is issued (between 1 and 31)",
+				"description": "Day of the month the invoices are issued (between 1 and 31)",
 				"validation": {
 					"minimum": 1,
 					"maximum": 31
@@ -7931,10 +9451,18 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"default": ""
 			},
 			{
+				"name": "draft_in_advance",
+				"apiName": "draft_in_advance",
+				"displayName": "Draft In Advance",
+				"description": "Whether the template prepares a draft for review before emitting",
+				"type": "boolean",
+				"default": false
+			},
+			{
 				"name": "preview_days",
 				"apiName": "preview_days",
 				"displayName": "Preview Days",
-				"description": "Days before emission date to create a draft for review (between 0 and 30)",
+				"description": "**Deprecated.** Superseded by `draft_in_advance` (between 0 and 30)",
 				"validation": {
 					"minimum": 0,
 					"maximum": 30
@@ -7955,6 +9483,15 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"default": ""
 			},
 			{
+				"name": "max_invoices",
+				"apiName": "max_invoices",
+				"displayName": "Max Invoices",
+				"description": "Total number of invoices this template will generate before ending on its own, between 2 and 600",
+				"type": "number",
+				"default": 0,
+				"numberPrecision": 0
+			},
+			{
 				"name": "series_id",
 				"apiName": "series_id",
 				"displayName": "Series ID",
@@ -7964,6 +9501,28 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				},
 				"type": "options",
 				"loadOptionsMethod": "getSeries",
+				"default": ""
+			},
+			{
+				"name": "invoice_type",
+				"apiName": "invoice_type",
+				"displayName": "Invoice Type",
+				"description": "Type of the invoices the template generates",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "STANDARD",
+						"value": "STANDARD"
+					},
+					{
+						"name": "SIMPLIFIED",
+						"value": "SIMPLIFIED"
+					}
+				],
 				"default": ""
 			},
 			{
@@ -8007,7 +9566,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Format: min 0.01",
 						"required": true,
 						"validation": {
-							"minimum": 0.01
+							"minimum": 0.01,
+							"multipleOf": 0.0001
 						},
 						"type": "number",
 						"default": 0
@@ -8024,16 +9584,84 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"default": ""
 					},
 					{
+						"name": "price_mode",
+						"apiName": "price_mode",
+						"displayName": "Price Given As",
+						"description": "Which figure you are stating for this line. BeeL works the other two out.",
+						"type": "options",
+						"uiOnly": true,
+						"options": [
+							{
+								"name": "Unit Price",
+								"value": "unit_price",
+								"description": "Price per unit, before taxes — the usual case"
+							},
+							{
+								"name": "Line Total Without Tax",
+								"value": "total_excluding_tax",
+								"description": "You know the taxable base and want it respected exactly"
+							},
+							{
+								"name": "Line Total With Tax",
+								"value": "total_including_tax",
+								"description": "You know what the customer pays and want the base worked back from it"
+							}
+						],
+						"default": "unit_price"
+					},
+					{
 						"name": "unit_price",
 						"apiName": "unit_price",
 						"displayName": "Unit Price",
-						"description": "Format: min 0",
-						"required": true,
+						"description": "Unit price before taxes (between 0 and 999999.9999)",
 						"validation": {
-							"minimum": 0
+							"minimum": 0,
+							"maximum": 999999.9999
 						},
 						"type": "number",
-						"default": 0
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"unit_price"
+							]
+						}
+					},
+					{
+						"name": "total_excluding_tax",
+						"apiName": "total_excluding_tax",
+						"displayName": "Total Excluding Tax",
+						"description": "Declared line total excluding taxes: this amount IS the taxable base, exactly, with no recalculation (between 0 and 99999999.99)",
+						"validation": {
+							"minimum": 0,
+							"maximum": 99999999.99
+						},
+						"type": "number",
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"total_excluding_tax"
+							]
+						}
+					},
+					{
+						"name": "total_including_tax",
+						"apiName": "total_including_tax",
+						"displayName": "Total Including Tax",
+						"description": "Declared line total including taxes — what the customer pays (between 0 and 99999999.99)",
+						"validation": {
+							"minimum": 0,
+							"maximum": 99999999.99
+						},
+						"type": "number",
+						"default": 0,
+						"showWhen": {
+							"field": "price_mode",
+							"values": [
+								"total_including_tax"
+							]
+						}
 					},
 					{
 						"name": "discount_percentage",
@@ -8084,6 +9712,130 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "IRPF Rate",
 						"type": "number",
 						"default": 0
+					},
+					{
+						"name": "exemption_reason",
+						"apiName": "exemption_reason",
+						"displayName": "Exemption Reason",
+						"description": "Tax exemption reason code per the Spanish VAT Law (Ley 37/1992, LIVA), with the VeriFactu code each one is reported as",
+						"type": "options",
+						"options": [
+							{
+								"name": "— Not set —",
+								"value": ""
+							},
+							{
+								"name": "Exempt — Art. 20 LIVA",
+								"value": "EXENTA_ART_20",
+								"description": "exempt, art. 20 (domestic operations such as medical, educational,"
+							},
+							{
+								"name": "Exempt — Art. 21 LIVA",
+								"value": "EXENTA_ART_21",
+								"description": "exempt, art. 21 (exports of goods). E2."
+							},
+							{
+								"name": "Exempt — Art. 22 LIVA",
+								"value": "EXENTA_ART_22",
+								"description": "exempt, art. 22 (operations treated as exports). E3."
+							},
+							{
+								"name": "Exempt — Art. 24 LIVA",
+								"value": "EXENTA_ART_24",
+								"description": "exempt, art. 24 (free zones, warehouses and customs regimes). E4."
+							},
+							{
+								"name": "Exempt — Art. 25 LIVA",
+								"value": "EXENTA_ART_25",
+								"description": "exempt, art. 25 (intra-community supplies of goods). E5."
+							},
+							{
+								"name": "Exempt — Art. 26 LIVA",
+								"value": "EXENTA_ART_26",
+								"description": "exempt, art. 26 (intra-community acquisitions of goods)."
+							},
+							{
+								"name": "Exempt — Art. 140 LIVA",
+								"value": "EXENTA_ART_140",
+								"description": "investment gold exemption, art. 140 bis (usually with `regime_key`"
+							},
+							{
+								"name": "Not Subject to VAT — Art. 7.9 LIVA",
+								"value": "NO_SUJETA_ART_7_9",
+								"description": "not subject under art. 7 (such as the transfer of a business as"
+							},
+							{
+								"name": "Not Subject to VAT — Outside the Spanish VAT Territory",
+								"value": "NO_SUJETA_LOCALIZACION",
+								"description": "not subject by the place-of-supply rules (intra-community"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.a LIVA",
+								"value": "ISP_ART_84_2_A"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.b LIVA",
+								"value": "ISP_ART_84_2_B"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.c LIVA",
+								"value": "ISP_ART_84_2_C"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.d LIVA",
+								"value": "ISP_ART_84_2_D"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.e LIVA",
+								"value": "ISP_ART_84_2_E"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.f LIVA",
+								"value": "ISP_ART_84_2_F"
+							},
+							{
+								"name": "Reverse Charge — Art. 84.2.g LIVA",
+								"value": "ISP_ART_84_2_G",
+								"description": "reverse charge of letter g) (silver, platinum, palladium, mobile phones,"
+							},
+							{
+								"name": "Special Regime — Art. 129 LIVA",
+								"value": "REGIMEN_ART_129"
+							},
+							{
+								"name": "Special Regime — Art. 135 LIVA",
+								"value": "REGIMEN_ART_135"
+							},
+							{
+								"name": "Special Regime — Art. 141 LIVA",
+								"value": "REGIMEN_ART_141"
+							},
+							{
+								"name": "Special Regime — Art. 154 LIVA",
+								"value": "REGIMEN_ART_154"
+							},
+							{
+								"name": "Special Regime — Art. 163 Decies LIVA",
+								"value": "REGIMEN_ART_163_DECIES"
+							},
+							{
+								"name": "Other",
+								"value": "OTRO",
+								"description": "any other provision. Requires the text in `exemption_reason_text`. E6."
+							}
+						],
+						"default": ""
+					},
+					{
+						"name": "exemption_reason_text",
+						"apiName": "exemption_reason_text",
+						"displayName": "Exemption Reason Text",
+						"description": "Custom exemption text (max 500 characters)",
+						"validation": {
+							"maxLength": 500
+						},
+						"type": "string",
+						"default": ""
 					}
 				],
 				"multipleValues": true,
@@ -8166,13 +9918,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"default": ""
 			},
 			{
-				"name": "verifactu_enabled",
-				"apiName": "verifactu_enabled",
-				"displayName": "Verifactu Enabled",
-				"type": "boolean",
-				"default": false
-			},
-			{
 				"name": "send_automatically",
 				"apiName": "send_automatically",
 				"displayName": "Send Automatically",
@@ -8190,7 +9935,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "recipients",
 						"apiName": "recipients",
 						"displayName": "Recipients",
+						"description": "Format: email address, min 5 characters, max 255 characters",
 						"type": "string",
+						"validation": {
+							"minLength": 5,
+							"maxLength": 255,
+							"format": "email"
+						},
 						"multipleValues": true,
 						"default": []
 					},
@@ -8198,7 +9949,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "cc",
 						"apiName": "cc",
 						"displayName": "CC",
+						"description": "Format: email address, min 5 characters, max 255 characters",
 						"type": "string",
+						"validation": {
+							"minLength": 5,
+							"maxLength": 255,
+							"format": "email"
+						},
 						"multipleValues": true,
 						"default": []
 					},
@@ -8231,8 +9988,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "recurringInvoice",
 		"operation": "delete",
 		"displayName": "Delete",
-		"action": "Delete a recurring invoice of a company",
-		"description": "Permanently deletes a recurring invoice template of this company (NIF) and cancels any pending scheduled generations",
+		"action": "Delete a recurring invoice",
+		"description": "Permanently deletes a recurring invoice template of this company and cancels any pending scheduled generations",
 		"operationId": "deleteCompanyRecurringInvoice",
 		"method": "DELETE",
 		"path": "/v1/companies/{company_id}/recurring-invoices/{recurring_invoice_id}",
@@ -8241,7 +9998,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "recurringInvoiceId",
 				"apiName": "recurring_invoice_id",
 				"displayName": "Recurring Invoice ID",
-				"description": "Format: UUID",
+				"description": "Unique identifier (UUID) of the recurring invoice template, as returned when it is created or listed",
 				"required": true,
 				"validation": {
 					"format": "uuid"
@@ -8264,7 +10021,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "setStatus",
 		"displayName": "Set Status",
 		"action": "Set the status of a recurring invoice",
-		"description": "Sets the lifecycle status of a recurring invoice template, which is how generation is paused and resumed: - `PAUSED` stops automatic generation, keeping the schedule configuration intact",
+		"description": "Sets the lifecycle status of a recurring invoice template",
 		"operationId": "setCompanyRecurringInvoiceStatus",
 		"method": "PUT",
 		"path": "/v1/companies/{company_id}/recurring-invoices/{recurring_invoice_id}/status",
@@ -8273,7 +10030,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "recurringInvoiceId",
 				"apiName": "recurring_invoice_id",
 				"displayName": "Recurring Invoice ID",
-				"description": "Format: UUID",
+				"description": "Unique identifier (UUID) of the recurring invoice template, as returned when it is created or listed",
 				"required": true,
 				"validation": {
 					"format": "uuid"
@@ -8298,6 +10055,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "PAUSED",
 						"value": "PAUSED"
+					},
+					{
+						"name": "COMPLETED",
+						"value": "COMPLETED"
 					}
 				],
 				"default": "ACTIVE"
@@ -8325,7 +10086,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "recurringInvoiceId",
 				"apiName": "recurring_invoice_id",
 				"displayName": "Recurring Invoice ID",
-				"description": "Format: UUID",
+				"description": "Unique identifier (UUID) of the recurring invoice template, as returned when it is created or listed",
 				"required": true,
 				"validation": {
 					"format": "uuid"
@@ -8357,7 +10118,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "recurringInvoiceId",
 				"apiName": "recurring_invoice_id",
 				"displayName": "Recurring Invoice ID",
-				"description": "Format: UUID",
+				"description": "Unique identifier (UUID) of the recurring invoice template, as returned when it is created or listed",
 				"required": true,
 				"validation": {
 					"format": "uuid"
@@ -8389,7 +10150,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "recurringInvoiceId",
 				"apiName": "recurring_invoice_id",
 				"displayName": "Recurring Invoice ID",
-				"description": "Format: UUID",
+				"description": "Unique identifier (UUID) of the recurring invoice template, as returned when it is created or listed",
 				"required": true,
 				"validation": {
 					"format": "uuid"
@@ -8412,7 +10173,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "getHistory",
 		"displayName": "Get History",
 		"action": "Get the generation history of a recurring invoice",
-		"description": "Returns the invoices previously generated from this recurring template, including their status and generation dates",
+		"description": "Returns **every entry** in this schedule's history, newest first: the invoices it generated and, just as important, the periods it did **not** — a failed unattended run, a slot a user skipped, or the schedule being paused",
 		"operationId": "getCompanyRecurringInvoiceHistory",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/recurring-invoices/{recurring_invoice_id}/history",
@@ -8421,7 +10182,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "recurringInvoiceId",
 				"apiName": "recurring_invoice_id",
 				"displayName": "Recurring Invoice ID",
-				"description": "Format: UUID",
+				"description": "Unique identifier (UUID) of the recurring invoice template, as returned when it is created or listed",
 				"required": true,
 				"validation": {
 					"format": "uuid"
@@ -8435,8 +10196,27 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"filters": [],
 		"optionalCollectionName": "options",
 		"queryParamNames": [],
-		"paginated": false,
+		"paginated": true,
 		"isList": true,
+		"listKey": "history"
+	},
+	{
+		"resource": "recurringInvoice",
+		"operation": "getStats",
+		"displayName": "Get Stats",
+		"action": "Get recurring invoice stats",
+		"description": "How many recurring schedules this company has alive, what they add up to per month, and how much invoicing is stopped because the unattended generation broke",
+		"operationId": "getCompanyRecurringInvoiceStats",
+		"method": "GET",
+		"path": "/v1/companies/{company_id}/recurring-invoices/stats",
+		"pathParams": [],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
 		"listKey": ""
 	},
 	{
@@ -8469,6 +10249,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"description": "Format: max 255 characters",
 				"required": true,
 				"validation": {
+					"pattern": "^\\S.*$",
+					"minLength": 1,
 					"maxLength": 255
 				},
 				"type": "string",
@@ -8478,7 +10260,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "day_of_month",
 				"apiName": "day_of_month",
 				"displayName": "Day Of Month",
-				"description": "Format: between 1 and 31",
+				"description": "Day of the month the invoices are issued (between 1 and 31)",
 				"required": true,
 				"validation": {
 					"minimum": 1,
@@ -8503,6 +10285,40 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		],
 		"optionalFields": [
 			{
+				"name": "frequency",
+				"apiName": "frequency",
+				"displayName": "Frequency",
+				"description": "Generation cadence: `MONTHLY` every month, `QUARTERLY` every 3 months, `YEARLY` every 12 months",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "MONTHLY",
+						"value": "MONTHLY"
+					},
+					{
+						"name": "QUARTERLY",
+						"value": "QUARTERLY"
+					},
+					{
+						"name": "YEARLY",
+						"value": "YEARLY"
+					}
+				],
+				"default": ""
+			},
+			{
+				"name": "draft_in_advance",
+				"apiName": "draft_in_advance",
+				"displayName": "Draft In Advance",
+				"description": "Whether the template prepares a draft for review before emitting",
+				"type": "boolean",
+				"default": false
+			},
+			{
 				"name": "end_date",
 				"apiName": "end_date",
 				"displayName": "End Date",
@@ -8512,14 +10328,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				},
 				"type": "string",
 				"default": ""
-			},
-			{
-				"name": "verifactu_enabled",
-				"apiName": "verifactu_enabled",
-				"displayName": "Verifactu Enabled",
-				"description": "Whether the invoices this template generates enter VeriFactu",
-				"type": "boolean",
-				"default": false
 			},
 			{
 				"name": "send_automatically",
@@ -8538,7 +10346,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "recipients",
 						"apiName": "recipients",
 						"displayName": "Recipients",
+						"description": "Format: email address, min 5 characters, max 255 characters",
 						"type": "string",
+						"validation": {
+							"minLength": 5,
+							"maxLength": 255,
+							"format": "email"
+						},
 						"multipleValues": true,
 						"default": []
 					},
@@ -8546,7 +10360,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "cc",
 						"apiName": "cc",
 						"displayName": "CC",
+						"description": "Format: email address, min 5 characters, max 255 characters",
 						"type": "string",
+						"validation": {
+							"minLength": 5,
+							"maxLength": 255,
+							"format": "email"
+						},
 						"multipleValues": true,
 						"default": []
 					},
@@ -8580,7 +10400,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "getTaxConfiguration",
 		"displayName": "Get Tax Configuration",
 		"action": "Get the tax configuration of a company",
-		"description": "Retrieves the tax configuration of this company (NIF), including: - Default tax regime (VAT, IGIC, IPSI, OTHERS) - Default main tax percentage - IRPF and equivalence surcharge configuration The catalog of tax types this configuration draws from is not company data and lives outside this resource",
+		"description": "Returns the tax configuration of a company: its default main tax (`IVA`, `IGIC`, `IPSI` or `OTHER`) with the default percentage and regime key, the default exemption reason, its IRPF and equivalence surcharge settings, and the default payment method and payment term",
 		"operationId": "getCompanyTaxConfiguration",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/tax-configuration",
@@ -8599,7 +10419,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "getVerifactu",
 		"displayName": "Get Verifactu",
 		"action": "Get the VeriFactu configuration of a company",
-		"description": "Retrieves the VeriFactu configuration of this company (NIF)",
+		"description": "Retrieves the VeriFactu configuration of this company",
 		"operationId": "getCompanyVeriFactuConfiguration",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/verifactu-configuration",
@@ -8618,7 +10438,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "getTaxTypes",
 		"displayName": "Get Tax Types",
 		"action": "List the tax types allowed in Spain",
-		"description": "Returns the tax regimes and percentages that Spanish law allows on an invoice: VAT (mainland), IGIC (Canary Islands), IPSI (Ceuta and Melilla), the withholding (IRPF) percentages, the equivalence surcharge that corresponds to each VAT rate, and the exemption reasons with the classification each o...",
+		"description": "Returns the tax regimes and percentages that BeeL accepts on an invoice",
 		"operationId": "listTaxTypes",
 		"method": "GET",
 		"path": "/v1/tax-types",
@@ -8636,8 +10456,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "configuration",
 		"operation": "getInvoiceCustomization",
 		"displayName": "Get Invoice Customization",
-		"action": "List invoice templates",
-		"description": "Returns the PDF templates a NIF can be rendered with, each one with a readable name and a short description, translated into the language of the user the credential belongs to",
+		"action": "List the invoice PDF templates",
+		"description": "Returns the PDF templates a NIF can be rendered with",
 		"operationId": "listInvoiceCustomizationOptions",
 		"method": "GET",
 		"path": "/v1/invoice-customization-options",
@@ -8655,8 +10475,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "nif",
 		"operation": "validate",
 		"displayName": "Validate",
-		"action": "Validate NIF against AEAT registry",
-		"description": "**Public endpoint** to validate a NIF/CIF against the AEAT registry using VeriFactu",
+		"action": "Validate a NIF against the AEAT register",
+		"description": "Checks a NIF or CIF against the AEAT register through VeriFactu and returns what the register says about it",
 		"operationId": "validateNif",
 		"method": "POST",
 		"path": "/v1/nif/validate",
@@ -8705,7 +10525,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "create",
 		"displayName": "Create",
 		"action": "Create a company",
-		"description": "Creates a new NIF/company under the authenticated account",
+		"description": "Creates a company under the account the request resolves to",
 		"operationId": "createCompany",
 		"method": "POST",
 		"path": "/v1/accounts/{account_id}/companies",
@@ -8765,7 +10585,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Full address (street, number, floor, etc.) - Latin characters only (max 255 characters)",
 						"required": true,
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 255
 						},
@@ -8778,7 +10598,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"apiName": "number",
 						"displayName": "Number",
 						"description": "Street number (max 20 characters)",
-						"required": true,
 						"validation": {
 							"minLength": 1,
 							"maxLength": 20
@@ -8832,7 +10651,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "City or town - Latin characters only (max 100 characters)",
 						"required": true,
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª()]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -8847,7 +10666,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Province or state - Latin characters only (max 100 characters)",
 						"required": true,
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -8859,9 +10678,9 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "country",
 						"apiName": "country",
 						"displayName": "Country",
-						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
+						"description": "Country name (in English, Spanish or Catalan) or ISO code. Prefer Country Code; if both are set they must name the same country (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -8873,7 +10692,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "country_code",
 						"apiName": "country_code",
 						"displayName": "Country Code",
-						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"description": "ISO 3166-1 alpha-2 country code: the canonical field that decides the country of the address (exactly 2 characters)",
 						"validation": {
 							"pattern": "^[A-Z]{2}$",
 							"minLength": 2,
@@ -8939,7 +10758,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address Street",
 						"description": "Full address (street, number, floor, etc.) - Latin characters only (max 255 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 255
 						},
@@ -8961,8 +10780,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "123",
-						"required": true,
-						"groupRequired": true
+						"required": false
 					},
 					{
 						"name": "address_floor",
@@ -9011,7 +10829,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address City",
 						"description": "City or town - Latin characters only (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª()]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -9027,7 +10845,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address Province",
 						"description": "Province or state - Latin characters only (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -9041,9 +10859,9 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "address_country",
 						"apiName": "address.country",
 						"displayName": "Address Country",
-						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
+						"description": "Country name (in English, Spanish or Catalan) or ISO code. Prefer Country Code; if both are set they must name the same country (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -9056,7 +10874,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "address_country_code",
 						"apiName": "address.country_code",
 						"displayName": "Address Country Code",
-						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"description": "ISO 3166-1 alpha-2 country code: the canonical field that decides the country of the address (exactly 2 characters)",
 						"validation": {
 							"pattern": "^[A-Z]{2}$",
 							"minLength": 2,
@@ -9083,21 +10901,21 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "default_main_tax",
 				"apiName": "default_main_tax",
 				"displayName": "Default Main Tax",
-				"description": "Complete tax information with cross-validations: - IVA: only percentages 0, 4, 10, 21 - IGIC: only percentages 0, 3, 5, 7, 9.5, 15, 20 - IPSI: only percentages 0.5, 1, 2, 4, 8, 10 - OTHER: any percentage between 0 and 100 Exception: when regime_key = \"17\" (OSS/IOSS) the invoice applies the destin...",
+				"description": "Complete tax information with cross-validations: - IVA: real rates 4, 10, 21, and the temporary 2, 5 and 7.5 (see below for 0) - IGIC: 0, 3, 5, 7, 9.5, 15, 20 — here 0 is the real \"Tipo Cero\" - IPSI: real rates 0.5, 1, 2, 4, 8, 10 (see below for 0) - OTHER: any percentage between 0 and 100 **0 % ...",
 				"type": "fixedCollection",
 				"fields": [
 					{
 						"name": "type",
 						"apiName": "type",
 						"displayName": "Type",
-						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100%",
+						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100% Under IVA and IPSI, 0...",
 						"required": true,
 						"type": "options",
 						"options": [
 							{
 								"name": "IVA",
 								"value": "IVA",
-								"description": "Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%)"
+								"description": "Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period)"
 							},
 							{
 								"name": "IGIC",
@@ -9135,8 +10953,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": 0
 							},
 							{
+								"name": "2%",
+								"value": 2
+							},
+							{
 								"name": "4%",
 								"value": 4
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7.5%",
+								"value": 7.5
 							},
 							{
 								"name": "10%",
@@ -9217,6 +11047,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"default": 0.5,
 						"options": [
 							{
+								"name": "0%",
+								"value": 0
+							},
+							{
 								"name": "0.5%",
 								"value": 0.5
 							},
@@ -9286,17 +11120,17 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "02",
 								"value": "02",
-								"description": "Export"
+								"description": "Export (IVA and IGIC; not IPSI, whose AEAT list is `01, 08, 11, 18, 19, 20`)"
 							},
 							{
 								"name": "03",
 								"value": "03",
-								"description": "Used goods, art, antiques"
+								"description": "Used goods, art, antiques (not accepted, see below)"
 							},
 							{
 								"name": "04",
 								"value": "04",
-								"description": "Investment gold"
+								"description": "only reverse charge (an `ISP_ART_84_2_*` reason) or an exemption"
 							},
 							{
 								"name": "05",
@@ -9306,7 +11140,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "06",
 								"value": "06",
-								"description": "Group of entities"
+								"description": "Group of entities (not accepted, see below)"
 							},
 							{
 								"name": "07",
@@ -9316,7 +11150,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "08",
 								"value": "08",
-								"description": "IPSI/IVA/IGIC operations"
+								"description": "only `exemption_reason: NO_SUJETA_LOCALIZACION`, at 0 %"
 							},
 							{
 								"name": "09",
@@ -9326,7 +11160,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "10",
 								"value": "10",
-								"description": "Third-party collections"
+								"description": "only `exemption_reason: NO_SUJETA_ART_7_9`, on a `STANDARD` invoice whose"
 							},
 							{
 								"name": "11",
@@ -9336,7 +11170,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "14",
 								"value": "14",
-								"description": "VAT pending in certifications"
+								"description": "VAT pending in certifications (not accepted, see below)"
 							},
 							{
 								"name": "15",
@@ -9641,8 +11475,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "company",
 		"operation": "getAll",
 		"displayName": "Get Many",
-		"action": "List the companies (NIFs) of an account (paginated)",
-		"description": "Returns a server-side page of the companies (NIFs) that belong to the given account, optionally filtered by `search` (NIF / legal name / trade name)",
+		"action": "List the companies of an account",
+		"description": "Returns the companies (NIFs) belonging to the account in the path, ordered with the primary company first",
 		"operationId": "listCompanies",
 		"method": "GET",
 		"path": "/v1/accounts/{account_id}/companies",
@@ -9684,14 +11518,14 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		],
 		"paginated": true,
 		"isList": true,
-		"listKey": ""
+		"listKey": "companies"
 	},
 	{
 		"resource": "company",
 		"operation": "get",
 		"displayName": "Get",
-		"action": "Get company details",
-		"description": "Returns details of a specific company (NIF), including its VeriFactu status",
+		"action": "Get a company",
+		"description": "Returns the identity and activation state of a company: its fiscal data, whether it is switched on in Test and in Live, and its VeriFactu registration state",
 		"operationId": "getCompanyById",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}",
@@ -9709,8 +11543,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "company",
 		"operation": "update",
 		"displayName": "Update",
-		"action": "Update company details",
-		"description": "Updates editable fields of a company (same field set as the profile)",
+		"action": "Update a company",
+		"description": "Updates the editable fields of a company; the set is the one `UpdateCompanyRequest` declares",
 		"operationId": "patchCompanyById",
 		"method": "PATCH",
 		"path": "/v1/companies/{company_id}",
@@ -9805,7 +11639,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Full address (street, number, floor, etc.) - Latin characters only (max 255 characters)",
 						"required": true,
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 255
 						},
@@ -9818,7 +11652,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"apiName": "number",
 						"displayName": "Number",
 						"description": "Street number (max 20 characters)",
-						"required": true,
 						"validation": {
 							"minLength": 1,
 							"maxLength": 20
@@ -9872,7 +11705,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "City or town - Latin characters only (max 100 characters)",
 						"required": true,
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª()]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -9887,7 +11720,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"description": "Province or state - Latin characters only (max 100 characters)",
 						"required": true,
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -9899,9 +11732,9 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "country",
 						"apiName": "country",
 						"displayName": "Country",
-						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
+						"description": "Country name (in English, Spanish or Catalan) or ISO code. Prefer Country Code; if both are set they must name the same country (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -9913,7 +11746,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "country_code",
 						"apiName": "country_code",
 						"displayName": "Country Code",
-						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"description": "ISO 3166-1 alpha-2 country code: the canonical field that decides the country of the address (exactly 2 characters)",
 						"validation": {
 							"pattern": "^[A-Z]{2}$",
 							"minLength": 2,
@@ -9968,7 +11801,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address Street",
 						"description": "Full address (street, number, floor, etc.) - Latin characters only (max 255 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 255
 						},
@@ -9990,8 +11823,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "123",
-						"required": true,
-						"groupRequired": true
+						"required": false
 					},
 					{
 						"name": "address_floor",
@@ -10040,7 +11872,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address City",
 						"description": "City or town - Latin characters only (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª()]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -10056,7 +11888,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address Province",
 						"description": "Province or state - Latin characters only (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -10070,9 +11902,9 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "address_country",
 						"apiName": "address.country",
 						"displayName": "Address Country",
-						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
+						"description": "Country name (in English, Spanish or Catalan) or ISO code. Prefer Country Code; if both are set they must name the same country (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -10085,7 +11917,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "address_country_code",
 						"apiName": "address.country_code",
 						"displayName": "Address Country Code",
-						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"description": "ISO 3166-1 alpha-2 country code: the canonical field that decides the country of the address (exactly 2 characters)",
 						"validation": {
 							"pattern": "^[A-Z]{2}$",
 							"minLength": 2,
@@ -10103,7 +11935,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "phone",
 				"apiName": "phone",
 				"displayName": "Phone",
-				"description": "Phone number (min 9 characters, max 20 characters)",
+				"description": "A phone number as this API accepts it: 9 to 20 characters, and only digits, spaces, dashes, parentheses and an optional leading `+` (min 9 characters, max 20 characters)",
 				"validation": {
 					"pattern": "^[+]?[0-9\\s\\-\\(\\)]+$",
 					"minLength": 9,
@@ -10155,7 +11987,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "additional_info",
 				"apiName": "additional_info",
 				"displayName": "Additional Info",
-				"description": "Additional information displayed on invoices (max 500 characters)",
+				"description": "Free note printed on the invoice (max 500 characters)",
 				"validation": {
 					"maxLength": 500
 				},
@@ -10337,7 +12169,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "delete",
 		"displayName": "Delete",
 		"action": "Delete a company",
-		"description": "Removes the NIF from your account: it stops appearing in the account and stops being billed",
+		"description": "Removes a company from the account: it stops appearing and stops being billed",
 		"operationId": "deleteCompanyById",
 		"method": "DELETE",
 		"path": "/v1/companies/{company_id}",
@@ -10356,7 +12188,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "generateRepresentation",
 		"displayName": "Generate Representation",
 		"action": "Generate the representation document",
-		"description": "Generates the unsigned AEAT representation PDF for this company (NIF), which is the first step of the process: download it with `GET /v1/companies/{company_id}/representation/document`, sign it digitally and upload it back with `POST /v1/companies/{company_id}/representation/submit`",
+		"description": "Generates the unsigned AEAT representation PDF of a company, the first step of the representation flow",
 		"operationId": "generateCompanyRepresentation",
 		"method": "POST",
 		"path": "/v1/companies/{company_id}/representation",
@@ -10375,7 +12207,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "downloadRepresentation",
 		"displayName": "Download Representation",
 		"action": "Download the representation document",
-		"description": "Returns a presigned URL, valid for 5 minutes, to download the representation PDF of this company (NIF)",
+		"description": "Returns a presigned URL, valid for 5 minutes, to download the representation PDF of a company",
 		"operationId": "downloadCompanyRepresentationDocument",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/representation/document",
@@ -10393,8 +12225,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "company",
 		"operation": "getRepresentationStatus",
 		"displayName": "Get Representation Status",
-		"action": "Get fiscal representation",
-		"description": "Returns the state of the AEAT fiscal representation of this company (NIF): whether the document has been generated, signed, submitted, accepted or cancelled",
+		"action": "Get the fiscal representation",
+		"description": "Returns the state of the AEAT fiscal representation of a company: whether the document has been generated, signed and submitted, and whether AEAT accepted it or it was cancelled",
 		"operationId": "getCompanyRepresentation",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/representation",
@@ -10413,7 +12245,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "cancelRepresentation",
 		"displayName": "Cancel Representation",
 		"action": "Cancel the fiscal representation",
-		"description": "Cancels the active AEAT representation of this company (NIF)",
+		"description": "Cancels the active AEAT representation of a company",
 		"operationId": "cancelCompanyRepresentation",
 		"method": "DELETE",
 		"path": "/v1/companies/{company_id}/representation",
@@ -10431,8 +12263,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "company",
 		"operation": "getIssuingReadiness",
 		"displayName": "Get Issuing Readiness",
-		"action": "Get issuing readiness",
-		"description": "Returns whether this company (NIF) can issue its STANDARD invoice right now, in this environment — and if not, exactly what is missing",
+		"action": "Get the issuing readiness of a company",
+		"description": "Returns whether a company can issue its STANDARD invoice right now in the environment of the request, and the `blockers` that stop it otherwise",
 		"operationId": "getCompanyIssuingReadiness",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/issuing-readiness",
@@ -10450,27 +12282,38 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "company",
 		"operation": "getStats",
 		"displayName": "Get Stats",
-		"action": "Per-company invoice aggregates",
-		"description": "Returns invoice aggregates (count + last emission date) per company under the authenticated account",
+		"action": "Get invoice stats per company",
+		"description": "Returns, for each company of the account, how many fiscal documents it has issued and when it last issued one",
 		"operationId": "listCompanyStats",
 		"method": "GET",
 		"path": "/v1/accounts/{account_id}/companies/stats",
 		"pathParams": [],
 		"requiredFields": [],
 		"optionalFields": [],
-		"filters": [],
+		"filters": [
+			{
+				"name": "search",
+				"apiName": "search",
+				"displayName": "Search",
+				"description": "Case-insensitive filter on NIF, legal name or trade name — the same filter, over the same universe, as the one `GET /v1/accounts/{account_id}/companies` applies",
+				"type": "string",
+				"default": ""
+			}
+		],
 		"optionalCollectionName": "options",
-		"queryParamNames": [],
-		"paginated": false,
+		"queryParamNames": [
+			"search"
+		],
+		"paginated": true,
 		"isList": true,
-		"listKey": ""
+		"listKey": "stats"
 	},
 	{
 		"resource": "company",
 		"operation": "getFiscalSummary",
 		"displayName": "Get Fiscal Summary",
-		"action": "Get the fiscal summary of a company for a period",
-		"description": "Returns the VAT and IRPF summary of the invoices issued under this company (NIF) for the requested period, together with the annual IRPF projection and its progressive bracket breakdown",
+		"action": "Get the fiscal summary of a company",
+		"description": "Returns the VAT and IRPF summary of the invoices issued under this company over the requested period, together with the annual IRPF projection and its progressive bracket breakdown",
 		"operationId": "getCompanyFiscalSummary",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/fiscal-summary",
@@ -10482,7 +12325,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "start_date",
 				"apiName": "start_date",
 				"displayName": "Start Date",
-				"description": "Period start date (inclusive)",
+				"description": "Period start date (inclusive), as `YYYY-MM-DD`",
 				"validation": {
 					"format": "date"
 				},
@@ -10493,7 +12336,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "end_date",
 				"apiName": "end_date",
 				"displayName": "End Date",
-				"description": "Period end date (inclusive)",
+				"description": "Period end date (inclusive), as `YYYY-MM-DD`",
 				"validation": {
 					"format": "date"
 				},
@@ -10515,7 +12358,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "provision",
 		"displayName": "Provision",
 		"action": "Provision an account",
-		"description": "Provisions a new account on BeeL",
+		"description": "Provisions a new account on BeeL and, when it is born with a holder, returns a single-use `claim_token` to deliver so they can set a password and take ownership",
 		"operationId": "provisionAccount",
 		"method": "POST",
 		"path": "/v1/accounts",
@@ -10659,7 +12502,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address Street",
 						"description": "Full address (street, number, floor, etc.) - Latin characters only (max 255 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 255
 						},
@@ -10681,8 +12524,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "123",
-						"required": true,
-						"groupRequired": true
+						"required": false
 					},
 					{
 						"name": "address_floor",
@@ -10731,7 +12573,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address City",
 						"description": "City or town - Latin characters only (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª()]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -10747,7 +12589,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Address Province",
 						"description": "Province or state - Latin characters only (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -10761,9 +12603,9 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "address_country",
 						"apiName": "address.country",
 						"displayName": "Address Country",
-						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
+						"description": "Country name (in English, Spanish or Catalan) or ISO code. Prefer Country Code; if both are set they must name the same country (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -10776,7 +12618,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "address_country_code",
 						"apiName": "address.country_code",
 						"displayName": "Address Country Code",
-						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"description": "ISO 3166-1 alpha-2 country code: the canonical field that decides the country of the address (exactly 2 characters)",
 						"validation": {
 							"pattern": "^[A-Z]{2}$",
 							"minLength": 2,
@@ -10832,7 +12674,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Legal Representative Address Street",
 						"description": "Full address (street, number, floor, etc.) - Latin characters only (max 255 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 255
 						},
@@ -10854,8 +12696,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "123",
-						"required": false,
-						"groupRequired": true
+						"required": false
 					},
 					{
 						"name": "legal_representative_address_floor",
@@ -10904,7 +12745,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Legal Representative Address City",
 						"description": "City or town - Latin characters only (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª()]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -10920,7 +12761,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"displayName": "Legal Representative Address Province",
 						"description": "Province or state - Latin characters only (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -10934,9 +12775,9 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "legal_representative_address_country",
 						"apiName": "legal_representative.address.country",
 						"displayName": "Legal Representative Address Country",
-						"description": "The country name in Spanish, e.g. España for Spain — this is what BeeL's API expects (max 100 characters)",
+						"description": "Country name (in English, Spanish or Catalan) or ISO code. Prefer Country Code; if both are set they must name the same country (max 100 characters)",
 						"validation": {
-							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª]+$",
+							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
 							"maxLength": 100
 						},
@@ -10949,7 +12790,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "legal_representative_address_country_code",
 						"apiName": "legal_representative.address.country_code",
 						"displayName": "Legal Representative Address Country Code",
-						"description": "ISO 3166-1 alpha-2 country code (exactly 2 characters)",
+						"description": "ISO 3166-1 alpha-2 country code: the canonical field that decides the country of the address (exactly 2 characters)",
 						"validation": {
 							"pattern": "^[A-Z]{2}$",
 							"minLength": 2,
@@ -10973,13 +12814,13 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "default_main_tax_type",
 						"apiName": "default_main_tax.type",
 						"displayName": "Default Main Tax Type",
-						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100%",
+						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100% Under IVA and IPSI, 0...",
 						"type": "options",
 						"options": [
 							{
 								"name": "IVA",
 								"value": "IVA",
-								"description": "Iberian Peninsula and Balearic Islands (0%, 4%, 10%, 21%)"
+								"description": "Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period)"
 							},
 							{
 								"name": "IGIC",
@@ -11020,8 +12861,20 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 								"value": 0
 							},
 							{
+								"name": "2%",
+								"value": 2
+							},
+							{
 								"name": "4%",
 								"value": 4
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7.5%",
+								"value": 7.5
 							},
 							{
 								"name": "10%",
@@ -11104,6 +12957,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"groupRequired": true,
 						"options": [
 							{
+								"name": "0%",
+								"value": 0
+							},
+							{
 								"name": "0.5%",
 								"value": 0.5
 							},
@@ -11174,17 +13031,17 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "02",
 								"value": "02",
-								"description": "Export"
+								"description": "Export (IVA and IGIC; not IPSI, whose AEAT list is `01, 08, 11, 18, 19, 20`)"
 							},
 							{
 								"name": "03",
 								"value": "03",
-								"description": "Used goods, art, antiques"
+								"description": "Used goods, art, antiques (not accepted, see below)"
 							},
 							{
 								"name": "04",
 								"value": "04",
-								"description": "Investment gold"
+								"description": "only reverse charge (an `ISP_ART_84_2_*` reason) or an exemption"
 							},
 							{
 								"name": "05",
@@ -11194,7 +13051,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "06",
 								"value": "06",
-								"description": "Group of entities"
+								"description": "Group of entities (not accepted, see below)"
 							},
 							{
 								"name": "07",
@@ -11204,7 +13061,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "08",
 								"value": "08",
-								"description": "IPSI/IVA/IGIC operations"
+								"description": "only `exemption_reason: NO_SUJETA_LOCALIZACION`, at 0 %"
 							},
 							{
 								"name": "09",
@@ -11214,7 +13071,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "10",
 								"value": "10",
-								"description": "Third-party collections"
+								"description": "only `exemption_reason: NO_SUJETA_ART_7_9`, on a `STANDARD` invoice whose"
 							},
 							{
 								"name": "11",
@@ -11224,7 +13081,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 							{
 								"name": "14",
 								"value": "14",
-								"description": "VAT pending in certifications"
+								"description": "VAT pending in certifications (not accepted, see below)"
 							},
 							{
 								"name": "15",
@@ -11286,8 +13143,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "account",
 		"operation": "getAll",
 		"displayName": "Get Many",
-		"action": "List the accounts you provisioned, with lifecycle status",
-		"description": "Returns the accounts you provisioned, each with its lifecycle `status` (`PROVISIONED` → `CLAIMED` → `ACTIVE`) and the access you hold",
+		"action": "List the accounts you provisioned",
+		"description": "Returns the accounts you provisioned, newest first",
 		"operationId": "listAccounts",
 		"method": "GET",
 		"path": "/v1/accounts",
@@ -11299,7 +13156,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "status",
 				"apiName": "status",
 				"displayName": "Status",
-				"description": "Lifecycle stage of a provisioned account",
+				"description": "Keeps only the accounts at this lifecycle stage",
 				"type": "options",
 				"options": [
 					{
@@ -11366,8 +13223,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "account",
 		"operation": "get",
 		"displayName": "Get",
-		"action": "Get a provisioned account's authoritative status",
-		"description": "Returns the current lifecycle status and access for one account you provisioned",
+		"action": "Retrieve a provisioned account",
+		"description": "Returns one account you provisioned, with the same shape the list returns: its lifecycle `status`, the `access_level` you hold, the state of its claim link and its `company_id` when the account holds exactly one company",
 		"operationId": "getAccount",
 		"method": "GET",
 		"path": "/v1/accounts/{account_id}",
@@ -11385,8 +13242,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "account",
 		"operation": "getUsage",
 		"displayName": "Get Usage",
-		"action": "Provisioning usage of your own account",
-		"description": "Returns how many accounts you have provisioned and how many NIFs (companies) they hold — the billable figure for your offline B2B invoice",
+		"action": "Get your provisioning usage",
+		"description": "Returns how many accounts you have provisioned and the billable count that follows from them — the figure behind your offline B2B invoice",
 		"operationId": "getAccountUsage",
 		"method": "GET",
 		"path": "/v1/accounts/{account_id}/usage",
@@ -11404,8 +13261,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "account",
 		"operation": "createClaimToken",
 		"displayName": "Create Claim Token",
-		"action": "Issue a claim token for an account you provisioned",
-		"description": "Issues a single-use `claim_token` for an account you provisioned, so its holder can set a password and take ownership",
+		"action": "Issue a claim token",
+		"description": "Issues a single-use `claim_token`, and the `claim_url` built from it, so the account's holder can set a password and take ownership",
 		"operationId": "createAccountClaimToken",
 		"method": "POST",
 		"path": "/v1/accounts/{account_id}/claim-tokens",
@@ -11461,8 +13318,8 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "paymentConnection",
 		"operation": "getAll",
 		"displayName": "Get Many",
-		"action": "List a NIF's payment connections",
-		"description": "Lists the payment provider connections of a NIF (company) that your account **owns or manages**",
+		"action": "List the payment connections of a NIF",
+		"description": "Returns the payment provider connections of a company your account **owns or manages**, with the provider-side account each one points at and its `status`",
 		"operationId": "listCompanyPaymentConnections",
 		"method": "GET",
 		"path": "/v1/companies/{company_id}/payment-connections",
@@ -11473,7 +13330,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"optionalCollectionName": "options",
 		"queryParamNames": [],
 		"paginated": false,
-		"isList": true,
+		"isList": false,
 		"listKey": ""
 	},
 	{
@@ -11481,7 +13338,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "initiate",
 		"displayName": "Initiate",
 		"action": "Open an authorization to connect a payment provider",
-		"description": "Opens an authorization session so the holder of a NIF (company) your platform **manages** can connect a payment provider (`stripe`), white-label by API",
+		"description": "Opens an authorization session so the holder of a company your account **manages** can connect a payment provider (`stripe`), and returns the `authorization_url` where they authorize it",
 		"operationId": "initiatePaymentConnection",
 		"method": "POST",
 		"path": "/v1/companies/{company_id}/payment-connections/authorizations",
@@ -11521,28 +13378,584 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 	},
 	{
 		"resource": "paymentConnection",
-		"operation": "disconnect",
-		"displayName": "Disconnect",
-		"action": "Disconnect a NIF's payment provider",
-		"description": "Disconnects the payment provider connection (`stripe`) of a NIF (company) that your account **owns or manages**",
-		"operationId": "disconnectCompanyPaymentConnection",
-		"method": "DELETE",
-		"path": "/v1/companies/{company_id}/payment-connections/{provider}",
+		"operation": "update",
+		"displayName": "Update",
+		"action": "Update the payment connection settings of a NIF",
+		"description": "Updates the auto-invoicing settings of the payment connection named by `{connection_id}` of a company your account **owns or manages**",
+		"operationId": "updateCompanyPaymentConnection",
+		"method": "PATCH",
+		"path": "/v1/companies/{company_id}/payment-connections/{connection_id}",
 		"pathParams": [
 			{
-				"name": "provider_paymentConnection_disconnect",
-				"apiName": "provider",
-				"displayName": "Provider",
-				"description": "Payment provider slug in **lowercase**",
+				"name": "connectionId",
+				"apiName": "connection_id",
+				"displayName": "Connection ID",
+				"description": "Unique identifier (UUID) of the payment connection the operation acts on, as returned by `GET /v1/companies/{company_id}/payment-connections`",
 				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "options",
+				"loadOptionsMethod": "getPaymentConnections",
+				"default": ""
+			}
+		],
+		"requiredFields": [],
+		"optionalFields": [
+			{
+				"name": "auto_invoice_enabled",
+				"apiName": "auto_invoice_enabled",
+				"displayName": "Auto Invoice Enabled",
+				"description": "Whether incoming charges are auto-invoiced",
+				"type": "boolean",
+				"default": false
+			},
+			{
+				"name": "event_source",
+				"apiName": "event_source",
+				"displayName": "Event Source",
+				"description": "Which family of Stripe events this connection acts on",
 				"type": "options",
 				"options": [
 					{
-						"name": "Stripe",
-						"value": "stripe"
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "PAYMENTS",
+						"value": "PAYMENTS"
+					},
+					{
+						"name": "INVOICES",
+						"value": "INVOICES"
+					},
+					{
+						"name": "BOTH",
+						"value": "BOTH"
 					}
 				],
-				"default": "stripe"
+				"default": ""
+			},
+			{
+				"name": "auto_create_customer",
+				"apiName": "auto_create_customer",
+				"displayName": "Auto Create Customer",
+				"description": "Whether customers are created from the fiscal data the provider supplies",
+				"type": "boolean",
+				"default": false
+			},
+			{
+				"name": "send_invoice_by_email",
+				"apiName": "send_invoice_by_email",
+				"displayName": "Send Invoice By Email",
+				"description": "Whether the auto-issued invoice is emailed to the payer",
+				"type": "boolean",
+				"default": false
+			},
+			{
+				"name": "prices_include_tax",
+				"apiName": "prices_include_tax",
+				"displayName": "Prices Include Tax",
+				"description": "Whether provider amounts are read as tax-inclusive",
+				"type": "boolean",
+				"default": false
+			},
+			{
+				"name": "tax_inclusive_tax",
+				"apiName": "tax_inclusive_tax",
+				"displayName": "Tax Inclusive Tax",
+				"description": "The tax to reverse out of the gross amount",
+				"type": "fixedCollection",
+				"fields": [
+					{
+						"name": "type",
+						"apiName": "type",
+						"displayName": "Type",
+						"description": "Tax type by territory: - IVA: Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period) - IGIC: Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%) - IPSI: Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%) - OTHER: Configurable 0%-100% Under IVA and IPSI, 0...",
+						"required": true,
+						"type": "options",
+						"options": [
+							{
+								"name": "IVA",
+								"value": "IVA",
+								"description": "Iberian Peninsula and Balearic Islands (4%, 10%, 21%; 2%, 5% and 7.5% only on operations of their period)"
+							},
+							{
+								"name": "IGIC",
+								"value": "IGIC",
+								"description": "Canary Islands (0%, 3%, 5%, 7%, 9.5%, 15%, 20%)"
+							},
+							{
+								"name": "IPSI",
+								"value": "IPSI",
+								"description": "Ceuta and Melilla (0.5%, 1%, 2%, 4%, 8%, 10%)"
+							},
+							{
+								"name": "OTHER",
+								"value": "OTHER",
+								"description": "Configurable 0%-100%"
+							}
+						],
+						"default": "IVA"
+					},
+					{
+						"name": "percentage_IVA",
+						"apiName": "percentage",
+						"displayName": "Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IVA",
+						"required": true,
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 21,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "2%",
+								"value": 2
+							},
+							{
+								"name": "4%",
+								"value": 4
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7.5%",
+								"value": 7.5
+							},
+							{
+								"name": "10%",
+								"value": 10
+							},
+							{
+								"name": "21%",
+								"value": 21
+							}
+						],
+						"showWhen": {
+							"field": "type",
+							"values": [
+								"IVA"
+							]
+						}
+					},
+					{
+						"name": "percentage_IGIC",
+						"apiName": "percentage",
+						"displayName": "Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IGIC",
+						"required": true,
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 0,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "3%",
+								"value": 3
+							},
+							{
+								"name": "5%",
+								"value": 5
+							},
+							{
+								"name": "7%",
+								"value": 7
+							},
+							{
+								"name": "9.5%",
+								"value": 9.5
+							},
+							{
+								"name": "15%",
+								"value": 15
+							},
+							{
+								"name": "20%",
+								"value": 20
+							}
+						],
+						"showWhen": {
+							"field": "type",
+							"values": [
+								"IGIC"
+							]
+						}
+					},
+					{
+						"name": "percentage_IPSI",
+						"apiName": "percentage",
+						"displayName": "Percentage",
+						"description": "Tax percentage (between 0 and 100) — rates allowed for IPSI",
+						"required": true,
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "options",
+						"default": 0.5,
+						"options": [
+							{
+								"name": "0%",
+								"value": 0
+							},
+							{
+								"name": "0.5%",
+								"value": 0.5
+							},
+							{
+								"name": "1%",
+								"value": 1
+							},
+							{
+								"name": "2%",
+								"value": 2
+							},
+							{
+								"name": "4%",
+								"value": 4
+							},
+							{
+								"name": "8%",
+								"value": 8
+							},
+							{
+								"name": "10%",
+								"value": 10
+							}
+						],
+						"showWhen": {
+							"field": "type",
+							"values": [
+								"IPSI"
+							]
+						}
+					},
+					{
+						"name": "percentage_OTHER",
+						"apiName": "percentage",
+						"displayName": "Percentage",
+						"description": "Tax percentage (between 0 and 100)",
+						"required": true,
+						"validation": {
+							"minimum": 0,
+							"maximum": 100
+						},
+						"type": "number",
+						"default": 0,
+						"showWhen": {
+							"field": "type",
+							"values": [
+								"OTHER"
+							]
+						}
+					},
+					{
+						"name": "regime_key",
+						"apiName": "regime_key",
+						"displayName": "Regime Key",
+						"description": "Regime key according to VeriFactu regulations",
+						"type": "options",
+						"options": [
+							{
+								"name": "— Not set —",
+								"value": ""
+							},
+							{
+								"name": "01",
+								"value": "01",
+								"description": "General regime operation"
+							},
+							{
+								"name": "02",
+								"value": "02",
+								"description": "Export (IVA and IGIC; not IPSI, whose AEAT list is `01, 08, 11, 18, 19, 20`)"
+							},
+							{
+								"name": "03",
+								"value": "03",
+								"description": "Used goods, art, antiques (not accepted, see below)"
+							},
+							{
+								"name": "04",
+								"value": "04",
+								"description": "only reverse charge (an `ISP_ART_84_2_*` reason) or an exemption"
+							},
+							{
+								"name": "05",
+								"value": "05",
+								"description": "Travel agencies"
+							},
+							{
+								"name": "06",
+								"value": "06",
+								"description": "Group of entities (not accepted, see below)"
+							},
+							{
+								"name": "07",
+								"value": "07",
+								"description": "Cash basis"
+							},
+							{
+								"name": "08",
+								"value": "08",
+								"description": "only `exemption_reason: NO_SUJETA_LOCALIZACION`, at 0 %"
+							},
+							{
+								"name": "09",
+								"value": "09",
+								"description": "Mediating agencies"
+							},
+							{
+								"name": "10",
+								"value": "10",
+								"description": "only `exemption_reason: NO_SUJETA_ART_7_9`, on a `STANDARD` invoice whose"
+							},
+							{
+								"name": "11",
+								"value": "11",
+								"description": "Local rental"
+							},
+							{
+								"name": "14",
+								"value": "14",
+								"description": "VAT pending in certifications (not accepted, see below)"
+							},
+							{
+								"name": "15",
+								"value": "15",
+								"description": "VAT pending successive tract"
+							},
+							{
+								"name": "17",
+								"value": "17",
+								"description": "OSS and IOSS"
+							},
+							{
+								"name": "18",
+								"value": "18",
+								"description": "Equivalence surcharge"
+							},
+							{
+								"name": "19",
+								"value": "19",
+								"description": "REAGYP"
+							},
+							{
+								"name": "20",
+								"value": "20",
+								"description": "Simplified regime"
+							}
+						],
+						"default": ""
+					}
+				],
+				"default": {}
+			},
+			{
+				"name": "series",
+				"apiName": "series",
+				"displayName": "Series",
+				"description": "Series to number auto-issued invoices in",
+				"type": "fixedCollection",
+				"fields": [
+					{
+						"name": "ordinary",
+						"apiName": "ordinaria",
+						"displayName": "Ordinary Invoice Series",
+						"description": "Series for auto-issued ordinary invoices (UUID)",
+						"validation": {
+							"format": "uuid"
+						},
+						"type": "string",
+						"default": ""
+					},
+					{
+						"name": "simplified",
+						"apiName": "simplificada",
+						"displayName": "Simplified Invoice Series",
+						"description": "Series for auto-issued simplified invoices (UUID)",
+						"validation": {
+							"format": "uuid"
+						},
+						"type": "string",
+						"default": ""
+					},
+					{
+						"name": "corrective",
+						"apiName": "rectificativa",
+						"displayName": "Corrective Invoice Series",
+						"description": "Series for auto-issued corrective invoices (refunds) (UUID)",
+						"validation": {
+							"format": "uuid"
+						},
+						"type": "string",
+						"default": ""
+					}
+				],
+				"default": {}
+			},
+			{
+				"name": "simplified_threshold",
+				"apiName": "simplificada_threshold",
+				"displayName": "Simplified Invoice Threshold",
+				"description": "Amount in EUR at or above which auto-invoicing must issue an ordinary invoice instead of a simplified one (between 0.01 and 3000)",
+				"validation": {
+					"minimum": 0.01,
+					"maximum": 3000,
+					"format": "double"
+				},
+				"type": "number",
+				"default": 0
+			},
+			{
+				"name": "filter_config",
+				"apiName": "filter_config",
+				"displayName": "Filter Config",
+				"description": "Omit to keep the current filter configuration untouched",
+				"type": "fixedCollection",
+				"fields": [
+					{
+						"name": "min_amount",
+						"apiName": "min_amount",
+						"displayName": "Min Amount",
+						"description": "Charges below this amount are skipped (min 0)",
+						"validation": {
+							"minimum": 0,
+							"format": "double"
+						},
+						"type": "number",
+						"default": 0
+					},
+					{
+						"name": "max_amount",
+						"apiName": "max_amount",
+						"displayName": "Max Amount",
+						"description": "Charges above this amount are skipped (min 0)",
+						"validation": {
+							"minimum": 0,
+							"format": "double"
+						},
+						"type": "number",
+						"default": 0
+					},
+					{
+						"name": "only_mapped_customers",
+						"apiName": "only_mapped_customers",
+						"displayName": "Only Mapped Customers",
+						"description": "When true, only charges from customers already mapped to a BeeL customer are invoiced",
+						"type": "boolean",
+						"default": false
+					},
+					{
+						"name": "allowed_customer_ids",
+						"apiName": "allowed_customer_ids",
+						"displayName": "Allowed Customer IDs",
+						"description": "Provider-side customer ids (e.g",
+						"type": "string",
+						"multipleValues": true,
+						"default": []
+					},
+					{
+						"name": "excluded_description_patterns",
+						"apiName": "excluded_description_patterns",
+						"displayName": "Excluded Description Patterns",
+						"description": "Regular expressions matched against the charge description",
+						"type": "string",
+						"multipleValues": true,
+						"default": []
+					},
+					{
+						"name": "required_description_patterns",
+						"apiName": "required_description_patterns",
+						"displayName": "Required Description Patterns",
+						"description": "Regular expressions matched against the charge description",
+						"type": "string",
+						"multipleValues": true,
+						"default": []
+					},
+					{
+						"name": "disabled_categories",
+						"apiName": "disabled_categories",
+						"displayName": "Disabled Categories",
+						"description": "Charge categories opted out of auto-invoicing",
+						"type": "options",
+						"options": [
+							{
+								"name": "— Not set —",
+								"value": ""
+							},
+							{
+								"name": "DIRECT PAYMENT",
+								"value": "DIRECT_PAYMENT",
+								"description": "a one-off charge"
+							},
+							{
+								"name": "SUBSCRIPTION",
+								"value": "SUBSCRIPTION",
+								"description": "a charge produced by a recurring subscription"
+							},
+							{
+								"name": "REFUND",
+								"value": "REFUND",
+								"description": "money given back"
+							},
+							{
+								"name": "CREDIT NOTE",
+								"value": "CREDIT_NOTE",
+								"description": "a credit note issued on the provider's side"
+							}
+						],
+						"multipleValues": true,
+						"default": []
+					}
+				],
+				"default": {}
+			}
+		],
+		"filters": [],
+		"optionalCollectionName": "updateFields",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "paymentConnection",
+		"operation": "disconnect",
+		"displayName": "Disconnect",
+		"action": "Disconnect the payment provider of a NIF",
+		"description": "Disconnects the payment connection named by `{connection_id}` of a company that your account **owns or manages**",
+		"operationId": "disconnectCompanyPaymentConnection",
+		"method": "DELETE",
+		"path": "/v1/companies/{company_id}/payment-connections/{connection_id}",
+		"pathParams": [
+			{
+				"name": "connectionId",
+				"apiName": "connection_id",
+				"displayName": "Connection ID",
+				"description": "Unique identifier (UUID) of the payment connection the operation acts on, as returned by `GET /v1/companies/{company_id}/payment-connections`",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "options",
+				"loadOptionsMethod": "getPaymentConnections",
+				"default": ""
 			}
 		],
 		"requiredFields": [],
@@ -11558,61 +13971,290 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "paymentEvent",
 		"operation": "getAll",
 		"displayName": "Get Many",
-		"action": "List the payment events of a NIF's connection",
-		"description": "Lists the payment events received through the payment provider connection of a NIF (company) that your account **owns or manages**, most recent first",
+		"action": "List the payment events of a company's connection",
+		"description": "Lists the payment events received through the payment provider connection of a NIF (company), most recent first",
 		"operationId": "listCompanyPaymentEvents",
 		"method": "GET",
-		"path": "/v1/companies/{company_id}/payment-connections/{provider}/events",
+		"path": "/v1/companies/{company_id}/payment-connections/{connection_id}/events",
 		"pathParams": [
 			{
-				"name": "provider_paymentEvent_getAll",
-				"apiName": "provider",
-				"displayName": "Provider",
-				"description": "Payment provider slug in **lowercase**",
+				"name": "connectionId",
+				"apiName": "connection_id",
+				"displayName": "Connection ID",
+				"description": "Unique identifier (UUID) of the payment connection the operation acts on, as returned by `GET /v1/companies/{company_id}/payment-connections`",
 				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
 				"type": "options",
-				"options": [
-					{
-						"name": "Stripe",
-						"value": "stripe"
-					}
-				],
-				"default": "stripe"
+				"loadOptionsMethod": "getPaymentConnections",
+				"default": ""
 			}
 		],
 		"requiredFields": [],
 		"optionalFields": [],
-		"filters": [],
+		"filters": [
+			{
+				"name": "status",
+				"apiName": "status",
+				"displayName": "Status",
+				"description": "Keep only the events in these processing states",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "RECEIVED",
+						"value": "RECEIVED",
+						"description": "queued, awaiting processing"
+					},
+					{
+						"name": "PROCESSING",
+						"value": "PROCESSING",
+						"description": "in flight"
+					},
+					{
+						"name": "PROCESSED",
+						"value": "PROCESSED",
+						"description": "invoice was created (`invoice_id` is set)"
+					},
+					{
+						"name": "FAILED",
+						"value": "FAILED",
+						"description": "processing failed (see failure_reason / failure_message)"
+					},
+					{
+						"name": "SKIPPED",
+						"value": "SKIPPED",
+						"description": "filtered out by user rules (see skip_reason)"
+					},
+					{
+						"name": "MANUALLY RESOLVED",
+						"value": "MANUALLY_RESOLVED",
+						"description": "operator marked it as resolved outside BeeL — terminal"
+					}
+				],
+				"multipleValues": true,
+				"default": []
+			},
+			{
+				"name": "failure_reason",
+				"apiName": "failure_reason",
+				"displayName": "Failure Reason",
+				"description": "Keep only the events that did not complete for these reasons",
+				"type": "string",
+				"multipleValues": true,
+				"default": []
+			},
+			{
+				"name": "failure_category",
+				"apiName": "failure_category",
+				"displayName": "Failure Category",
+				"description": "Keep only the events that did not complete for a cause in these categories",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "USER CONFIGURATION",
+						"value": "USER_CONFIGURATION",
+						"description": "your configuration stopped it (filters, missing series)"
+					},
+					{
+						"name": "PROVIDER DATA",
+						"value": "PROVIDER_DATA",
+						"description": "the provider data was insufficient or inconsistent"
+					},
+					{
+						"name": "DOMAIN RULE",
+						"value": "DOMAIN_RULE",
+						"description": "an invoicing rule forbade it — permanent, retrying changes nothing"
+					},
+					{
+						"name": "INFRASTRUCTURE",
+						"value": "INFRASTRUCTURE",
+						"description": "a transient failure; retrying may work"
+					},
+					{
+						"name": "SYSTEM ERROR",
+						"value": "SYSTEM_ERROR",
+						"description": "a defect on our side"
+					}
+				],
+				"multipleValues": true,
+				"default": []
+			},
+			{
+				"name": "event_kind",
+				"apiName": "event_kind",
+				"displayName": "Event Kind",
+				"description": "Keep only the events of these kinds",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "PAYMENT COMPLETED",
+						"value": "PAYMENT_COMPLETED",
+						"description": "a charge went through"
+					},
+					{
+						"name": "PAYMENT FAILED",
+						"value": "PAYMENT_FAILED",
+						"description": "a charge was attempted and did not go through"
+					},
+					{
+						"name": "REFUND COMPLETED",
+						"value": "REFUND_COMPLETED",
+						"description": "money was returned (refund or credit note)"
+					},
+					{
+						"name": "DISPUTE OPENED",
+						"value": "DISPUTE_OPENED",
+						"description": "the payer disputed a charge"
+					},
+					{
+						"name": "DISPUTE CLOSED",
+						"value": "DISPUTE_CLOSED",
+						"description": "a dispute was settled, in favour of either party"
+					},
+					{
+						"name": "UNKNOWN",
+						"value": "UNKNOWN",
+						"description": "the provider event does not fall in any of the above"
+					}
+				],
+				"multipleValues": true,
+				"default": []
+			},
+			{
+				"name": "min_amount",
+				"apiName": "min_amount",
+				"displayName": "Min Amount",
+				"description": "Keep only the events whose `amount` is at or above this value",
+				"validation": {
+					"minimum": 0
+				},
+				"type": "number",
+				"default": 0
+			},
+			{
+				"name": "max_amount",
+				"apiName": "max_amount",
+				"displayName": "Max Amount",
+				"description": "Keep only the events whose `amount` is at or below this value",
+				"validation": {
+					"minimum": 0
+				},
+				"type": "number",
+				"default": 0
+			},
+			{
+				"name": "needs_action",
+				"apiName": "needs_action",
+				"displayName": "Needs Action",
+				"description": "`true` keeps only the events still worth acting on; `false`, only the ones that are not",
+				"type": "boolean",
+				"default": false
+			},
+			{
+				"name": "from",
+				"apiName": "from",
+				"displayName": "From",
+				"description": "Keep only the events received at or after this instant",
+				"validation": {
+					"format": "date-time"
+				},
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "to",
+				"apiName": "to",
+				"displayName": "To",
+				"description": "Keep only the events received at or before this instant",
+				"validation": {
+					"format": "date-time"
+				},
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "q",
+				"apiName": "q",
+				"displayName": "Search Query",
+				"description": "Free-text search over the payer name and the provider identifiers of the charge (`pi_`, `ch_`, `cs_`, `evt_`)",
+				"validation": {
+					"minLength": 1,
+					"maxLength": 200
+				},
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "include_discarded",
+				"apiName": "include_discarded",
+				"displayName": "Include Discarded",
+				"description": "Include the events you discarded",
+				"type": "boolean",
+				"default": false
+			},
+			{
+				"name": "charges_only",
+				"apiName": "charges_only",
+				"displayName": "Charges Only",
+				"description": "Return one row per money movement instead of one row per event",
+				"type": "boolean",
+				"default": false
+			}
+		],
 		"optionalCollectionName": "options",
-		"queryParamNames": [],
+		"queryParamNames": [
+			"status",
+			"failure_reason",
+			"failure_category",
+			"event_kind",
+			"min_amount",
+			"max_amount",
+			"needs_action",
+			"from",
+			"to",
+			"q",
+			"include_discarded",
+			"charges_only"
+		],
 		"paginated": true,
 		"isList": true,
-		"listKey": ""
+		"listKey": "events"
 	},
 	{
 		"resource": "paymentEvent",
 		"operation": "get",
 		"displayName": "Get",
-		"action": "Get a payment event of a NIF's connection",
+		"action": "Get a payment event of a company's connection",
 		"description": "Retrieves a single payment event of the NIF's connection, including the outcome of its automatic invoicing and, when it failed, the stable failure code you can act on",
 		"operationId": "getCompanyPaymentEvent",
 		"method": "GET",
-		"path": "/v1/companies/{company_id}/payment-connections/{provider}/events/{event_id}",
+		"path": "/v1/companies/{company_id}/payment-connections/{connection_id}/events/{event_id}",
 		"pathParams": [
 			{
-				"name": "provider_paymentEvent_get",
-				"apiName": "provider",
-				"displayName": "Provider",
-				"description": "Payment provider slug in **lowercase**",
+				"name": "connectionId",
+				"apiName": "connection_id",
+				"displayName": "Connection ID",
+				"description": "Unique identifier (UUID) of the payment connection the operation acts on, as returned by `GET /v1/companies/{company_id}/payment-connections`",
 				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
 				"type": "options",
-				"options": [
-					{
-						"name": "Stripe",
-						"value": "stripe"
-					}
-				],
-				"default": "stripe"
+				"loadOptionsMethod": "getPaymentConnections",
+				"default": ""
 			},
 			{
 				"name": "eventId",
@@ -11640,26 +14282,24 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "paymentEvent",
 		"operation": "retry",
 		"displayName": "Retry",
-		"action": "Retry a payment event of a NIF's connection",
-		"description": "Reprocesses a payment event whose automatic invoicing did not complete, applying the current configuration of the NIF",
+		"action": "Retry a payment event of a company's connection",
+		"description": "Reprocesses a payment event whose automatic invoicing did not complete, applying the configuration of the NIF as it stands now",
 		"operationId": "retryCompanyPaymentEvent",
 		"method": "POST",
-		"path": "/v1/companies/{company_id}/payment-connections/{provider}/events/{event_id}/retry",
+		"path": "/v1/companies/{company_id}/payment-connections/{connection_id}/events/{event_id}/retry",
 		"pathParams": [
 			{
-				"name": "provider_paymentEvent_retry",
-				"apiName": "provider",
-				"displayName": "Provider",
-				"description": "Payment provider slug in **lowercase**",
+				"name": "connectionId",
+				"apiName": "connection_id",
+				"displayName": "Connection ID",
+				"description": "Unique identifier (UUID) of the payment connection the operation acts on, as returned by `GET /v1/companies/{company_id}/payment-connections`",
 				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
 				"type": "options",
-				"options": [
-					{
-						"name": "Stripe",
-						"value": "stripe"
-					}
-				],
-				"default": "stripe"
+				"loadOptionsMethod": "getPaymentConnections",
+				"default": ""
 			},
 			{
 				"name": "eventId",
@@ -11687,26 +14327,159 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"resource": "paymentEvent",
 		"operation": "generateDraft",
 		"displayName": "Generate Draft",
-		"action": "Create a draft invoice from a payment event of a NIF's connection",
-		"description": "Builds a draft invoice from a payment event that could not be invoiced automatically, applying the same recipient resolution and tax treatment the automatic flow would have applied",
+		"action": "Create a draft invoice from a payment event",
+		"description": "Builds a draft invoice from a payment event that could not be invoiced automatically, applying the same recipient resolution and tax treatment the automatic flow would have applied, under the NIF in the path",
 		"operationId": "generateCompanyPaymentEventDraft",
 		"method": "POST",
-		"path": "/v1/companies/{company_id}/payment-connections/{provider}/events/{event_id}/draft",
+		"path": "/v1/companies/{company_id}/payment-connections/{connection_id}/events/{event_id}/draft",
 		"pathParams": [
 			{
-				"name": "provider_paymentEvent_generateDraft",
-				"apiName": "provider",
-				"displayName": "Provider",
-				"description": "Payment provider slug in **lowercase**",
+				"name": "connectionId",
+				"apiName": "connection_id",
+				"displayName": "Connection ID",
+				"description": "Unique identifier (UUID) of the payment connection the operation acts on, as returned by `GET /v1/companies/{company_id}/payment-connections`",
 				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
 				"type": "options",
-				"options": [
-					{
-						"name": "Stripe",
-						"value": "stripe"
-					}
-				],
-				"default": "stripe"
+				"loadOptionsMethod": "getPaymentConnections",
+				"default": ""
+			},
+			{
+				"name": "eventId",
+				"apiName": "event_id",
+				"displayName": "Event ID",
+				"description": "Identifier of the payment event, as returned by the list operation",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "paymentEvent",
+		"operation": "resolve",
+		"displayName": "Resolve",
+		"action": "Mark a payment event as manually resolved",
+		"description": "Marks a payment event as resolved outside BeeL, for example when the invoice was issued through another tool or the situation was otherwise handled by hand",
+		"operationId": "resolveCompanyPaymentEvent",
+		"method": "POST",
+		"path": "/v1/companies/{company_id}/payment-connections/{connection_id}/events/{event_id}/resolve",
+		"pathParams": [
+			{
+				"name": "connectionId",
+				"apiName": "connection_id",
+				"displayName": "Connection ID",
+				"description": "Unique identifier (UUID) of the payment connection the operation acts on, as returned by `GET /v1/companies/{company_id}/payment-connections`",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "options",
+				"loadOptionsMethod": "getPaymentConnections",
+				"default": ""
+			},
+			{
+				"name": "eventId",
+				"apiName": "event_id",
+				"displayName": "Event ID",
+				"description": "Identifier of the payment event, as returned by the list operation",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "paymentEvent",
+		"operation": "discard",
+		"displayName": "Discard",
+		"action": "Discard a payment event",
+		"description": "Removes a payment event from the default list (soft delete)",
+		"operationId": "discardCompanyPaymentEvent",
+		"method": "POST",
+		"path": "/v1/companies/{company_id}/payment-connections/{connection_id}/events/{event_id}/discard",
+		"pathParams": [
+			{
+				"name": "connectionId",
+				"apiName": "connection_id",
+				"displayName": "Connection ID",
+				"description": "Unique identifier (UUID) of the payment connection the operation acts on, as returned by `GET /v1/companies/{company_id}/payment-connections`",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "options",
+				"loadOptionsMethod": "getPaymentConnections",
+				"default": ""
+			},
+			{
+				"name": "eventId",
+				"apiName": "event_id",
+				"displayName": "Event ID",
+				"description": "Identifier of the payment event, as returned by the list operation",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			}
+		],
+		"requiredFields": [],
+		"optionalFields": [],
+		"filters": [],
+		"optionalCollectionName": "options",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "paymentEvent",
+		"operation": "restore",
+		"displayName": "Restore",
+		"action": "Restore a discarded payment event",
+		"description": "Reverses a previous discard, bringing a payment event back into the default list",
+		"operationId": "restoreCompanyPaymentEvent",
+		"method": "POST",
+		"path": "/v1/companies/{company_id}/payment-connections/{connection_id}/events/{event_id}/restore",
+		"pathParams": [
+			{
+				"name": "connectionId",
+				"apiName": "connection_id",
+				"displayName": "Connection ID",
+				"description": "Unique identifier (UUID) of the payment connection the operation acts on, as returned by `GET /v1/companies/{company_id}/payment-connections`",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "options",
+				"loadOptionsMethod": "getPaymentConnections",
+				"default": ""
 			},
 			{
 				"name": "eventId",
@@ -11747,9 +14520,24 @@ export const CONTRACT_PATHS: Record<string, string> = {
 	"listAccounts": "/v1/accounts",
 	"listCompanies": "/v1/accounts/{account_id}/companies",
 	"listCompanyCustomers": "/v1/companies/{company_id}/customers",
+	"listCompanyPaymentConnections": "/v1/companies/{company_id}/payment-connections",
 	"listCompanyProducts": "/v1/companies/{company_id}/products",
 	"listCompanySeries": "/v1/companies/{company_id}/series",
 	"patchAccountWebhookSubscription": "/v1/accounts/{account_id}/webhooks/{webhook_id}",
 	"previewCompanyInvoicePdf": "/v1/companies/{company_id}/invoices/{invoice_id}/pdf/preview",
 	"submitCompanyRepresentation": "/v1/companies/{company_id}/representation/submit"
 };
+
+/** `WebhookEventTypeEnum`, in contract order: every event a subscription can listen to. */
+export const CONTRACT_WEBHOOK_EVENTS: string[] = [
+	"invoice.issued",
+	"invoice.email.sent",
+	"invoice.pdf.generated",
+	"invoice.voided",
+	"recurring_invoice.paused",
+	"invoice.schedule_failed",
+	"verifactu.status.updated",
+	"account.claimed",
+	"company.created",
+	"representation.signed"
+];
