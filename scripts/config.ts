@@ -47,6 +47,10 @@ export const OPERATION_NAMES: Record<string, string> = {
 	issueCompanyInvoice: 'issue',
 	voidCompanyInvoice: 'void',
 	createCompanyCorrectiveInvoice: 'createCorrective',
+	// A full invoice issued in exchange for simplified ones when the customer asks
+	// for one with their details. Not a corrective: the simplified invoices end
+	// `VOIDED` with `void_cause` `EXCHANGED`.
+	createCompanySimplifiedExchange: 'exchangeSimplified',
 	// One `PUT .../status` replaces mark-paid, mark-sent and revert-to-issued: the
 	// contract now has one vocabulary for the commercial status instead of a verb
 	// per transition. Issuing and voiding stay separate — they are fiscal acts.
@@ -293,9 +297,12 @@ export const LOAD_OPTIONS_BY_FIELD: Record<string, string> = {
  * and let an invalid rate reach the API. `null` means the type accepts any value.
  */
 export const TAX_PERCENTAGES: Record<string, number[] | null> = {
-	IVA: [0, 4, 10, 21],
+	// 2, 5 and 7.5 are temporary rates the API accepts only for operations dated
+	// in the period they were in force (`VAT_RATE_NOT_ACCEPTED_ON_DATE` otherwise).
+	// 0 under IVA and IPSI is the exemption sentinel: it needs an exemption reason.
+	IVA: [0, 2, 4, 5, 7.5, 10, 21],
 	IGIC: [0, 3, 5, 7, 9.5, 15, 20],
-	IPSI: [0.5, 1, 2, 4, 8, 10],
+	IPSI: [0, 0.5, 1, 2, 4, 8, 10],
 	OTHER: null,
 };
 

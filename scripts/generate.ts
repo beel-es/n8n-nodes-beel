@@ -126,7 +126,11 @@ function enumOptions(schema: Json): GeneratedField['options'] | undefined {
 
 	return (schema.enum as Array<string | number>).map((value) => ({
 		// The label may need translating (the value never does — it is the API's).
-		name: OPTION_NAME_OVERRIDES[String(value)] ?? titleCase(String(value)),
+		// A numeric member is a rate (IRPF, equivalence surcharge): title-casing it
+		// would turn 9.5 into "9 5".
+		name:
+			OPTION_NAME_OVERRIDES[String(value)] ??
+			(typeof value === 'number' ? `${value}%` : titleCase(String(value))),
 		value,
 		...(docs.has(String(value)) ? { description: docs.get(String(value)) } : {}),
 	}));
@@ -265,7 +269,10 @@ function applyTaxPercentageOptions(fields: GeneratedField[]): GeneratedField[] {
 				name: `${field.name}_${taxType}`,
 				type: 'options' as const,
 				options: rates.map((rate) => ({ name: `${rate}%`, value: rate })),
-				default: rates.includes(21) ? 21 : rates[0],
+				// 0 under IVA and IPSI needs an exemption reason, so it is never the
+				// default (and n8n does not store a value equal to the default, so
+				// moving it would change what saved workflows send).
+				default: rates.includes(21) ? 21 : taxType === 'IGIC' ? rates[0] : rates.find((rate) => rate !== 0),
 				description: `${field.description ?? 'Tax percentage'} — rates allowed for ${taxType}`,
 				showWhen,
 			};

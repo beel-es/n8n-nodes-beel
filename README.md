@@ -24,7 +24,7 @@ n8n community node for [BeeL](https://beel.es) — invoicing for self-employed p
 
 Issue invoices, keep customers and products in sync, onboard new NIFs, and react to AEAT decisions, without writing a single HTTP request.
 
-- **BeeL** — 75 operations across invoices, recurring invoices, customers, products, series, companies, accounts, payment connections, configuration and NIF validation
+- **BeeL** — 83 operations across invoices, recurring invoices, customers, products, series, companies, accounts, payment connections, configuration and NIF validation
 - **BeeL Trigger** — starts a workflow when BeeL emits an event, with the delivery's HMAC-SHA256 signature verified before anything runs
 - Every field constraint comes from BeeL's OpenAPI contract and is checked before the request leaves n8n
 - Multi-NIF aware, idempotent, no runtime dependencies
@@ -83,12 +83,12 @@ If your key provisioned accounts for other people, the **Account** field picks w
 
 | | |
 | --- | --- |
-| **Lifecycle** | Create · Get · Get Many · Update · Delete · Issue · Void · Create Corrective · Convert Proforma |
+| **Lifecycle** | Create · Get · Get Many · Update · Delete · Issue · Void · Create Corrective · Exchange Simplified · Convert Proforma |
 | **Delivery** | Send by Email · Set Status · Download PDF |
 | **Scheduling** | Get Schedule · Schedule · Unschedule · Duplicate |
 | **VeriFactu** | Get Verifactu Records |
 
-**Lines** are a repeatable collection: description, quantity, unit, unit price, discount, tax, IRPF, equivalence surcharge and the exemption reasons from Ley 37/1992. The tax percentage dropdown follows the tax type — IVA offers 0/4/10/21, IGIC 0/3/5/7/9.5/15/20, IPSI 0.5/1/2/4/8/10, and only `OTHER` accepts a free value.
+**Lines** are a repeatable collection: description, quantity, unit, unit price, discount, tax, IRPF, equivalence surcharge and the exemption reasons from Ley 37/1992. The tax percentage dropdown follows the tax type — IVA offers 0/2/4/5/7.5/10/21, IGIC 0/3/5/7/9.5/15/20, IPSI 0/0.5/1/2/4/8/10, and only `OTHER` accepts a free value. Under IVA and IPSI, 0 is sent with an exemption reason; IVA 2, 5 and 7.5 are temporary rates the API accepts only for operations dated while they were in force.
 
 **Recipient** is either an existing customer picked from a dropdown, or filled inline for a one-off. Pick a customer and the address fields stay out of the request entirely.
 
@@ -97,6 +97,8 @@ If your key provisioned accounts for other people, the **Account** field picks w
 **Get Verifactu Records** lists the invoice's VeriFactu records — its registration and, if it was voided, its cancellation — each with its own status and the AEAT's error code when it gave one.
 
 A **Simplified** invoice is for a recipient who is not identified: the API rejects one whose recipient carries a NIF or an alternative ID (`SIMPLIFIED_INVOICE_FORBIDS_IDENTIFIED_RECIPIENT`), at any amount. Use **Standard** for an identified recipient.
+
+**Exchange Simplified** issues a full invoice with the customer's details in exchange for one or more issued simplified invoices, which end `VOIDED` with void cause `EXCHANGED`. **Void** needs `Issued In Error` set when the invoice was already sent or paid, and **Create Corrective** takes the `Circumstance Date` of the cause being corrected; the API enforces the four-year deadline for corrective invoices.
 
 **Set Status** covers what used to be three operations — Mark as Paid, Mark as Sent and Revert to Issued are now values of one commercial status, which is how the API models it. Issuing and voiding stay separate: they are fiscal acts, not statuses. **Schedule** both schedules and reschedules, so there is nothing to undo before moving a date.
 

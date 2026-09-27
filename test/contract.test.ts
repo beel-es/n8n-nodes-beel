@@ -103,9 +103,11 @@ describe('the generated operations match the contract', () => {
 				?.find((field) => field.name === `main_tax_percentage_${taxType}`)
 				?.options?.map((option) => option.value);
 
-		expect(rates('IVA')).toEqual([0, 4, 10, 21]);
+		// 2, 5 and 7.5 are the temporary rates, accepted for operations dated in their period.
+		expect(rates('IVA')).toEqual([0, 2, 4, 5, 7.5, 10, 21]);
 		expect(rates('IGIC')).toEqual([0, 3, 5, 7, 9.5, 15, 20]);
-		expect(rates('IPSI')).toEqual([0.5, 1, 2, 4, 8, 10]);
+		// 0 under IVA and IPSI is the exemption sentinel, sent with an exemption reason.
+		expect(rates('IPSI')).toEqual([0, 0.5, 1, 2, 4, 8, 10]);
 		// OTHER accepts any percentage, so it stays a free number.
 		expect(rates('OTHER')).toBeUndefined();
 	});

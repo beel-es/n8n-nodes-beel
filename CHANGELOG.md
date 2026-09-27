@@ -37,9 +37,28 @@ payment connections or payment events: a connection is now addressed by its ID.
 - **Invoice → Get Verifactu Records**: the invoice's VeriFactu records (its
   registration and, if it was voided, its cancellation), each with its own status.
 - **Payment Method** filter on Invoice → Get Many.
+- **Invoice → Exchange Simplified**: issues a full invoice with the customer's
+  details in exchange for one or more issued simplified invoices, which end
+  `VOIDED` with void cause `EXCHANGED`.
+- **Invoice → Create Corrective**: `Circumstance Date` (when the cause of the
+  correction took place) and `Recipient Is Business`, plus a **Recipient** to
+  correct only the recipient's data.
+- **Invoice → Void**: `Issued In Error`, required by the API when the invoice was
+  already sent or paid (`VOID_REQUIRES_ISSUED_IN_ERROR`).
+- **Recurring Invoice → Update**: `Invoice Type`.
+- Tax rate dropdowns: IVA adds the temporary 2, 5 and 7.5 % (accepted only for
+  operations dated in their period) and IPSI adds 0 (with an exemption reason).
+  IRPF and equivalence surcharge offer the rates the contract lists now,
+  decimals included, labelled as percentages. Exemption reasons add the reverse
+  charge cases of Art. 84.2 b, c, d and g.
 
 ### Changed in the API
 
+- IRPF rates depend on the issuer's NIF: a company that pays Corporate Income
+  Tax only bears 0, 19 and 24 (`IRPF_RATE_NOT_FOR_CORPORATE_ISSUER`).
+- A corrective invoice must be issued within four years
+  (`CORRECTIVE_OUT_OF_TIME`), and the contract documents the other new
+  `CORRECTIVE_*` rejections.
 - A **Simplified** invoice whose recipient carries a NIF or an alternative ID is
   rejected with `SIMPLIFIED_INVOICE_FORBIDS_IDENTIFIED_RECIPIENT` when it is
   created, updated or issued, at any amount. Use **Standard** for an identified
