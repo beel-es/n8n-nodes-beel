@@ -592,4 +592,24 @@ export const WEBHOOK_EVENTS = [
 		value: 'representation.signed',
 		description: 'The VeriFactu representation document was signed',
 	},
+	{
+		name: 'Email Domain Verified',
+		value: 'email_domain.verified',
+		description: 'A sending domain of the account was verified',
+	},
+	{
+		name: 'Email Domain Failed',
+		value: 'email_domain.failed',
+		description: 'A sending domain of the account failed verification',
+	},
+	{
+		name: 'Email Domain Removed',
+		value: 'email_domain.removed',
+		description: 'A sending domain of the account was removed',
+	},
+	{
+		name: 'Invoice Email Bounced',
+		value: 'invoice.email.bounced',
+		description: 'The email of an invoice bounced or was marked as spam',
+	},
 ];

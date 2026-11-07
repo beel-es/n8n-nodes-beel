@@ -59,6 +59,7 @@ export const OPERATION_NAMES: Record<string, string> = {
 	getCompanyInvoiceSchedule: 'getSchedule',
 	setCompanyInvoiceSchedule: 'schedule',
 	deleteCompanyInvoiceSchedule: 'unschedule',
+	patchCompanyInvoiceSchedule: 'updateSchedule',
 	sendCompanyInvoice: 'send',
 	convertCompanyProformaToInvoice: 'convertToInvoice',
 	// A signed URL to a rendered image of the invoice, returned as JSON.
@@ -222,6 +223,15 @@ export const EXCLUDED_OPERATION_IDS = [
 	'uploadCompanyLogoById', 'deleteCompanyLogoById',
 	'getCompanyInvoiceCustomization', 'updateCompanyInvoiceCustomization',
 	'activateCompanyById', 'deactivateCompanyById',
+	// Custom field definitions and the sender's email setup (address, domains, template
+	// variables) are configured once in the dashboard. Invoices already carry
+	// `custom_fields` as plain fields, so a workflow does not need to manage the definitions.
+	'listCompanyCustomFields', 'getCompanyCustomField', 'upsertCompanyCustomField',
+	'listCompanyCustomFieldOptions', 'createCompanyCustomFieldOption', 'getCompanyCustomFieldOption',
+	'patchCompanyCustomFieldOption',
+	'getCompanyEmailConfiguration', 'updateCompanyEmailConfiguration', 'listEmailTemplateVariables',
+	'listAccountEmailDomains', 'createAccountEmailDomain', 'getAccountEmailDomain',
+	'deleteAccountEmailDomain', 'verifyAccountEmailDomain', 'setAccountEmailDomainDefault',
 	// Ending or re-levelling the management of a provisioned account. Left out
 	// deliberately: offboarding is as automatable as onboarding, but these are
 	// destructive over someone else's fiscal data and rare enough that doing them

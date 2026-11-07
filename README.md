@@ -85,7 +85,7 @@ If your key provisioned accounts for other people, the **Account** field picks w
 | --- | --- |
 | **Lifecycle** | Create · Get · Get Many · Update · Delete · Issue · Void · Create Corrective · Exchange Simplified · Convert Proforma |
 | **Delivery** | Send by Email · Set Status · Download PDF |
-| **Scheduling** | Get Schedule · Schedule · Unschedule · Duplicate |
+| **Scheduling** | Get Schedule · Schedule · Update Schedule · Unschedule · Duplicate |
 | **VeriFactu** | Get Verifactu Records |
 
 **Lines** are a repeatable collection: description, quantity, unit, unit price, discount, tax, IRPF, equivalence surcharge and the exemption reasons from Ley 37/1992. The tax percentage dropdown follows the tax type — IVA offers 0/2/4/5/7.5/10/21, IGIC 0/3/5/7/9.5/15/20, IPSI 0/0.5/1/2/4/8/10, and only `OTHER` accepts a free value. Under IVA and IPSI, 0 is sent with an exemption reason; IVA 2, 5 and 7.5 are temporary rates the API accepts only for operations dated while they were in force.
@@ -146,7 +146,7 @@ Full CRUD on customers, products and numbering series, plus series Set Default, 
 
 Drop in a **BeeL Trigger**, choose your events, activate the workflow — the node registers the subscription with BeeL and stores the signing secret. Deactivating deletes it. If the URL or the event list drifts, the next activation realigns the subscription without losing the secret.
 
-Events: `invoice.issued`, `invoice.email.sent`, `invoice.pdf.generated`, `invoice.voided`, `invoice.schedule_failed`, `recurring_invoice.paused`, `verifactu.status.updated`, `account.claimed`, `company.created`, `representation.signed`.
+Events: `invoice.issued`, `invoice.email.sent`, `invoice.pdf.generated`, `invoice.voided`, `invoice.schedule_failed`, `recurring_invoice.paused`, `verifactu.status.updated`, `account.claimed`, `company.created`, `representation.signed`, `email_domain.verified`, `email_domain.failed`, `email_domain.removed`, `invoice.email.bounced`.
 
 A subscription belongs to the account, not to a company, so on a multi-NIF account one trigger receives the events of every NIF — filter on the payload if you only want one.
 
