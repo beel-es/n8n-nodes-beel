@@ -46,6 +46,8 @@ export const FIELD_UI_OVERRIDES: Record<string, FieldUiOverride> = {
 	// dropdown must not start on it.
 	document_type: { default: 'STANDARD' },
 	floor: { placeholder: '2nd floor, Apt A' },
+	// A custom field's value; the contract's example is a Spanish street ("Gran Vía 12").
+	value: { placeholder: 'Main Street 12' },
 	// Spanish street examples: "Calle Mayor, 123", "Calle Mayor".
 	street: { placeholder: '123 Main Street' },
 	address_street: { placeholder: '123 Main Street' },

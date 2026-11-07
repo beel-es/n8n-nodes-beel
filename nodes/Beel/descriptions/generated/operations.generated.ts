@@ -118,7 +118,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "OVERDUE",
 						"value": "OVERDUE",
-						"description": "Reserved."
+						"description": "Unpaid invoice in `ISSUED` or `SENT` status, with a total above zero, whose `due_date` is"
 					},
 					{
 						"name": "RECTIFIED",
@@ -242,7 +242,15 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "fiscal_only",
 				"apiName": "fiscal_only",
 				"displayName": "Fiscal Only",
-				"description": "When `true`, returns only fiscal documents (STANDARD, CORRECTIVE, SIMPLIFIED), excluding proformas and any other non-fiscal document",
+				"description": "When `true` (the default), returns only fiscal documents (STANDARD, CORRECTIVE, SIMPLIFIED), excluding proformas and any other non-fiscal document",
+				"type": "boolean",
+				"default": true
+			},
+			{
+				"name": "pending_collection_only",
+				"apiName": "pending_collection_only",
+				"displayName": "Pending Collection Only",
+				"description": "When `true`, returns only the invoices pending collection: STANDARD, SIMPLIFIED or CORRECTIVE invoices in status ISSUED, SENT, OVERDUE or RECTIFIED with no payment recorded (no `payment_date`)",
 				"type": "boolean",
 				"default": false
 			},
@@ -262,7 +270,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "date_from",
 				"apiName": "date_from",
 				"displayName": "Date From",
-				"description": "Issue date from (YYYY-MM-DD)",
+				"description": "Date from, inclusive (YYYY-MM-DD)",
 				"validation": {
 					"format": "date"
 				},
@@ -273,7 +281,51 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "date_to",
 				"apiName": "date_to",
 				"displayName": "Date To",
-				"description": "Issue date to (YYYY-MM-DD)",
+				"description": "Date to, inclusive (YYYY-MM-DD)",
+				"validation": {
+					"format": "date"
+				},
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "due_date_from",
+				"apiName": "due_date_from",
+				"displayName": "Due Date From",
+				"description": "Due date from, inclusive (YYYY-MM-DD)",
+				"validation": {
+					"format": "date"
+				},
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "due_date_to",
+				"apiName": "due_date_to",
+				"displayName": "Due Date To",
+				"description": "Due date to, inclusive (YYYY-MM-DD)",
+				"validation": {
+					"format": "date"
+				},
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "payment_date_from",
+				"apiName": "payment_date_from",
+				"displayName": "Payment Date From",
+				"description": "Payment date from, inclusive (YYYY-MM-DD)",
+				"validation": {
+					"format": "date"
+				},
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "payment_date_to",
+				"apiName": "payment_date_to",
+				"displayName": "Payment Date To",
+				"description": "Payment date to, inclusive (YYYY-MM-DD)",
 				"validation": {
 					"format": "date"
 				},
@@ -325,6 +377,17 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"apiName": "rectified_invoice_id",
 				"displayName": "Rectified Invoice ID",
 				"description": "Return the corrective invoices that correct this invoice",
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": ""
+			},
+			{
+				"name": "replaced_by_invoice_id",
+				"apiName": "replaced_by_invoice_id",
+				"displayName": "Replaced By Invoice ID",
+				"description": "Return the simplified invoices replaced by this exchange invoice",
 				"validation": {
 					"format": "uuid"
 				},
@@ -395,6 +458,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"value": "ACCEPTED"
 					},
 					{
+						"name": "ACCEPTED WITH ERRORS",
+						"value": "ACCEPTED_WITH_ERRORS"
+					},
+					{
 						"name": "VOIDED",
 						"value": "VOIDED"
 					},
@@ -422,6 +489,14 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"apiName": "metadata",
 				"displayName": "Metadata",
 				"description": "Filter by metadata key/value pairs (exact match, AND between keys)",
+				"type": "json",
+				"default": "{}"
+			},
+			{
+				"name": "custom_fields",
+				"apiName": "custom_fields",
+				"displayName": "Custom Fields",
+				"description": "Filter by the custom fields saved on the invoice, written as `custom_fields[<key>]=<value>`",
 				"type": "json",
 				"default": "{}"
 			},
@@ -459,15 +534,21 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 			"payment_method",
 			"type",
 			"fiscal_only",
+			"pending_collection_only",
 			"customer_id",
 			"date_from",
 			"date_to",
+			"due_date_from",
+			"due_date_to",
+			"payment_date_from",
+			"payment_date_to",
 			"invoice_number",
 			"recipient_name",
 			"recipient_nif",
 			"series_code",
 			"external_ref",
 			"rectified_invoice_id",
+			"replaced_by_invoice_id",
 			"taxable_base_min",
 			"taxable_base_max",
 			"total_min",
@@ -475,6 +556,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 			"verifactu_status",
 			"verifactu_enabled",
 			"metadata",
+			"custom_fields",
 			"sort_by",
 			"sort_order"
 		],
@@ -768,8 +850,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "Madrid",
-						"required": false,
-						"groupRequired": true
+						"required": false
 					},
 					{
 						"name": "address_country",
@@ -1715,6 +1796,46 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"default": "{}"
 			},
 			{
+				"name": "custom_fields",
+				"apiName": "custom_fields",
+				"displayName": "Custom Fields",
+				"description": "Values for the company's custom fields, at most one per `key`; a repeated `key` answers `422 VALIDATION_ERROR`",
+				"type": "fixedCollection",
+				"fields": [
+					{
+						"name": "key",
+						"apiName": "key",
+						"displayName": "Key",
+						"description": "Identifier of the custom field within the company, chosen when the field is created: lowercase letters, digits and `_`, up to 64 characters (max 64 characters)",
+						"required": true,
+						"validation": {
+							"pattern": "^[a-z0-9_]{1,64}$",
+							"minLength": 1,
+							"maxLength": 64
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "store"
+					},
+					{
+						"name": "value",
+						"apiName": "value",
+						"displayName": "Value",
+						"description": "Text of the value (max 255 characters)",
+						"required": true,
+						"validation": {
+							"minLength": 1,
+							"maxLength": 255
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Main Street 12"
+					}
+				],
+				"multipleValues": true,
+				"default": {}
+			},
+			{
 				"name": "options",
 				"apiName": "options",
 				"displayName": "Options",
@@ -1789,7 +1910,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "email_config_subject",
 						"apiName": "email_config.subject",
 						"displayName": "Email Config Subject",
-						"description": "Custom email subject (optional, if not specified uses a default) (max 200 characters)",
+						"description": "Custom email subject (optional) (max 200 characters)",
 						"validation": {
 							"minLength": 1,
 							"maxLength": 200
@@ -1803,7 +1924,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "email_config_message",
 						"apiName": "email_config.message",
 						"displayName": "Email Config Message",
-						"description": "Custom message (optional, added to email body) (max 2000 characters)",
+						"description": "Custom message (optional, added to the email body) (max 2000 characters)",
 						"validation": {
 							"minLength": 1,
 							"maxLength": 2000
@@ -2216,8 +2337,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "Madrid",
-						"required": false,
-						"groupRequired": true
+						"required": false
 					},
 					{
 						"name": "address_country",
@@ -3081,6 +3201,46 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"default": ""
 			},
 			{
+				"name": "custom_fields",
+				"apiName": "custom_fields",
+				"displayName": "Custom Fields",
+				"description": "Replaces the custom fields of the invoice as a whole: the list sent becomes the new list",
+				"type": "fixedCollection",
+				"fields": [
+					{
+						"name": "key",
+						"apiName": "key",
+						"displayName": "Key",
+						"description": "Identifier of the custom field within the company, chosen when the field is created: lowercase letters, digits and `_`, up to 64 characters (max 64 characters)",
+						"required": true,
+						"validation": {
+							"pattern": "^[a-z0-9_]{1,64}$",
+							"minLength": 1,
+							"maxLength": 64
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "store"
+					},
+					{
+						"name": "value",
+						"apiName": "value",
+						"displayName": "Value",
+						"description": "Text of the value (max 255 characters)",
+						"required": true,
+						"validation": {
+							"minLength": 1,
+							"maxLength": 255
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Main Street 12"
+					}
+				],
+				"multipleValues": true,
+				"default": {}
+			},
+			{
 				"name": "options",
 				"apiName": "options",
 				"displayName": "Options",
@@ -3131,7 +3291,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "email_config_subject",
 						"apiName": "email_config.subject",
 						"displayName": "Email Config Subject",
-						"description": "Custom email subject (optional, if not specified uses a default) (max 200 characters)",
+						"description": "Custom email subject (optional) (max 200 characters)",
 						"validation": {
 							"minLength": 1,
 							"maxLength": 200
@@ -3145,7 +3305,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "email_config_message",
 						"apiName": "email_config.message",
 						"displayName": "Email Config Message",
-						"description": "Custom message (optional, added to email body) (max 2000 characters)",
+						"description": "Custom message (optional, added to the email body) (max 2000 characters)",
 						"validation": {
 							"minLength": 1,
 							"maxLength": 2000
@@ -4145,6 +4305,28 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						},
 						"type": "string",
 						"default": ""
+					},
+					{
+						"name": "line_type",
+						"apiName": "line_type",
+						"displayName": "Line Type",
+						"description": "Only `NORMAL` is accepted, which is also what an omitted value means",
+						"type": "options",
+						"options": [
+							{
+								"name": "— Not set —",
+								"value": ""
+							},
+							{
+								"name": "NORMAL",
+								"value": "NORMAL"
+							},
+							{
+								"name": "SUPLIDO",
+								"value": "SUPLIDO"
+							}
+						],
+						"default": ""
 					}
 				],
 				"multipleValues": true,
@@ -4461,8 +4643,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "Madrid",
-						"required": false,
-						"groupRequired": true
+						"required": false
 					},
 					{
 						"name": "address_country",
@@ -4600,7 +4781,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "email_config_subject",
 						"apiName": "email_config.subject",
 						"displayName": "Email Config Subject",
-						"description": "Custom email subject (optional, if not specified uses a default) (max 200 characters)",
+						"description": "Custom email subject (optional) (max 200 characters)",
 						"validation": {
 							"minLength": 1,
 							"maxLength": 200
@@ -4614,7 +4795,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "email_config_message",
 						"apiName": "email_config.message",
 						"displayName": "Email Config Message",
-						"description": "Custom message (optional, added to email body) (max 2000 characters)",
+						"description": "Custom message (optional, added to the email body) (max 2000 characters)",
 						"validation": {
 							"minLength": 1,
 							"maxLength": 2000
@@ -4908,8 +5089,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "Madrid",
-						"required": false,
-						"groupRequired": true
+						"required": false
 					},
 					{
 						"name": "address_country",
@@ -5072,7 +5252,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "email_config_subject",
 						"apiName": "email_config.subject",
 						"displayName": "Email Config Subject",
-						"description": "Custom email subject (optional, if not specified uses a default) (max 200 characters)",
+						"description": "Custom email subject (optional) (max 200 characters)",
 						"validation": {
 							"minLength": 1,
 							"maxLength": 200
@@ -5086,7 +5266,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"name": "email_config_message",
 						"apiName": "email_config.message",
 						"displayName": "Email Config Message",
-						"description": "Custom message (optional, added to email body) (max 2000 characters)",
+						"description": "Custom message (optional, added to the email body) (max 2000 characters)",
 						"validation": {
 							"minLength": 1,
 							"maxLength": 2000
@@ -5422,6 +5602,74 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 	},
 	{
 		"resource": "invoice",
+		"operation": "updateSchedule",
+		"displayName": "Update Schedule",
+		"action": "Update the scheduling of an invoice",
+		"description": "Updates only the fields present in the body of the scheduling of an invoice that is **already** `SCHEDULED` — same convention as `PATCH …/{invoice_id}` on the invoice itself",
+		"operationId": "patchCompanyInvoiceSchedule",
+		"method": "PATCH",
+		"path": "/v1/companies/{company_id}/invoices/{invoice_id}/schedule",
+		"pathParams": [
+			{
+				"name": "invoiceId",
+				"apiName": "invoice_id",
+				"displayName": "Invoice ID",
+				"description": "Invoice ID",
+				"required": true,
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "string",
+				"default": "",
+				"placeholder": "550e8400-e29b-41d4-a716-446655440000"
+			}
+		],
+		"requiredFields": [],
+		"optionalFields": [
+			{
+				"name": "scheduled_for",
+				"apiName": "scheduled_for",
+				"displayName": "Scheduled For",
+				"description": "New date on which the invoice should be processed (YYYY-MM-DD)",
+				"validation": {
+					"format": "date"
+				},
+				"type": "string",
+				"default": "",
+				"placeholder": "2025-02-15"
+			},
+			{
+				"name": "generation_mode",
+				"apiName": "generation_mode",
+				"displayName": "Generation Mode",
+				"description": "New generation mode",
+				"type": "options",
+				"options": [
+					{
+						"name": "— Not set —",
+						"value": ""
+					},
+					{
+						"name": "DRAFT",
+						"value": "DRAFT"
+					},
+					{
+						"name": "ISSUE AND SEND",
+						"value": "ISSUE_AND_SEND"
+					}
+				],
+				"default": ""
+			}
+		],
+		"filters": [],
+		"optionalCollectionName": "updateFields",
+		"queryParamNames": [],
+		"paginated": false,
+		"isList": false,
+		"listKey": ""
+	},
+	{
+		"resource": "invoice",
 		"operation": "send",
 		"displayName": "Send",
 		"action": "Send an invoice by email",
@@ -5478,7 +5726,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "subject",
 				"apiName": "subject",
 				"displayName": "Subject",
-				"description": "Email subject (optional, if not specified uses a default) (max 200 characters)",
+				"description": "Email subject (max 200 characters)",
 				"validation": {
 					"minLength": 1,
 					"maxLength": 200
@@ -5490,7 +5738,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "message",
 				"apiName": "message",
 				"displayName": "Message",
-				"description": "Custom message (optional, added before standard message) (max 2000 characters)",
+				"description": "Custom message, added before the standard message (max 2000 characters)",
 				"validation": {
 					"minLength": 1,
 					"maxLength": 2000
@@ -5939,7 +6187,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"apiName": "province",
 						"displayName": "Province",
 						"description": "Province or state - Latin characters only (max 100 characters)",
-						"required": true,
 						"validation": {
 							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
@@ -6577,7 +6824,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"apiName": "province",
 						"displayName": "Province",
 						"description": "Province or state - Latin characters only (max 100 characters)",
-						"required": true,
 						"validation": {
 							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
@@ -8071,7 +8317,12 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "CORRECTIVE",
 						"value": "CORRECTIVE",
-						"description": "Corrects or cancels a previous invoice"
+						"description": "Corrects or cancels a previous standard invoice (R1–R4)"
+					},
+					{
+						"name": "SIMPLIFIED CORRECTIVE",
+						"value": "SIMPLIFIED_CORRECTIVE",
+						"description": "Corrects a simplified invoice (R5)."
 					},
 					{
 						"name": "PROFORMA",
@@ -8128,7 +8379,12 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "CORRECTIVE",
 						"value": "CORRECTIVE",
-						"description": "Corrects or cancels a previous invoice"
+						"description": "Corrects or cancels a previous standard invoice (R1–R4)"
+					},
+					{
+						"name": "SIMPLIFIED CORRECTIVE",
+						"value": "SIMPLIFIED_CORRECTIVE",
+						"description": "Corrects a simplified invoice (R5)."
 					},
 					{
 						"name": "PROFORMA",
@@ -8344,7 +8600,12 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 					{
 						"name": "CORRECTIVE",
 						"value": "CORRECTIVE",
-						"description": "Corrects or cancels a previous invoice"
+						"description": "Corrects or cancels a previous standard invoice (R1–R4)"
+					},
+					{
+						"name": "SIMPLIFIED CORRECTIVE",
+						"value": "SIMPLIFIED_CORRECTIVE",
+						"description": "Corrects a simplified invoice (R5)."
 					},
 					{
 						"name": "PROFORMA",
@@ -8775,18 +9036,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"default": ""
 			},
 			{
-				"name": "series_id",
-				"apiName": "series_id",
-				"displayName": "Series ID",
-				"required": true,
-				"validation": {
-					"format": "uuid"
-				},
-				"type": "options",
-				"loadOptionsMethod": "getSeries",
-				"default": ""
-			},
-			{
 				"name": "invoice_type",
 				"apiName": "invoice_type",
 				"displayName": "Invoice Type",
@@ -9170,6 +9419,18 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"default": ""
 			},
 			{
+				"name": "series_id",
+				"apiName": "series_id",
+				"displayName": "Series ID",
+				"description": "Series the generated invoices are numbered in",
+				"validation": {
+					"format": "uuid"
+				},
+				"type": "options",
+				"loadOptionsMethod": "getSeries",
+				"default": ""
+			},
+			{
 				"name": "max_invoices",
 				"apiName": "max_invoices",
 				"displayName": "Max Invoices",
@@ -9263,6 +9524,46 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"displayName": "Notes",
 				"type": "string",
 				"default": ""
+			},
+			{
+				"name": "custom_fields",
+				"apiName": "custom_fields",
+				"displayName": "Custom Fields",
+				"description": "Values for the company's custom fields that every generated invoice copies, at most one per `key`; a repeated `key` answers `422 VALIDATION_ERROR`",
+				"type": "fixedCollection",
+				"fields": [
+					{
+						"name": "key",
+						"apiName": "key",
+						"displayName": "Key",
+						"description": "Identifier of the custom field within the company, chosen when the field is created: lowercase letters, digits and `_`, up to 64 characters (max 64 characters)",
+						"required": true,
+						"validation": {
+							"pattern": "^[a-z0-9_]{1,64}$",
+							"minLength": 1,
+							"maxLength": 64
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "store"
+					},
+					{
+						"name": "value",
+						"apiName": "value",
+						"displayName": "Value",
+						"description": "Text of the value (max 255 characters)",
+						"required": true,
+						"validation": {
+							"minLength": 1,
+							"maxLength": 255
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Main Street 12"
+					}
+				],
+				"multipleValues": true,
+				"default": {}
 			},
 			{
 				"name": "send_automatically",
@@ -9918,6 +10219,46 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"default": ""
 			},
 			{
+				"name": "custom_fields",
+				"apiName": "custom_fields",
+				"displayName": "Custom Fields",
+				"description": "Replaces the custom fields of the template as a whole: the list sent becomes the new list",
+				"type": "fixedCollection",
+				"fields": [
+					{
+						"name": "key",
+						"apiName": "key",
+						"displayName": "Key",
+						"description": "Identifier of the custom field within the company, chosen when the field is created: lowercase letters, digits and `_`, up to 64 characters (max 64 characters)",
+						"required": true,
+						"validation": {
+							"pattern": "^[a-z0-9_]{1,64}$",
+							"minLength": 1,
+							"maxLength": 64
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "store"
+					},
+					{
+						"name": "value",
+						"apiName": "value",
+						"displayName": "Value",
+						"description": "Text of the value (max 255 characters)",
+						"required": true,
+						"validation": {
+							"minLength": 1,
+							"maxLength": 255
+						},
+						"type": "string",
+						"default": "",
+						"placeholder": "Main Street 12"
+					}
+				],
+				"multipleValues": true,
+				"default": {}
+			},
+			{
 				"name": "send_automatically",
 				"apiName": "send_automatically",
 				"displayName": "Send Automatically",
@@ -10224,7 +10565,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 		"operation": "createFromInvoice",
 		"displayName": "Create From Invoice",
 		"action": "Derive a recurring invoice from an existing invoice",
-		"description": "Creates a recurring invoice template of this company taking its lines, recipient, series and payment data from an existing invoice, so only the recurrence has to be described",
+		"description": "Creates a recurring invoice template of this company taking its lines, recipient, series, payment data and custom fields from an existing invoice, so only the recurrence has to be described",
 		"operationId": "createCompanyRecurringInvoiceDerivation",
 		"method": "POST",
 		"path": "/v1/companies/{company_id}/recurring-invoices/derivations",
@@ -10664,7 +11005,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"apiName": "province",
 						"displayName": "Province",
 						"description": "Province or state - Latin characters only (max 100 characters)",
-						"required": true,
 						"validation": {
 							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
@@ -10852,8 +11192,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "Madrid",
-						"required": true,
-						"groupRequired": true
+						"required": false
 					},
 					{
 						"name": "address_country",
@@ -11718,7 +12057,6 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"apiName": "province",
 						"displayName": "Province",
 						"description": "Province or state - Latin characters only (max 100 characters)",
-						"required": true,
 						"validation": {
 							"pattern": "^[a-zA-Z0-9À-ÿ\\u0100-\\u017F\\u00B7\\u2018\\u2019\\u0060\\u00B4\\s\\.,\\-\\/'ºª°:;\"()&#]+$",
 							"minLength": 1,
@@ -11895,8 +12233,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "Madrid",
-						"required": true,
-						"groupRequired": true
+						"required": false
 					},
 					{
 						"name": "address_country",
@@ -12596,8 +12933,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "Madrid",
-						"required": true,
-						"groupRequired": true
+						"required": false
 					},
 					{
 						"name": "address_country",
@@ -12768,8 +13104,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 						"type": "string",
 						"default": "",
 						"placeholder": "Madrid",
-						"required": false,
-						"groupRequired": true
+						"required": false
 					},
 					{
 						"name": "legal_representative_address_country",
@@ -13453,18 +13788,10 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"default": false
 			},
 			{
-				"name": "prices_include_tax",
-				"apiName": "prices_include_tax",
-				"displayName": "Prices Include Tax",
-				"description": "Whether provider amounts are read as tax-inclusive",
-				"type": "boolean",
-				"default": false
-			},
-			{
 				"name": "tax_inclusive_tax",
 				"apiName": "tax_inclusive_tax",
 				"displayName": "Tax Inclusive Tax",
-				"description": "The tax to reverse out of the gross amount",
+				"description": "Optional",
 				"type": "fixedCollection",
 				"fields": [
 					{
@@ -13813,7 +14140,7 @@ export const GENERATED_OPERATIONS: GeneratedOperation[] = [
 				"name": "simplified_threshold",
 				"apiName": "simplificada_threshold",
 				"displayName": "Simplified Invoice Threshold",
-				"description": "Amount in EUR at or above which auto-invoicing must issue an ordinary invoice instead of a simplified one (between 0.01 and 3000)",
+				"description": "Amount in EUR up to which a charge whose buyer has no complete fiscal data (tax ID, name and address) is invoiced as a simplified invoice (between 0.01 and 3000)",
 				"validation": {
 					"minimum": 0.01,
 					"maximum": 3000,
@@ -14539,5 +14866,9 @@ export const CONTRACT_WEBHOOK_EVENTS: string[] = [
 	"verifactu.status.updated",
 	"account.claimed",
 	"company.created",
-	"representation.signed"
+	"representation.signed",
+	"email_domain.verified",
+	"email_domain.failed",
+	"email_domain.removed",
+	"invoice.email.bounced"
 ];

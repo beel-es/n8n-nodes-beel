@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0
+
+Sync with the current API contract.
+
+### Added
+
+- **Invoice → Update Schedule**: changes the date or the generation mode of an invoice that is already scheduled.
+- **BeeL Trigger**: `email_domain.verified`, `email_domain.failed`, `email_domain.removed` and `invoice.email.bounced`.
+- Invoices and recurring invoices accept and return `custom_fields`, and invoice lists gain due date, payment date and replaced-invoice filters, through the generated fields.
+
 ## 0.3.0
 
 Sync with the current API contract. **Breaking** for saved workflows that use
